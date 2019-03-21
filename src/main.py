@@ -26,12 +26,13 @@ with open("config.json") as file:
 
 @client.event
 async def on_ready():
-    await Hook.get("on_ready")()
     global initialised
     if not initialised:
         initialised = True
         logger.info("Notte's ready to go!")
         await Hook.get("on_init")(client, config)
+
+    await Hook.get("on_ready")()
 
 
 @client.event
