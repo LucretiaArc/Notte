@@ -3,6 +3,7 @@ import os
 import logging
 import bot_modules
 import json
+import util
 from hook import Hook
 
 logging.basicConfig(level=logging.INFO)
@@ -23,6 +24,8 @@ with open("config.json") as file:
 # on_ready()
 # on_message(message:discord.Message)
 # on_message_private(message:discord.Message)
+# on_reset()
+# before_reset()
 # Command events:
 # public!COMMAND(message:discord.Message, args:string)
 # admin!COMMAND(message:discord.Message, args:string)
@@ -55,6 +58,10 @@ async def on_message(message):
             await Hook.get("on_message")(message)
             if message.channel.is_private:
                 await Hook.get("on_message_private")(message)
+
+
+util.create_daily_hook("on_reset", 6, 0, 1)
+util.create_daily_hook("before_reset", 5, 59, 54)
 
 
 client.run(os.environ["DISCORD_CLIENT_TOKEN"])

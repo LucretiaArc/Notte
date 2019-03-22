@@ -2,11 +2,14 @@ import discord
 from hook import Hook
 
 client = None
+config = None
 
 
 async def on_init(discord_client, module_config):
-    global client
+    global client, config
     client = discord_client
+    config = module_config
+    Hook.get("admin!say").attach(say)
 
 
 async def say(message, args):
@@ -16,4 +19,3 @@ async def say(message, args):
 
 
 Hook.get("on_init").attach(on_init)
-Hook.get("admin!say").attach(say)

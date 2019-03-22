@@ -1,7 +1,7 @@
-from hook import Hook
 import discord
 import asyncio
 import random
+from hook import Hook
 
 client = None
 config = None

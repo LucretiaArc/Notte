@@ -1,19 +1,9 @@
 import discord
-import asyncio
-import util
 import datetime
 from hook import Hook
 
-import logging
-logger = logging.getLogger(__name__)
-
 client = None
 config = None
-
-
-def schedule_reset_message():
-    asyncio.ensure_future(util.schedule_at_time(prepare_reset, 5, 59, 55))
-    asyncio.ensure_future(util.schedule_at_time(on_reset, 6, 0, 1))
 
 
 async def on_init(discord_client, module_config):
@@ -21,21 +11,19 @@ async def on_init(discord_client, module_config):
     client = discord_client
     config = module_config
 
-    schedule_reset_message()
+    Hook.get("on_reset").attach(on_reset)
+    Hook.get("before_reset").attach(before_reset)
 
 
-def prepare_reset():
+async def before_reset():
     for channel in config["active_channels"]:
-        asyncio.ensure_future(client.send_typing(discord.Object(channel)))
+        await client.send_typing(discord.Object(channel))
 
 
-def on_reset():
+async def on_reset():
     message_string = get_reset_message(datetime.datetime.utcnow().weekday())
     for channel in config["active_channels"]:
-        asyncio.ensure_future(client.send_message(discord.Object(channel), message_string))
-
-    schedule_reset_message()
-    logger.info("Posted and scheduled reset message")
+        await client.send_message(discord.Object(channel), message_string)
 
 
 def get_reset_message(day):

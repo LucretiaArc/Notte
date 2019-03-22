@@ -9,12 +9,11 @@ async def on_init(discord_client, module_config):
     client = discord_client
     config = module_config
 
-    Hook.get("on_message").attach(handle_message)
+    Hook.get("public!command").attach(command)
 
 
-async def handle_message(message):
-    if "thanks notte" in message.content.lower():
-        await client.send_message(message.channel, "You're welcome!")
+async def command(message, args):
+    pass
 
 
 Hook.get("on_init").attach(on_init)
