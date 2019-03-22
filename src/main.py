@@ -29,7 +29,7 @@ async def on_ready():
     global initialised
     if not initialised:
         initialised = True
-        logger.info("Notte's ready to go!")
+        logger.info(client.user.name + "'s ready to go!")
         await Hook.get("on_init")(client, config)
 
     await Hook.get("on_ready")()

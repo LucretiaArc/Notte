@@ -11,12 +11,22 @@ client = None
 config = None
 
 
+def schedule_reset_message():
+    asyncio.ensure_future(util.schedule_at_time(prepare_reset, 5, 59, 55))
+    asyncio.ensure_future(util.schedule_at_time(on_reset, 6, 0, 1))
+
+
 async def on_init(discord_client, module_config):
     global client, config
     client = discord_client
     config = module_config
 
-    await util.schedule_at_time(on_reset, 6, 0, 1)
+    schedule_reset_message()
+
+
+def prepare_reset():
+    for channel in config["active_channels"]:
+        asyncio.ensure_future(client.send_typing(discord.Object(str(channel))))
 
 
 def on_reset():
@@ -24,8 +34,8 @@ def on_reset():
     for channel in config["active_channels"]:
         asyncio.ensure_future(client.send_message(discord.Object(str(channel)), message_string))
 
-    logger.info("Posted reset message")
-    asyncio.ensure_future(util.schedule_at_time(on_reset, 6, 0, 1))
+    schedule_reset_message()
+    logger.info("Posted and scheduled reset message")
 
 
 def get_reset_message(day):
@@ -39,7 +49,7 @@ def get_reset_message(day):
         "all Elemental Ruins"
     ]
 
-    # different void battles through march 30th
+    # different void battles through march 30th, after which these are the rotations
     # void_battles_available = [
     #     "Steel Golem and Blazing Ghost",
     #     "Raging Manticore and Obsidian Golem",
