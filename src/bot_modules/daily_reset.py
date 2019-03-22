@@ -26,13 +26,13 @@ async def on_init(discord_client, module_config):
 
 def prepare_reset():
     for channel in config["active_channels"]:
-        asyncio.ensure_future(client.send_typing(discord.Object(str(channel))))
+        asyncio.ensure_future(client.send_typing(discord.Object(channel)))
 
 
 def on_reset():
     message_string = get_reset_message(datetime.datetime.utcnow().weekday())
     for channel in config["active_channels"]:
-        asyncio.ensure_future(client.send_message(discord.Object(str(channel)), message_string))
+        asyncio.ensure_future(client.send_message(discord.Object(channel), message_string))
 
     schedule_reset_message()
     logger.info("Posted and scheduled reset message")

@@ -1,7 +1,9 @@
 {
+  "owner": "126587545336283136",
+  "token": "!!",
   "active_channels": [
-    250830827515019265,
-    419031366500483074
+    "250830827515019265",
+    "419031366500483074"
   ],
   "random_statuses": [
     "Fire Emblem: Heroes",
@@ -18,5 +20,4 @@
     "Dragon Trials",
     "regular ass midgard"
   ]
-
 }

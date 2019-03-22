@@ -16,10 +16,19 @@ class Hook:
         :param name: Name of the hook to retrieve.
         :return: The hook for the given name.
         """
-        if name not in cls.__registered_hooks:
+        if not Hook.exists(name):
             cls.__registered_hooks[name] = cls()
 
         return cls.__registered_hooks[name]
+
+    @classmethod
+    def exists(cls, name):
+        """
+        Checks if a hook exists by the given name.
+        :param name: Name of the hook to check.
+        :return: True if the hook exists, False otherwise.
+        """
+        return name in cls.__registered_hooks
 
     def __init__(self):
         self.__methods = []

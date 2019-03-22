@@ -18,11 +18,15 @@ with open("config.json") as file:
     config = json.load(file)
 
 
-# Hookable events:
-# on_init(discord.Client, config dict)
+# Standard events:
+# on_init(client:discord.Client, config:dict)
 # on_ready()
-# on_message(discord.Message)
-# on_message_private(discord.Message)
+# on_message(message:discord.Message)
+# on_message_private(message:discord.Message)
+# Command events:
+# public!COMMAND(message:discord.Message, args:string)
+# admin!COMMAND(message:discord.Message, args:string)
+
 
 @client.event
 async def on_ready():
@@ -38,9 +42,19 @@ async def on_ready():
 @client.event
 async def on_message(message):
     if not message.author.bot:
-        await Hook.get("on_message")(message)
-        if message.channel.is_private:
-            await Hook.get("on_message_private")(message)
+        if message.content.startswith(config["token"]):
+            command = message.content.split(" ")[0][len(config["token"]):].lower()  # just command text
+            args = message.content[len(config["token"]) + len(command) + 1:]
+            if Hook.exists("public!"+command):
+                await Hook.get("public!"+command)(message, args)
+            elif message.channel.is_private and message.author.id == config["owner"] and Hook.exists("admin!"+command):
+                await Hook.get("admin!"+command)(message, args)
+            else:
+                await client.send_message(message.channel, "I don't know that command, sorry!")
+        else:
+            await Hook.get("on_message")(message)
+            if message.channel.is_private:
+                await Hook.get("on_message_private")(message)
 
 
 client.run(os.environ["DISCORD_CLIENT_TOKEN"])
