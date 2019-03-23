@@ -46,11 +46,13 @@ async def threshold(message, args):
         "high mid": "hms",
         "high midgard": "hms",
         "high midgardsormr": "hms",
+        "hmid": "hms",
         "mid": "hms",
         "midgard": "hms",
         "midgardsormr": "hms",
         "high brun": "hbh",
         "high brunhilda": "hbh",
+        "hbrun": "hbh",
         "brun": "hbh",
         "brunhilda": "hbh"
     }
