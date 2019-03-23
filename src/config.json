@@ -19,5 +19,16 @@
     "Imperial Onslaught",
     "Dragon Trials",
     "regular ass midgard"
-  ]
+  ],
+  "emotes": {
+    "fire": "<:element_fire:558907933287776257>",
+    "water": "<:element_water:558907933367468043>",
+    "wind": "<:element_wind:558907933774184458>",
+    "light": "<:element_light:558907933606281226>",
+    "dark": "<:element_dark:558907933434314753>",
+    "none": "<:element_none:558907933648224256>",
+    "rarity5": "<:rarity_5:558909753720307716>",
+    "rarity4": "<:rarity_4:558909753695272960>",
+    "rarity3": "<:rarity_3:558909755175731213>"
+  }
 }

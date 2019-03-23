@@ -1,6 +1,11 @@
 import datetime
 import asyncio
+import logging
 from hook import Hook
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def schedule_at_time(method, hour, minute=0, second=0, microsecond=0):
@@ -43,7 +48,21 @@ def create_daily_hook(name, hour, minute=0, second=0):
     scheduled_hook = Hook.get(name)
 
     def scheduled_call():
+        logger.info("Running scheduled hook " + name)
         asyncio.ensure_future(scheduled_hook())
         schedule_at_time(scheduled_call, hour, minute, second)
 
     schedule_at_time(scheduled_call, hour, minute, second)
+
+
+def get_emote(config, name):
+    """
+    Gets the emote string for the given emote name
+    :param config: configuration settings to use for finding the emote
+    :param name: name of the emote
+    :return: emote string for the given name
+    """
+    if name in config["emotes"]:
+        return config["emotes"][name]
+
+    return ""
