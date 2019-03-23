@@ -15,7 +15,13 @@ config = None
 resist_data = None
 adventurer_data = None
 
-elemental_types = ["fire", "water", "wind", "light", "dark"]
+elemental_types = {
+    "flame": "fire",
+    "water": "water",
+    "wind": "wind",
+    "light": "light",
+    "shadow": "dark"
+}
 weapon_types = ["sword", "blade", "dagger", "axe", "lance", "bow", "wand", "staff"]
 res_names = {
     "poison": "poison",
@@ -49,21 +55,27 @@ async def resist_search(message, args):
     If you use more than one keyword from a single category, or omit a category, all other categories must have *exactly* one keyword specified.
     """
     arg_list = list(map(str.strip, args.lower().split(" ")))
-    specified_elements = []
-    specified_resists = []
+    specified_elements = set()
+    specified_resists = set()
 
     # collect criteria
     for arg in arg_list:
         if arg == "":
             continue
+
         if arg in elemental_types:
-            specified_elements.append(arg)
+            arg = elemental_types[arg]
+        elif arg in res_names:
+            arg = res_names[arg]
+
+        if arg in elemental_types.values():
+            specified_elements.add(arg)
         elif arg in res_names.values():
-            specified_resists.append(arg)
+            specified_resists.add(arg)
 
     # if one is empty, use all
     if len(specified_elements) == 0:
-        element_list = elemental_types
+        element_list = elemental_types.values()
     else:
         element_list = specified_elements
     if len(specified_resists) == 0:
@@ -71,6 +83,7 @@ async def resist_search(message, args):
     else:
         resist_list = specified_resists
 
+    # too broad or no keywords
     if len(element_list) == 0 and len(resist_list) == 0:
         await client.send_message(message.channel, "I something to work with, give me an element or resistance!")
         return
@@ -93,6 +106,11 @@ async def resist_search(message, args):
             result_string = util.get_emote(config, res) + "** " + res.capitalize() + " Resistance**\n"
         else:
             continue
+            
+        if len(match_list) == 0:
+            result_string += util.get_emote(config, "blank")*2 + " *No results.*"
+            result_sections.append(result_string)
+            continue
 
         # sorting
         match_list.sort(key=lambda t: t[0])  # by name
@@ -111,7 +129,7 @@ async def resist_search(message, args):
                 result_string += util.get_emote(config, "blank")*2 + " **" + str(adv[3]) + "%**"
 
             result_string += "\n" + util.get_emote(config, "rarity" + str(adv[2])) + \
-                             util.get_emote(config, elemental_types[adv[1]]) + " " + adv[0]
+                             util.get_emote(config, list(elemental_types.values())[adv[1]]) + " " + adv[0]
 
         result_sections.append(result_string)
 
@@ -121,6 +139,7 @@ async def resist_search(message, args):
     # avoid huge messages by breaking them up at every resist
     output_message = ""
     for section in result_sections:
+        section = section.strip()
         if len(output_message + "\n" + section) > 2000:
             await client.send_message(message.channel, output_message)
             output_message = section
@@ -185,10 +204,10 @@ def fetch_adventurer_data():
 
 
 def fetch_adventurer_resists(res_abilities):
-    res_data = {res: {el: collections.defaultdict(int) for el in elemental_types} for res in res_names.values()}
+    res_data = {res: {el: collections.defaultdict(int) for el in elemental_types.values()} for res in res_names.values()}
 
     request = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Adventurers&format=json&limit=500" \
-              "&fields=FullName,ElementalTypeId," \
+              "&fields=FullName,ElementalType," \
               "Abilities11,Abilities12,Abilities13,Abilities14," \
               "Abilities21,Abilities22,Abilities23,Abilities24," \
               "Abilities31,Abilities32,Abilities33,Abilities34"
@@ -199,7 +218,7 @@ def fetch_adventurer_resists(res_abilities):
         adventurers = [
             {
                 "name": a["title"]["FullName"],
-                "element": elemental_types[int(a["title"]["ElementalTypeId"]) - 1],
+                "element": elemental_types[a["title"]["ElementalType"].lower()],
                 "abilities": [
                     [
                         int(a["title"]["Abilities34"]),
