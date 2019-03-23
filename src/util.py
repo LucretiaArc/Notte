@@ -55,7 +55,7 @@ def create_daily_hook(name, hour, minute=0, second=0):
     schedule_at_time(scheduled_call, hour, minute, second)
 
 
-def get_emote(config, name):
+def get_emote(config, name) -> str:
     """
     Gets the emote string for the given emote name
     :param config: configuration settings to use for finding the emote
@@ -66,3 +66,19 @@ def get_emote(config, name):
         return config["emotes"][name]
 
     return ""
+
+
+def readable_list(items, last_separator="and") -> str:
+    """
+    Formats a list of strings to fit in an english sentence. For example:
+    ["a"] -> "a"
+    ["a", "b'] -> "a and b"
+    ["a", "b", "c", "d"] -> "a, b, c, and d"
+    :param items: list of items to turn into an english list.
+    :param last_separator: separator word to use before the last item. This is "and" in the above examples.
+    :return: string representing the list of items
+    """
+    if len(items) < 3:
+        return (" " + last_separator + " ").join(items)
+
+    return ", ".join(items[:-1]) + ", " + last_separator + " " + items[-1]

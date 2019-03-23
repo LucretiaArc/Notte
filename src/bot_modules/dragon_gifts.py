@@ -15,9 +15,10 @@ gift_string = None
 
 
 def on_init(discord_client, module_config):
-    global client, config, gift_string
+    global client, config
     client = discord_client
     config = module_config
+
     update_gift_string()
 
     Hook.get("on_reset").attach(update_gift_string)
@@ -67,7 +68,7 @@ def update_gift_string():
 
     gift_string = "It's " + calendar.day_name[reset_day] + ", so give your best gift to " + gift_target
 
-    logger.info("Completed requesting today's preferred dragons")
+    logger.info("Finished requesting today's preferred dragons")
 
 
 Hook.get("on_init").attach(on_init)
