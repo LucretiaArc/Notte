@@ -49,18 +49,37 @@ def on_init(discord_client, module_config):
 async def resist_search(message, args):
     """
     Searches for combinations of elemental affinity and affliction resistance.
-    **Affliction keywords:** *poison, burn, freeze, paralysis, blind, stun, curse, bog, sleep*
-    **Element keywords:** *fire, water, wind, light, dark*
+    **Affliction keywords:** *poison, burning/burn, freezing/freeze, paralysis, blind, stun, curses/curse, bog, sleep*
+    **Element keywords:** *flame/fire, water, wind, light, shadow/dark*
     If no keywords of a category are used, all keywords of that category are included. (E.g. if no element is specified, adventurers of all elements will be included)
     If you use more than one keyword from a single category, or omit a category, all other categories must have *exactly* one keyword specified.
+    You may also add a number as the minimum percentage resist value to display. If multiple are provided, only the first will be used.
+
+    Shortcut keywords are available for Advanced Dragon Trials:
+    **hms** (High Midgardsormr) = *flame*, *stun*, *100*
+    **hbh** (High Brunhilda) = *water*, *burning*, *100*
+
     """
     arg_list = list(map(str.strip, args.lower().split(" ")))
+
+    shortcuts = {
+        "hms": ("fire", "stun", 100),
+        "hbh": ("water", "burn", 100),
+    }
+
     specified_elements = set()
     specified_resists = set()
+    specified_threshold = -1
 
     # collect criteria
     for arg in arg_list:
         if arg == "":
+            continue
+
+        if arg in shortcuts:
+            specified_elements.add(shortcuts[arg][0])
+            specified_resists.add(shortcuts[arg][1])
+            specified_threshold = shortcuts[arg][2]
             continue
 
         if arg in elemental_types:
@@ -72,6 +91,12 @@ async def resist_search(message, args):
             specified_elements.add(arg)
         elif arg in res_names.values():
             specified_resists.add(arg)
+
+        # find threshold
+        if specified_threshold == -1:
+            threshold_match = re.findall("^(\d+)%?$", arg)
+            if len(threshold_match) > 0 and 0 <= int(threshold_match[0]) <= 100:
+                specified_threshold = int(threshold_match[0])
 
     # if one is empty, use all
     if len(specified_elements) == 0:
@@ -106,7 +131,7 @@ async def resist_search(message, args):
             result_string = util.get_emote(config, res) + "** " + res.capitalize() + " Resistance**\n"
         else:
             continue
-            
+
         if len(match_list) == 0:
             result_string += util.get_emote(config, "blank")*2 + " *No results.*"
             result_sections.append(result_string)
@@ -121,6 +146,9 @@ async def resist_search(message, args):
         # formatting
         current_resist = 101
         for adv in match_list:
+            if adv[3] < specified_threshold:
+                break
+
             if adv[3] < current_resist:
                 if current_resist < 101:  # don't separate the resist header from the first section
                     result_sections.append(result_string)
