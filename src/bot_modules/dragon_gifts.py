@@ -15,9 +15,9 @@ def on_init(discord_client, module_config):
     global client, config, gift_string
     client = discord_client
     config = module_config
-    gift_string = retrieve_gift_string()
+    update_gift_string()
 
-    Hook.get("on_reset").attach(retrieve_gift_string)
+    Hook.get("on_reset").attach(update_gift_string)
     Hook.get("public!gift").attach(gift_message)
 
 
@@ -28,7 +28,7 @@ async def gift_message(message, args):
     await client.send_message(message.channel, gift_string)
 
 
-def retrieve_gift_string():
+def update_gift_string():
     global gift_string
 
     reset_day = util.get_reset_day()
