@@ -22,6 +22,14 @@ class Hook:
         return cls.__registered_hooks[name]
 
     @classmethod
+    def list(cls):
+        """
+        Gets a list of registered hook names.
+        :return: List of registered hook names
+        """
+        return sorted(cls.__registered_hooks.keys())
+
+    @classmethod
     def exists(cls, name):
         """
         Checks if a hook exists by the given name.
@@ -56,12 +64,18 @@ class Hook:
             return True
         return False
 
+    def methods(self):
+        """
+        Returns a list of the methods attached to this hook.
+        :return: List of methods attached to the hook
+        """
+        return self.__methods.copy()
+
     async def __call__(self, *args, **kwargs):
         """
         Calls the hook, executing the attached methods with the given arguments in the order they were added.
         :param args: Arguments to execute the attached methods with.
         :param kwargs: Keyword arguments to execute the attached methods with.
-        :return: Nothing
         """
         for method in self.__methods:
             if inspect.iscoroutinefunction(method):

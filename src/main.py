@@ -53,7 +53,7 @@ async def on_message(message):
             elif message.channel.is_private and message.author.id == config["owner"] and Hook.exists("admin!"+command):
                 await Hook.get("admin!"+command)(message, args)
             else:
-                await client.send_message(message.channel, "I don't know that command, sorry!")
+                await client.send_message(message.channel, "I don't know that command, sorry! Use the `help` command for a list of commands.")
         else:
             await Hook.get("on_message")(message)
             if message.channel.is_private:

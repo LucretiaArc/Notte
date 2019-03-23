@@ -22,6 +22,9 @@ def on_init(discord_client, module_config):
 
 
 async def gift_message(message, args):
+    """
+    Provides details about the dragons who receive and extra bonus from today's gift in the Dragon Roost.
+    """
     await client.send_message(message.channel, gift_string)
 
 
