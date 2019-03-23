@@ -46,7 +46,7 @@ def retrieve_gift_string():
             dragon_names = map(lambda d: "*" + d["title"]["FullName"] + "*", dragon_info_list)
             gift_target = "one of these dragons:\n" + "\n".join(dragon_names)
 
-    return "It's " + calendar.day_name[reset_day] + ", so give your best gift to " + gift_target
+    gift_string = "It's " + calendar.day_name[reset_day] + ", so give your best gift to " + gift_target
 
 
 Hook.get("on_init").attach(on_init)
