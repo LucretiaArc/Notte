@@ -23,7 +23,7 @@ async def help_message(message, args):
     """
     Gives help with commands.
     `help` gives a list of all the commands you can use.
-    `help <command>` gives information about how to use a command, if the command is available for public use.
+    `help <command>` gives information about how to use a command, if you can use it.
     """
     command_list = [c[c.find("!")+1:] for c in Hook.list() if (
                         (c.startswith("public!") and util.check_command_permissions(message, "public")) or
@@ -35,12 +35,13 @@ async def help_message(message, args):
         help_msg = "Available commands: *" + ", ".join(command_list) + \
                    "*\nUse `help <command>` for help with a specific command."
     elif args.strip().lower() in command_list:
-        # help for a specific command
+        # help for a specific command, command_list already filters commands the user can use
         cmd = args.strip().lower()
+        command_methods = []
+        command_methods.extend(Hook.get("public!" + cmd).methods())
+        command_methods.extend(Hook.get("admin!" + cmd).methods())
         help_msg = "**" + config.get_response_token(message.server) + cmd + "**" + "\n"
-        help_msg += ("\n"+"\u2E3B"*16+"\n").join(
-            inspect.getdoc(method) for method in Hook.get("public!" + cmd).methods() if inspect.getdoc(method) != ""
-        )
+        help_msg += ("\n"+"\u2E3B"*16+"\n").join(inspect.getdoc(method) for method in command_methods if inspect.getdoc(method) != "")
     else:
         # unknown command
         help_msg = "I don't know what you mean! Use `help` for help."

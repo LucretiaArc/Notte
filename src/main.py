@@ -21,8 +21,10 @@ initialised = False
 # on_server_join(server:discord.Server)
 # on_message(message:discord.Message)
 # on_message_private(message:discord.Message)
+# on_mention(message:discord.Message)
 # on_reset()
 # before_reset()
+#
 # Command events:
 # public!COMMAND(message:discord.Message, args:string)
 # admin!COMMAND(message:discord.Message, args:string)
@@ -46,7 +48,7 @@ async def on_message(message):
     if not message.author.bot:
         token = config.get_response_token(message.server)
         if message.content.startswith(token):
-            command = message.content.split(" ")[0][len(token):].lower()  # just command text
+            command = message.content[len(token):].split(" ")[0].lower()  # just command text
             args = message.content[len(token) + len(command) + 1:]
             if Hook.exists("public!"+command) and util.check_command_permissions(message, "public"):
                 await Hook.get("public!"+command)(message, args)
@@ -58,6 +60,8 @@ async def on_message(message):
                 await client.send_message(message.channel, "I don't know that command, sorry! Use the `help` command for a list of commands.")
         else:
             await Hook.get("on_message")(message)
+            if discord.utils.find(lambda m: m.id == client.user.id, message.mentions) is not None:
+                await Hook.get("on_mention")(message)
             if message.channel.is_private:
                 await Hook.get("on_message_private")(message)
 
