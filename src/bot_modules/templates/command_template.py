@@ -1,13 +1,11 @@
 from hook import Hook
 
 client = None
-config = None
 
 
-async def on_init(discord_client, module_config):
-    global client, config
+async def on_init(discord_client):
+    global client
     client = discord_client
-    config = module_config
 
     Hook.get("public!command").attach(command)
 

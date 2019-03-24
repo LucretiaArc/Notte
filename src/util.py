@@ -1,6 +1,7 @@
 import datetime
 import asyncio
 import logging
+import config
 from hook import Hook
 
 
@@ -55,17 +56,14 @@ def create_daily_hook(name, hour, minute=0, second=0):
     schedule_at_time(scheduled_call, hour, minute, second)
 
 
-def get_emote(config, name) -> str:
+def get_emote(name) -> str:
     """
     Gets the emote string for the given emote name
-    :param config: configuration settings to use for finding the emote
     :param name: name of the emote
     :return: emote string for the given name
     """
-    if name in config["emotes"]:
-        return config["emotes"][name]
-
-    return ""
+    emote_map = config.get_global_config()["emotes"]
+    return emote_map[name] if name in emote_map else ""
 
 
 def readable_list(items, last_separator="and") -> str:
@@ -82,3 +80,18 @@ def readable_list(items, last_separator="and") -> str:
         return (" " + last_separator + " ").join(items)
 
     return ", ".join(items[:-1]) + ", " + last_separator + " " + items[-1]
+
+
+def check_command_permissions(message, level) -> bool:
+    """
+    Determines whether a command of the given level can be used, given the context of a sent message.
+    :param message: context message used to determine whether the command can be used
+    :param level: level of command to use, may be one of "public", "admin", or "owner"
+    :return: True if the command can be used, False otherwise
+    """
+    if level == "public":
+        return True
+    elif level == "admin":
+        return not message.channel.is_private and message.author.server_permissions.manage_server
+    elif level == "owner":
+        return message.author.id == config.get_global_config()["owner_id"]

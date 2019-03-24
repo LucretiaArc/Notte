@@ -1,29 +1,31 @@
-import discord
 import datetime
+import config
 from hook import Hook
 
 client = None
-config = None
 
 
-async def on_init(discord_client, module_config):
-    global client, config
+async def on_init(discord_client):
+    global client
     client = discord_client
-    config = module_config
 
     Hook.get("on_reset").attach(on_reset)
     Hook.get("before_reset").attach(before_reset)
 
 
 async def before_reset():
-    for channel in config["active_channels"]:
-        await client.send_typing(discord.Object(channel))
+    for server in client.servers:
+        active_channel = config.get_server_config(server.id)["active_channel"]
+        if active_channel != "":
+            await client.send_typing(server.get_channel(active_channel))
 
 
 async def on_reset():
     message_string = get_reset_message(datetime.datetime.utcnow().weekday())
-    for channel in config["active_channels"]:
-        await client.send_message(discord.Object(channel), message_string)
+    for server in client.servers:
+        active_channel = config.get_server_config(server.id)["active_channel"]
+        if active_channel != "":
+            await client.send_message(server.get_channel(active_channel), message_string)
 
 
 def get_reset_message(day):

@@ -10,14 +10,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 client = None
-config = None
 gift_string = None
 
 
-def on_init(discord_client, module_config):
-    global client, config
+def on_init(discord_client):
+    global client
     client = discord_client
-    config = module_config
 
     update_gift_string()
 
@@ -52,7 +50,7 @@ def update_gift_string():
 
             dragon_info = map(lambda d: {
                 "name": d["title"]["FullName"],
-                "emote": util.get_emote(config, elemental_types[int(d["title"]["ElementalTypeId"])-1]),
+                "emote": util.get_emote(elemental_types[int(d["title"]["ElementalTypeId"])-1]),
                 "rarity": d["title"]["Rarity"]
             }, dragon_info_list)
 
@@ -62,7 +60,7 @@ def update_gift_string():
                 gift_target += "\n"
                 if int(dragon["rarity"]) < current_rarity:
                     current_rarity = int(dragon["rarity"])
-                    gift_target += "\n" + current_rarity * util.get_emote(config, "rarity"+str(current_rarity)) + "\n"
+                    gift_target += "\n" + current_rarity * util.get_emote("rarity"+str(current_rarity)) + "\n"
 
                 gift_target += dragon["emote"] + " " + dragon["name"]
 

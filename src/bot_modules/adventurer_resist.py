@@ -11,7 +11,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 client = None
-config = None
 resist_data = None
 adventurer_data = None
 
@@ -36,10 +35,9 @@ res_names = {
 }
 
 
-def on_init(discord_client, module_config):
-    global client, config
+def on_init(discord_client):
+    global client
     client = discord_client
-    config = module_config
     update_data_store()
 
     Hook.get("on_reset").attach(update_data_store)
@@ -128,12 +126,12 @@ async def resist_search(message, args):
             ) for name in resist_data[res][el]))
 
         if len(match_list) > 0 or res in specified_resists:  # include resists specifically searched for
-            result_string = util.get_emote(config, res) + "** " + res.capitalize() + " Resistance**\n"
+            result_string = util.get_emote(res) + "** " + res.capitalize() + " Resistance**\n"
         else:
             continue
 
         if len(match_list) == 0:
-            result_string += util.get_emote(config, "blank")*2 + " *No results.*"
+            result_string += util.get_emote("blank")*2 + " *No results.*"
             result_sections.append(result_string)
             continue
 
@@ -154,10 +152,10 @@ async def resist_search(message, args):
                     result_sections.append(result_string)
                     result_string = ""
                 current_resist = adv[3]
-                result_string += util.get_emote(config, "blank")*2 + " **" + str(adv[3]) + "%**"
+                result_string += util.get_emote("blank")*2 + " **" + str(adv[3]) + "%**"
 
-            result_string += "\n" + util.get_emote(config, "rarity" + str(adv[2])) + \
-                             util.get_emote(config, list(elemental_types.values())[adv[1]]) + " " + adv[0]
+            result_string += "\n" + util.get_emote("rarity" + str(adv[2])) + \
+                             util.get_emote(list(elemental_types.values())[adv[1]]) + " " + adv[0]
 
         result_sections.append(result_string)
 
