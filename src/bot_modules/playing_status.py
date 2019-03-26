@@ -14,7 +14,9 @@ async def on_init(discord_client):
 
 
 def change_status():
-    asyncio.ensure_future(client.change_presence(game=discord.Game(name=random.choices(config.get_global_config()["random_statuses"])[0])))
+    statuses = list(zip(*(config.get_global_config()["random_statuses"])))
+    new_status = random.choices(statuses[0], weights=statuses[1])[0]
+    asyncio.ensure_future(client.change_presence(game=discord.Game(name=new_status)))
     asyncio.get_event_loop().call_later(600, change_status)
 
 

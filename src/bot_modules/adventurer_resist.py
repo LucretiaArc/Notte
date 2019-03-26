@@ -56,6 +56,7 @@ async def resist_search(message, args):
     Shortcut keywords are available for Advanced Dragon Trials:
     **hms** (High Midgardsormr) = *flame*, *stun*, *100*
     **hbh** (High Brunhilda) = *water*, *burning*, *100*
+    **hmc** (High Mercury) = *wind*, *bog*, *100*
 
     """
     arg_list = list(map(str.strip, args.lower().split(" ")))
@@ -63,6 +64,7 @@ async def resist_search(message, args):
     shortcuts = {
         "hms": ("fire", "stun", 100),
         "hbh": ("water", "burn", 100),
+        "hmc": ("wind", "bog", 100),
     }
 
     specified_elements = set()
@@ -77,7 +79,8 @@ async def resist_search(message, args):
         if arg in shortcuts:
             specified_elements.add(shortcuts[arg][0])
             specified_resists.add(shortcuts[arg][1])
-            specified_threshold = shortcuts[arg][2]
+            if specified_threshold == -1:
+                specified_threshold = shortcuts[arg][2]
             continue
 
         if arg in elemental_types:
@@ -92,7 +95,7 @@ async def resist_search(message, args):
 
         # find threshold
         if specified_threshold == -1:
-            threshold_match = re.findall("^(\d+)%?$", arg)
+            threshold_match = re.findall(r"^(\d+)%?$", arg)
             if len(threshold_match) > 0 and 0 <= int(threshold_match[0]) <= 100:
                 specified_threshold = int(threshold_match[0])
 
@@ -107,8 +110,8 @@ async def resist_search(message, args):
         resist_list = specified_resists
 
     # too broad or no keywords
-    if len(element_list) == 0 and len(resist_list) == 0:
-        await client.send_message(message.channel, "I something to work with, give me an element or resistance!")
+    if len(specified_elements) == 0 and len(specified_resists) == 0:
+        await client.send_message(message.channel, "I need something to work with, give me an element or resistance!")
         return
     elif len(resist_list) > 1 and len(element_list) > 1:
         await client.send_message(message.channel, "Too much! Try narrowing down your search.")
@@ -198,7 +201,7 @@ def fetch_resist_abilities():
 
         res_abilities = []
         for ability in abilities:
-            resist_percent = int(re.findall("'''(\d+)%'''", ability["details"])[0])
+            resist_percent = int(re.findall(r"'''(\d+)%'''", ability["details"])[0])
             for res in res_names:
                 if res in ability["details"]:
                     res_abilities.append({
