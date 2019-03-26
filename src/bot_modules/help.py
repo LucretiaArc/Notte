@@ -54,7 +54,7 @@ async def about_message(message, args):
     Gives information about Notte (that's me!).
     """
     msg = "Hi, I'm Notte! I'm a bot made by Struct to help out with everything Dragalia Lost.\n" \
-          "You can find my source code here: https://gitlab.com/VStruct/notte\n" \
+          "You can find my source code here: <https://gitlab.com/VStruct/notte>\n" \
           "Special thanks to AlphaDK for all of his help and feedback!\n" \
           "If you find a bug, want a feature, or have something else to say, you can use `" + \
           config.get_response_token(message.server) + "report`, and I'll let " + \
