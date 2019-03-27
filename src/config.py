@@ -6,7 +6,6 @@ import discord
 import copy
 import logging
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

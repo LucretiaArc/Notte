@@ -6,7 +6,6 @@ import calendar
 import logging
 from hook import Hook
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 client = None
@@ -17,10 +16,10 @@ def on_init(discord_client):
     global client
     client = discord_client
 
-    update_gift_string()
-
     Hook.get("on_reset").attach(update_gift_string)
     Hook.get("public!gift").attach(gift_message)
+
+    update_gift_string()
 
 
 async def gift_message(message, args):

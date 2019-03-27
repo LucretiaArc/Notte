@@ -7,7 +7,6 @@ import re
 import util
 from hook import Hook
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 client = None
@@ -38,10 +37,11 @@ res_names = {
 def on_init(discord_client):
     global client
     client = discord_client
-    update_data_store()
 
     Hook.get("on_reset").attach(update_data_store)
     Hook.get("public!resist").attach(resist_search)
+
+    update_data_store()
 
 
 async def resist_search(message, args):
@@ -201,7 +201,13 @@ def fetch_resist_abilities():
 
         res_abilities = []
         for ability in abilities:
-            resist_percent = int(re.findall(r"'''(\d+)%'''", ability["details"])[0])
+            matches = re.findall(r"(\d+)%", ability["details"])
+            if len(matches) == 0:
+                logger.warning("Ability with id {0} and description {1} has no resist percentage listed.",
+                               ability["id"], ability["details"])
+                continue
+
+            resist_percent = int(matches[0])
             for res in res_names:
                 if res in ability["details"]:
                     res_abilities.append({

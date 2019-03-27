@@ -5,7 +5,6 @@ import config
 from hook import Hook
 
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

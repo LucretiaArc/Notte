@@ -1,4 +1,7 @@
 import inspect
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Hook:
@@ -17,7 +20,7 @@ class Hook:
         :return: The hook for the given name.
         """
         if not Hook.exists(name):
-            cls.__registered_hooks[name] = cls()
+            cls.__registered_hooks[name] = cls(name)
 
         return cls.__registered_hooks[name]
 
@@ -38,8 +41,9 @@ class Hook:
         """
         return name in cls.__registered_hooks
 
-    def __init__(self):
+    def __init__(self, name=None):
         self.__methods = []
+        self.__name = name
 
     def attach(self, method):
         """
@@ -78,7 +82,12 @@ class Hook:
         :param kwargs: Keyword arguments to execute the attached methods with.
         """
         for method in self.__methods:
-            if inspect.iscoroutinefunction(method):
-                await method(*args, **kwargs)
-            else:
-                method(*args, **kwargs)
+            try:
+                if inspect.iscoroutinefunction(method):
+                    await method(*args, **kwargs)
+                else:
+                    method(*args, **kwargs)
+            except Exception as e:
+                if self.__name is not None:
+                    logger.exception("Exception in hook {0} from module {1}:".format(self.__name, method.__module__))
+                logger.exception(e)
