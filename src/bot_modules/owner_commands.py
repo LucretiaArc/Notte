@@ -1,3 +1,4 @@
+import discord
 import config
 import json
 from hook import Hook
@@ -17,7 +18,10 @@ async def on_init(discord_client):
 async def say(message, args):
     channel = args.split(" ")[0]
     output_message = args[len(channel) + 1:]
-    await client.send_message(client.get_channel(channel), output_message)
+    try:
+        await client.send_message(client.get_channel(channel), output_message)
+    except discord.Forbidden:
+        await client.send_message(message.channel, "I don't have permission to send messages in that channel. Sorry!")
 
 
 async def get_config(message, args):

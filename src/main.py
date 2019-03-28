@@ -45,7 +45,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if not message.author.bot:
+    if not message.author.bot and (message.channel.is_private or message.channel.permissions_for(message.server.me).send_messages):
         token = config.get_response_token(message.server)
         if message.content.startswith(token):
             command = message.content[len(token):].split(" ")[0].lower()  # just command text

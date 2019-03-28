@@ -15,7 +15,16 @@ async def xmus(message, args):
     """
     Posts a labelled X-Muspelheim pattern, so that groups playing High Brunhilda can negotiate where they're going to move to during that attack.
     """
-    await client.send_file(message.channel, "../assets/images/xmus.png")
+    if message.channel.permissions_for(message.server.me).attach_files:
+        await client.send_file(message.channel, "../assets/images/xmus.png", content="Pick an area for X-Muspelheim!")
+    elif message.channel.permissions_for(message.server.me).embed_links:
+        await client.send_message(message.channel, "Pick an area for X-Muspelheim! https://cdn.discordapp.com/attachments/560454966154756107/560455072073646082/xmus.png")
+    else:
+        await client.send_message(message.channel, "Pick an area for X-Muspelheim! https://cdn.discordapp.com/attachments/560454966154756107/560455072073646082/xmus.png\n"
+                                                   "A is top\n"
+                                                   "B is right\n"
+                                                   "C is bottom\n"
+                                                   "D is left")
 
 
 async def threshold(message, args):

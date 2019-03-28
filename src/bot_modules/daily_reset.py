@@ -16,16 +16,18 @@ async def on_init(discord_client):
 async def before_reset():
     for server in client.servers:
         active_channel = config.get_server_config(server.id)["active_channel"]
-        if active_channel != "":
-            await client.send_typing(server.get_channel(active_channel))
+        channel = server.get_channel(active_channel)
+        if channel is not None and channel.permissions_for(server.me).send_messages:
+            await client.send_typing(channel)
 
 
 async def on_reset():
     message_string = get_reset_message(datetime.datetime.utcnow().weekday())
     for server in client.servers:
         active_channel = config.get_server_config(server.id)["active_channel"]
-        if active_channel != "":
-            await client.send_message(server.get_channel(active_channel), message_string)
+        channel = server.get_channel(active_channel)
+        if channel is not None and channel.permissions_for(server.me).send_messages:
+            await client.send_message(channel, message_string)
 
 
 def get_reset_message(day):
