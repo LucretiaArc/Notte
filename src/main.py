@@ -35,17 +35,21 @@ initialised = False
 async def on_ready():
     global initialised
     if not initialised:
-        initialised = True
         config.Config.init_configuration()
         await Hook.get("on_init")(client)
+        initialised = True
         logger.info(client.user.name + "'s ready to go!")
 
     await Hook.get("on_ready")()
 
 
 @client.event
-async def on_message(message):
+async def on_message(message: discord.Message):
     if not message.author.bot and (message.channel.is_private or message.channel.permissions_for(message.server.me).send_messages):
+        if not initialised:
+            await client.send_message(message.channel, "I've only just woken up, give me a second please.")
+            return
+
         token = config.get_response_token(message.server)
         if message.content.startswith(token):
             command = message.content[len(token):].split(" ")[0].lower()  # just command text

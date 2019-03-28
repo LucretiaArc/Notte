@@ -1,7 +1,5 @@
 import util
-import json
-import urllib.parse
-import urllib.request
+import aiohttp
 import calendar
 import logging
 from hook import Hook
@@ -12,14 +10,14 @@ client = None
 gift_string = None
 
 
-def on_init(discord_client):
+async def on_init(discord_client):
     global client
     client = discord_client
 
     Hook.get("on_reset").attach(update_gift_string)
     Hook.get("public!gift").attach(gift_message)
 
-    update_gift_string()
+    await update_gift_string()
 
 
 async def gift_message(message, args):
@@ -29,7 +27,7 @@ async def gift_message(message, args):
     await client.send_message(message.channel, gift_string)
 
 
-def update_gift_string():
+async def update_gift_string():
     global gift_string
 
     reset_day = util.get_reset_day()
@@ -38,30 +36,32 @@ def update_gift_string():
         gift_target = "your favourite dragon!"
     else:
         logger.info("Requesting today's preferred dragons")
-        request = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Dragons&format=json&limit=500" \
-                  "&fields=FullName,Rarity,ElementalTypeId" \
-                  "&order_by=Rarity+DESC,+ElementalTypeId+ASC,+Id+DESC,+FullName+ASC" \
-                  "&where=FavoriteType%3D" + str(reset_day + 1)
+        url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Dragons&format=json&limit=500" \
+              "&fields=FullName,Rarity,ElementalTypeId" \
+              "&order_by=Rarity+DESC,+ElementalTypeId+ASC,+Id+DESC,+FullName+ASC" \
+              "&where=FavoriteType%3D" + str(reset_day + 1)
 
-        with urllib.request.urlopen(request) as response:
-            dragon_info_list = json.loads(response.read().decode())["cargoquery"]
-            elemental_types = ["fire", "water", "wind", "light", "dark"]
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                gifts_json = await response.json()
+                dragon_info_list = gifts_json["cargoquery"]
+                elemental_types = ["fire", "water", "wind", "light", "dark"]
 
-            dragon_info = map(lambda d: {
-                "name": d["title"]["FullName"],
-                "emote": util.get_emote(elemental_types[int(d["title"]["ElementalTypeId"])-1]),
-                "rarity": d["title"]["Rarity"]
-            }, dragon_info_list)
+                dragon_info = map(lambda d: {
+                    "name": d["title"]["FullName"],
+                    "emote": util.get_emote(elemental_types[int(d["title"]["ElementalTypeId"])-1]),
+                    "rarity": d["title"]["Rarity"]
+                }, dragon_info_list)
 
-            current_rarity = 6
-            gift_target = "one of these dragons:"
-            for dragon in dragon_info:
-                gift_target += "\n"
-                if int(dragon["rarity"]) < current_rarity:
-                    current_rarity = int(dragon["rarity"])
-                    gift_target += "\n" + current_rarity * util.get_emote("rarity"+str(current_rarity)) + "\n"
+                current_rarity = 6
+                gift_target = "one of these dragons:"
+                for dragon in dragon_info:
+                    gift_target += "\n"
+                    if int(dragon["rarity"]) < current_rarity:
+                        current_rarity = int(dragon["rarity"])
+                        gift_target += "\n" + current_rarity * util.get_emote("rarity"+str(current_rarity)) + "\n"
 
-                gift_target += dragon["emote"] + " " + dragon["name"]
+                    gift_target += dragon["emote"] + " " + dragon["name"]
 
     gift_string = "It's " + calendar.day_name[reset_day] + ", so give your best gift to " + gift_target
 

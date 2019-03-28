@@ -1,10 +1,8 @@
 import collections
-import json
-import urllib.parse
-import urllib.request
 import logging
 import re
 import util
+import aiohttp
 from hook import Hook
 
 logger = logging.getLogger(__name__)
@@ -34,14 +32,14 @@ res_names = {
 }
 
 
-def on_init(discord_client):
+async def on_init(discord_client):
     global client
     client = discord_client
 
     Hook.get("on_reset").attach(update_data_store)
     Hook.get("public!resist").attach(resist_search)
 
-    update_data_store()
+    await update_data_store()
 
 
 async def resist_search(message, args):
@@ -178,18 +176,20 @@ async def resist_search(message, args):
     await client.send_message(message.channel, output_message)
 
 
-def fetch_resist_abilities():
+async def fetch_resist_abilities(session: aiohttp.ClientSession):
     """
     Gets info about all the resist skills in the game. Each element of the list is a dict with the keys
     (skill_id, resist_type, resist_value), and a skill will appear once for each resistance type it provides.
+    :param session: aiohttp.ClientSession to use to fetch abilities
     :return: a list of dicts, representing all the resist skills in the game
     """
-    request = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Abilities&format=json&limit=500" \
-              "&fields=Details,Id" \
-              "&where=Details+LIKE+'%susceptibility%'"
 
-    with urllib.request.urlopen(request) as response:
-        ability_info_list = json.loads(response.read().decode())["cargoquery"]
+    url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Abilities&format=json&limit=500" \
+          "&fields=Details,Id" \
+          "&where=Details+LIKE+'%susceptibility%'"
+    async with session.get(url) as response:
+        ability_json = await response.json()
+        ability_info_list = ability_json["cargoquery"]
 
         abilities = [
             {
@@ -219,12 +219,13 @@ def fetch_resist_abilities():
         return res_abilities
 
 
-def fetch_adventurer_data():
-    request = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Adventurers&format=json&limit=500" \
-              "&fields=FullName,Rarity,ElementalTypeId,WeaponTypeId"
+async def fetch_adventurer_data(session: aiohttp.ClientSession):
+    url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Adventurers&format=json&limit=500" \
+          "&fields=FullName,Rarity,ElementalTypeId,WeaponTypeId"
 
-    with urllib.request.urlopen(request) as response:
-        adventurer_info_list = json.loads(response.read().decode())["cargoquery"]
+    async with session.get(url) as response:
+        adventurer_json = await response.json()
+        adventurer_info_list = adventurer_json["cargoquery"]
 
         adventurer_info = {
             a["title"]["FullName"]: {
@@ -238,17 +239,18 @@ def fetch_adventurer_data():
         return adventurer_info
 
 
-def fetch_adventurer_resists(res_abilities):
+async def fetch_adventurer_resists(session: aiohttp.ClientSession, res_abilities):
     res_data = {res: {el: collections.defaultdict(int) for el in elemental_types.values()} for res in res_names.values()}
 
-    request = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Adventurers&format=json&limit=500" \
-              "&fields=FullName,ElementalType," \
-              "Abilities11,Abilities12,Abilities13,Abilities14," \
-              "Abilities21,Abilities22,Abilities23,Abilities24," \
-              "Abilities31,Abilities32,Abilities33,Abilities34"
+    url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Adventurers&format=json&limit=500" \
+          "&fields=FullName,ElementalType," \
+          "Abilities11,Abilities12,Abilities13,Abilities14," \
+          "Abilities21,Abilities22,Abilities23,Abilities24," \
+          "Abilities31,Abilities32,Abilities33,Abilities34"
 
-    with urllib.request.urlopen(request) as response:
-        adventurer_info_list = json.loads(response.read().decode())["cargoquery"]
+    async with session.get(url) as response:
+        resists_json = await response.json()
+        adventurer_info_list = resists_json["cargoquery"]
 
         adventurers = [
             {
@@ -292,16 +294,17 @@ def fetch_adventurer_resists(res_abilities):
         return res_data
 
 
-def update_data_store():
+async def update_data_store():
     global resist_data, adventurer_data
 
-    logger.info("Requesting resist abilities")
-    res_abilities = fetch_resist_abilities()
-    logger.info("Finished processing resist abilities, requesting adventurer resists")
-    resist_data = fetch_adventurer_resists(res_abilities)
-    logger.info("Finished processing adventurer resists, requesting adventurer info")
-    adventurer_data = fetch_adventurer_data()
-    logger.info("Finished processing adventurer info, data stores updated")
+    async with aiohttp.ClientSession() as session:
+        logger.info("Requesting resist abilities")
+        res_abilities = await fetch_resist_abilities(session)
+        logger.info("Finished processing resist abilities, requesting adventurer resists")
+        resist_data = await fetch_adventurer_resists(session, res_abilities)
+        logger.info("Finished processing adventurer resists, requesting adventurer info")
+        adventurer_data = await fetch_adventurer_data(session)
+        logger.info("Finished processing adventurer info, data stores updated")
 
 
 Hook.get("on_init").attach(on_init)

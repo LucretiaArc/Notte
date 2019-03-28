@@ -1,5 +1,6 @@
 import inspect
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -77,17 +78,21 @@ class Hook:
 
     async def __call__(self, *args, **kwargs):
         """
-        Calls the hook, executing the attached methods with the given arguments in the order they were added.
+        Calls the hook, executing the attached methods. Coroutines are scheduled to run concurrently.
         :param args: Arguments to execute the attached methods with.
         :param kwargs: Keyword arguments to execute the attached methods with.
         """
+        tasks = []
         for method in self.__methods:
             try:
                 if inspect.iscoroutinefunction(method):
-                    await method(*args, **kwargs)
+                    tasks.append(asyncio.ensure_future(method(*args, **kwargs)))
                 else:
                     method(*args, **kwargs)
             except Exception as e:
                 if self.__name is not None:
                     logger.exception("Exception in hook {0} from module {1}:".format(self.__name, method.__module__))
                 logger.exception(e)
+
+        for task in tasks:
+            await task
