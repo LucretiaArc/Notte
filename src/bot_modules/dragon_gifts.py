@@ -44,14 +44,22 @@ async def update_gift_string():
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 gifts_json = await response.json()
-                dragon_info_list = gifts_json["cargoquery"]
+                dragon_info_list = [d["title"] for d in gifts_json["cargoquery"]]
                 elemental_types = ["fire", "water", "wind", "light", "dark"]
 
-                dragon_info = map(lambda d: {
-                    "name": d["title"]["FullName"],
-                    "emote": util.get_emote(elemental_types[int(d["title"]["ElementalTypeId"])-1]),
-                    "rarity": d["title"]["Rarity"]
-                }, dragon_info_list)
+                dragon_info = []
+                for d in dragon_info_list:
+                    if util.safe_int(d["Rarity"], -1) == -1:
+                        continue
+
+                    if util.safe_int(d["ElementalTypeId"], -1) == -1:
+                        continue
+
+                    dragon_info.append({
+                        "name": d["FullName"],
+                        "emote": util.get_emote(elemental_types[int(d["ElementalTypeId"])-1]),
+                        "rarity": d["Rarity"]
+                    })
 
                 current_rarity = 6
                 gift_target = "one of these dragons:"

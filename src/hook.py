@@ -95,4 +95,10 @@ class Hook:
                 logger.exception(e)
 
         for task in tasks:
-            await task
+            try:
+                await task
+            except Exception as e:
+                if self.__name is not None:
+                    logger.exception("Exception in hook {0} from async method:".format(self.__name))
+                logger.exception(e)
+

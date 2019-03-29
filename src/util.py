@@ -80,6 +80,19 @@ def readable_list(items, last_separator="and") -> str:
     return ", ".join(items[:-1]) + ", " + last_separator + " " + items[-1]
 
 
+def safe_int(value, default):
+    """
+    Attempts a cast to int, returning a default value if the cast fails.
+    :param value: value to cast
+    :param default: default value
+    :return: result of cast or default value
+    """
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+
 def check_command_permissions(message, level) -> bool:
     """
     Determines whether a command of the given level can be used, given the context of a sent message.

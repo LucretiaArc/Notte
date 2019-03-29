@@ -209,7 +209,7 @@ async def fetch_resist_abilities(session: aiohttp.ClientSession):
 
             resist_percent = int(matches[0])
             for res in res_names:
-                if res in ability["details"]:
+                if res in ability["details"] or res_names[res] in ability["details"]:
                     res_abilities.append({
                         "ability_id": ability["id"],
                         "resist_type": res_names[res],
@@ -225,16 +225,25 @@ async def fetch_adventurer_data(session: aiohttp.ClientSession):
 
     async with session.get(url) as response:
         adventurer_json = await response.json()
-        adventurer_info_list = adventurer_json["cargoquery"]
+        adventurer_info_list = [a["title"] for a in adventurer_json["cargoquery"]]
 
-        adventurer_info = {
-            a["title"]["FullName"]: {
-                "name": a["title"]["FullName"],
-                "rarity": int(a["title"]["Rarity"]),
-                "element": int(a["title"]["ElementalTypeId"]) - 1,
-                "weapon": int(a["title"]["WeaponTypeId"]) - 1,
-            } for a in adventurer_info_list
-        }
+        adventurer_info = {}
+        for a in adventurer_info_list:
+            if util.safe_int(a["Rarity"], -1) == -1:
+                continue
+
+            if util.safe_int(a["ElementalTypeId"], -1) == -1:
+                continue
+
+            if util.safe_int(a["WeaponTypeId"], -1) == -1:
+                continue
+
+            adventurer_info[a["FullName"]] = {
+                "name": a["FullName"],
+                "rarity": int(a["Rarity"]),
+                "element": int(a["ElementalTypeId"]) - 1,
+                "weapon": int(a["WeaponTypeId"]) - 1,
+            }
 
         return adventurer_info
 
@@ -250,32 +259,33 @@ async def fetch_adventurer_resists(session: aiohttp.ClientSession, res_abilities
 
     async with session.get(url) as response:
         resists_json = await response.json()
-        adventurer_info_list = resists_json["cargoquery"]
+        adventurer_info_list = [a["title"] for a in resists_json["cargoquery"]]
 
         adventurers = [
             {
-                "name": a["title"]["FullName"],
-                "element": elemental_types[a["title"]["ElementalType"].lower()],
+                "name": a["FullName"],
+                "element": elemental_types[a["ElementalType"].lower()],
                 "abilities": [
                     [
-                        int(a["title"]["Abilities34"]),
-                        int(a["title"]["Abilities33"]),
-                        int(a["title"]["Abilities32"]),
-                        int(a["title"]["Abilities31"])
+                        util.safe_int(a["Abilities34"], 0),
+                        util.safe_int(a["Abilities33"], 0),
+                        util.safe_int(a["Abilities32"], 0),
+                        util.safe_int(a["Abilities31"], 0)
                     ], [
-                        int(a["title"]["Abilities24"]),
-                        int(a["title"]["Abilities23"]),
-                        int(a["title"]["Abilities22"]),
-                        int(a["title"]["Abilities21"])
+                        util.safe_int(a["Abilities24"], 0),
+                        util.safe_int(a["Abilities23"], 0),
+                        util.safe_int(a["Abilities22"], 0),
+                        util.safe_int(a["Abilities21"], 0)
                     ], [
-                        int(a["title"]["Abilities14"]),
-                        int(a["title"]["Abilities13"]),
-                        int(a["title"]["Abilities12"]),
-                        int(a["title"]["Abilities11"])
+                        util.safe_int(a["Abilities14"], 0),
+                        util.safe_int(a["Abilities13"], 0),
+                        util.safe_int(a["Abilities12"], 0),
+                        util.safe_int(a["Abilities11"], 0)
                     ]
                 ]
             }
             for a in adventurer_info_list
+            if a["ElementalType"].lower() in elemental_types
         ]
 
         for adv in adventurers:
