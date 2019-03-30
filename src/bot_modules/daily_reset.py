@@ -41,24 +41,13 @@ def get_reset_message(day):
         "all Elemental Ruins"
     ]
 
-    # different void battles through march 30th, after which these are the rotations
-    # void_battles_available = [
-    #     "Steel Golem and Blazing Ghost",
-    #     "Raging Manticore and Obsidian Golem",
-    #     "Steel Golem and Frost Hermit",
-    #     "Void Zephyr and Obsidian Golem",
-    #     "Steel Golem and Blazing Ghost",
-    #     "Raging Manticore, Void Zephyr, and Frost Hermit",
-    #     "Steel Golem, Void Zephyr, Frost Hermit, Obsidian Golem, and Blazing Ghost"
-    # ]
-
     void_battles_available = [
-        "Steel Golem, Obsidian Golem, and Blazing Ghost",
-        "Raging Manticore, Frost Hermit, and Blazing Ghost",
-        "Steel Golem, Void Zephyr, Frost Hermit, and Obsidian Golem",
-        "Raging Manticore, Frost Hermit, Obsidian Golem, and Blazing Ghost",
-        "Steel Golem, Frost Hermit, and Blazing Ghost",
-        "Raging Manticore, Void Zephyr, Frost Hermit, and Obsidian Golem",
+        "Steel Golem and Blazing Ghost",
+        "Raging Manticore and Obsidian Golem",
+        "Steel Golem and Frost Hermit",
+        "Void Zephyr and Obsidian Golem",
+        "Steel Golem and Blazing Ghost",
+        "Raging Manticore, Void Zephyr, and Frost Hermit",
         "Steel Golem, Void Zephyr, Frost Hermit, Obsidian Golem, and Blazing Ghost"
     ]
 
