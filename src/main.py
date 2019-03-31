@@ -4,6 +4,7 @@ import logging
 import bot_modules
 import util
 import config
+import data
 
 from hook import Hook
 
@@ -36,6 +37,7 @@ async def on_ready():
     global initialised
     if not initialised:
         config.Config.init_configuration()
+        await data.update_repositories()
         await Hook.get("on_init")(client)
         initialised = True
         logger.info(client.user.name + "'s ready to go!")
