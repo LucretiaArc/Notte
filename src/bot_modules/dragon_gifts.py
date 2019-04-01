@@ -1,7 +1,7 @@
 import util
-import aiohttp
 import calendar
 import logging
+import data
 from hook import Hook
 
 logger = logging.getLogger(__name__)
@@ -35,45 +35,26 @@ async def update_gift_string():
     if reset_day >= 5:
         gift_target = "your favourite dragon!"
     else:
-        logger.info("Requesting today's preferred dragons")
-        url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Dragons&format=json&limit=500" \
-              "&fields=FullName,Rarity,ElementalTypeId" \
-              "&order_by=Rarity+DESC,+ElementalTypeId+ASC,+Id+DESC,+FullName+ASC" \
-              "&where=FavoriteType%3D" + str(reset_day + 1)
+        gift = data.DragonGift(reset_day + 1)
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                gifts_json = await response.json()
-                dragon_info_list = [d["title"] for d in gifts_json["cargoquery"]]
-                elemental_types = ["fire", "water", "wind", "light", "dark"]
+        dragons = [d for d in data.Dragon.dragons.values() if d.favourite_gift == gift and d.rarity and d.element]
 
-                dragon_info = []
-                for d in dragon_info_list:
-                    if util.safe_int(d["Rarity"], -1) == -1:
-                        continue
+        # sorting
+        dragons.sort(key=lambda d: d.full_name)  # by name
+        dragons.sort(key=lambda d: d.element.value)  # by element
+        dragons.sort(key=lambda d: d.rarity, reverse=True)  # by rarity
 
-                    if util.safe_int(d["ElementalTypeId"], -1) == -1:
-                        continue
+        current_rarity = 6
+        gift_target = "one of these dragons:"
+        for d in dragons:
+            gift_target += "\n"
+            if d.rarity < current_rarity:
+                current_rarity = d.rarity
+                gift_target += "\n" + current_rarity * util.get_emote("rarity"+str(current_rarity)) + "\n"
 
-                    dragon_info.append({
-                        "name": d["FullName"],
-                        "emote": util.get_emote(elemental_types[int(d["ElementalTypeId"])-1]),
-                        "rarity": d["Rarity"]
-                    })
-
-                current_rarity = 6
-                gift_target = "one of these dragons:"
-                for dragon in dragon_info:
-                    gift_target += "\n"
-                    if int(dragon["rarity"]) < current_rarity:
-                        current_rarity = int(dragon["rarity"])
-                        gift_target += "\n" + current_rarity * util.get_emote("rarity"+str(current_rarity)) + "\n"
-
-                    gift_target += dragon["emote"] + " " + dragon["name"]
+            gift_target += util.get_emote(d.element) + " " + d.full_name
 
     gift_string = "It's " + calendar.day_name[reset_day] + ", so give your best gift to " + gift_target
-
-    logger.info("Finished requesting today's preferred dragons")
 
 
 Hook.get("on_init").attach(on_init)

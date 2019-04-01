@@ -2,7 +2,7 @@ import data
 import re
 import discord
 import util
-import string
+import calendar
 from hook import Hook
 
 client = None
@@ -88,16 +88,84 @@ def get_adventurer_embed(adv: data.Adventurer):
     return embed
 
 
+def get_dragon_embed(dragon: data.Dragon):
+    embed_colours = [
+        0xFF0000,
+        0x0066FF,
+        0x00CC00,
+        0xFFBB00,
+        0xAA00DD
+    ]
+
+    # self.favourite_gift = None
+    #
+    # self.ability_1 = []
+    # self.ability_2 = []
+
+    header_str = "{0}{1} {2}{3}".format(
+        util.get_emote("rarity" + str(dragon.rarity)),
+        util.get_emote(dragon.element or ""),
+        dragon.name or "???",
+        "" if not dragon.title else ": "+dragon.title
+    )
+
+    stats_str = "{0} HP  /  {1} Str  /  {2} Might\n\n".format(
+        dragon.max_hp or "???",
+        dragon.max_str or "???",
+        dragon.max_might or "???"
+    )
+
+    skill_str = "**Skill:** {0}\n\n".format(
+        "???" if (not dragon.skill or not dragon.skill.name) else dragon.skill.name,
+    )
+
+    ability_str = "**Abilities**\n" + ("???" if (not dragon.ability_1 or not dragon.ability_1[-1].name) else dragon.ability_1[-1].name)
+    if dragon.ability_2 and dragon.ability_2[-1].name:
+        ability_str += "\n" + dragon.ability_2[-1].name
+    ability_str += "\n\n"
+
+    footer_str = "*Favourite gift:  {0}*\n*Obtained from:  {1}*\n*Release Date:  {2}*".format(
+        "???" if not dragon.favourite_gift else "{0} ({1})".format(str(dragon.favourite_gift), calendar.day_name[dragon.favourite_gift.value-1]),
+        dragon.obtained or "???",
+        dragon.release_date or "???"
+    )
+
+    desc = "".join((
+        stats_str,
+        skill_str,
+        ability_str,
+        footer_str
+    ))
+
+    if dragon.element is not None:
+        embed = discord.Embed(
+            title=header_str,
+            description=desc,
+            colour=embed_colours[dragon.element.value - 1]
+        )
+    else:
+        embed = discord.Embed(
+            title=header_str,
+            description=desc
+        )
+
+    return embed
+
+
 async def get_info(message):
     if "[[" in message.content:
         matches = re.findall(r"\[\[(.+?)\]\]", message.content.lower())
         if len(matches) > 0:
             found_result = False
             for search in matches:
-                adv_name = string.capwords(search)
-                if adv_name in data.Adventurer.adventurers:
-                    adv = data.Adventurer.adventurers[adv_name]
+                entry_name = search.lower()
+                if entry_name in data.Adventurer.adventurers:
+                    adv = data.Adventurer.adventurers[entry_name]
                     await client.send_message(message.channel, embed=get_adventurer_embed(adv))
+                    found_result = True
+                elif entry_name in data.Dragon.dragons:
+                    dragon = data.Dragon.dragons[entry_name]
+                    await client.send_message(message.channel, embed=get_dragon_embed(dragon))
                     found_result = True
 
             if not found_result:

@@ -21,6 +21,8 @@ async def update_repositories():
         await CoAbility.update_repository(session)
         logger.info("Updating adventurer repository")
         await Adventurer.update_repository(session)
+        logger.info("Updating dragon repository")
+        await Dragon.update_repository(session)
         logger.info("Updated all repositories.")
 
 
@@ -107,6 +109,18 @@ class Resistance(MultiValueEnum):
         return self.name.capitalize()
 
 
+class DragonGift(MultiValueEnum):
+    JUICY_MEAT = 1
+    KALEIDOSCOPE = 2
+    FLORAL_CIRCLET = 3
+    COMPELLING_BOOK = 4
+    MANA_ESSENCE = 5
+    GOLDEN_CHALICE = 6, 7
+
+    def __str__(self):
+        return self.name.replace("_", " ").title()
+
+
 class Adventurer:
     """
     Represents an adventurer and some of their associated data
@@ -144,7 +158,7 @@ class Adventurer:
             adv.title = a["Title"] or None
             adv.description = clean_wikitext(a["Description"]) or None
             adv.obtained = clean_wikitext(a["Obtain"]) or None
-            adv.release_date = a["ReleaseDate"] or None
+            adv.release_date = a["ReleaseDate"] if a["ReleaseDate"] and not a["ReleaseDate"].startswith("1970") else None
             wt_id = safe_int(a["WeaponTypeId"], None)
             adv.weapon_type = None if wt_id is None else WeaponType(wt_id)
             el_id = safe_int(a["ElementalTypeId"], None)
@@ -194,29 +208,20 @@ class Adventurer:
                 adv.coability += filter(None, [coability])
 
             # add skills
-            s1_name = a["Skill1Name"].strip()
-            s2_name = a["Skill2Name"].strip()
-            search_s1 = s1_name != ""
-            search_s2 = s2_name != ""
-            if search_s1 or search_s2:
-                for skill in Skill.skills.values():
-                    if not search_s1 and not search_s2:
-                        break
-                    if search_s1 and skill.name == s1_name:
-                        adv.skill_1 = skill
-                        search_s1 = False
-                    if search_s2 and skill.name == s2_name:
-                        adv.skill_2 = skill
-                        search_s2 = False
+            adv.skill_1 = Skill.skills.get(a["Skill1Name"].strip())
+            adv.skill_2 = Skill.skills.get(a["Skill2Name"].strip())
 
             # max might adds 500 for all max level skills, 120 for force strike level 2
-            adv.max_might = adv.max_hp + adv.max_str + 500 + 120 + \
-                adv.ability_1[-1].might + \
-                adv.ability_2[-1].might + \
-                adv.ability_3[-1].might + \
-                adv.coability[-1].might
+            try:
+                adv.max_might = adv.max_hp + adv.max_str + 500 + 120 + \
+                    adv.ability_1[-1].might + \
+                    adv.ability_2[-1].might + \
+                    adv.ability_3[-1].might + \
+                    adv.coability[-1].might
+            except (IndexError, TypeError):
+                adv.max_might = None
 
-            adventurers_new[adv.full_name] = adv
+            adventurers_new[adv.full_name.lower()] = adv
 
         cls.adventurers = adventurers_new
 
@@ -256,6 +261,98 @@ class Adventurer:
         return dump_dict
 
 
+class Dragon:
+    """
+    Represents a dragon and some of their associated data
+    """
+    dragons = {}
+
+    @classmethod
+    async def update_repository(cls, session: aiohttp.ClientSession):
+        base_url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Dragons&format=json&limit=500&fields=" \
+                   "FullName,Name,Title,ProfileText,MaxHp,MaxAtk,Rarity,ElementalTypeId," \
+                   "FavoriteType,Obtain,DATE(ReleaseDate)%3DReleaseDate," \
+                   "SkillName,Abilities11,Abilities12,Abilities21,Abilities22" \
+                   "&order_by=FullName&offset="
+
+        dragon_info_list = await process_cargo_query(session, base_url)
+
+        dragons_new = {}
+
+        safe_int = util.safe_int
+        for d in dragon_info_list:
+            dragon = cls()
+            dragon.full_name = d["FullName"] or None
+
+            if dragon.full_name is None:
+                continue
+
+            # basic info
+            dragon.name = d["Name"] or None
+            dragon.title = d["Title"] or None
+            dragon.description = d["ProfileText"] or None
+            dragon.obtained = clean_wikitext(d["Obtain"]) or None
+            dragon.release_date = d["ReleaseDate"] if d["ReleaseDate"] and not d["ReleaseDate"].startswith("1970") else None
+            dragon.rarity = safe_int(d["Rarity"], None)
+            dragon.max_hp = safe_int(d["MaxHp"], None)
+            dragon.max_str = safe_int(d["MaxAtk"], None)
+            el_id = safe_int(d["ElementalTypeId"], None)
+            dragon.element = None if el_id is None else Element(el_id)
+            gift_id = safe_int(d["FavoriteType"], None)
+            dragon.favourite_gift = None if gift_id is None else DragonGift(gift_id)
+
+            # add all abilities that exist
+            ability_slots = [dragon.ability_1, dragon.ability_2]
+            for slot in range(2):
+                for pos in range(2):
+                    ability = Ability.abilities.get(d["Abilities{0}{1}".format(slot+1, pos+1)])
+                    ability_slots[slot] += filter(None, [ability])
+
+            # add skill
+            dragon.skill = Skill.skills.get(d["SkillName"].strip())
+
+            # max might adds 300 for bond 30, 100 for skill 1
+            try:
+                dragon.max_might = dragon.max_hp + dragon.max_str + 300 + 100 + \
+                                   (0 if not dragon.ability_1 else dragon.ability_1[-1].might) + \
+                                   (0 if not dragon.ability_2 else dragon.ability_2[-1].might)
+            except (IndexError, TypeError):
+                dragon.max_might = None
+
+            dragons_new[dragon.full_name.lower()] = dragon
+
+        cls.dragons = dragons_new
+
+    def __init__(self):
+        self.full_name = ""
+        self.name = ""
+        self.title = ""
+        self.description = ""
+        self.obtained = ""
+        self.release_date = ""
+        self.rarity = 0
+        self.element = None
+        self.max_hp = 0
+        self.max_str = 0
+        self.max_might = 0
+        self.favourite_gift = None
+
+        self.skill = None
+        self.ability_1 = []
+        self.ability_2 = []
+
+    def dump(self):
+        dump_dict = vars(self)
+        dump_dict["element"] = str(dump_dict["element"])
+        dump_dict["favourite_gift"] = str(dump_dict["favourite_gift"])
+        if dump_dict["skill"] is not None:
+            dump_dict["skill"] = vars(dump_dict["skill"])
+            dump_dict["skill"]["levels"] = [vars(d) for d in dump_dict["skill"]["levels"]]
+        dump_dict["ability_1"] = [vars(d) for d in dump_dict["ability_1"]]
+        dump_dict["ability_2"] = [vars(d) for d in dump_dict["ability_2"]]
+        return dump_dict
+
+
 class Skill:
     """
     Represents a skill and some of its associated data
@@ -274,12 +371,11 @@ class Skill:
 
         safe_int = util.safe_int
         for s in skill_info_list:
-            sk_id = s["SkillId"] or None
-            if sk_id is None:
+            sk_name = s["Name"] or None
+            if sk_name is None:
                 continue
 
-            sk = cls(sk_id)
-            sk.name = s["Name"] or None
+            sk = cls(sk_name)
 
             s1 = SkillLevel(
                 clean_wikitext(s["Description1"]) or None,
@@ -300,13 +396,12 @@ class Skill:
             if s["HideLevel3"] != "1":
                 sk.levels.append(s3)
 
-            skills_new[sk_id] = sk
+            skills_new[sk.name] = sk
 
         cls.skills = skills_new
 
-    def __init__(self, id_str: str):
-        self.id_str = id_str
-        self.name = ""
+    def __init__(self, name: str):
+        self.name = name
         self.levels = []
 
 

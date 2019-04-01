@@ -101,7 +101,7 @@ async def resist_search(message, args):
         match_list = []
         for el in element_list:
             match_list.extend(list(filter(None, (
-                data.Adventurer.adventurers.get(adv_name) for adv_name in resist_data[res][el]
+                data.Adventurer.adventurers.get(adv_name.lower()) for adv_name in resist_data[res][el]
             ))))
 
         if len(match_list) > 0 or res in specified_resists:  # include resists specifically searched for
