@@ -7,6 +7,14 @@ from hook import Hook
 
 client = None
 
+embed_colours = [
+        0xE73031,
+        0x1790E0,
+        0x00D770,
+        0xFFBA10,
+        0xA738DE
+    ]
+
 
 async def on_init(discord_client):
     global client
@@ -16,14 +24,6 @@ async def on_init(discord_client):
 
 
 def get_adventurer_embed(adv: data.Adventurer):
-    embed_colours = [
-        0xFF0000,
-        0x0066FF,
-        0x00CC00,
-        0xFFBB00,
-        0xAA00DD
-    ]
-
     header_str = "{0}{1}{2} {3}: {4}".format(
         util.get_emote("rarity" + str(adv.rarity)),
         util.get_emote(adv.element or ""),
@@ -89,19 +89,6 @@ def get_adventurer_embed(adv: data.Adventurer):
 
 
 def get_dragon_embed(dragon: data.Dragon):
-    embed_colours = [
-        0xFF0000,
-        0x0066FF,
-        0x00CC00,
-        0xFFBB00,
-        0xAA00DD
-    ]
-
-    # self.favourite_gift = None
-    #
-    # self.ability_1 = []
-    # self.ability_2 = []
-
     header_str = "{0}{1} {2}{3}".format(
         util.get_emote("rarity" + str(dragon.rarity)),
         util.get_emote(dragon.element or ""),
