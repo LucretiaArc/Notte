@@ -2,6 +2,8 @@ import aiohttp
 import util
 import logging
 import mwparserfromhell
+import html
+import re
 from enum import Enum
 from aenum import MultiValueEnum
 
@@ -10,22 +12,33 @@ logger = logging.getLogger(__name__)
 
 async def update_repositories():
     async with aiohttp.ClientSession() as session:
+        logger.info("Updating skill repository")
+        await Skill.update_repository(session)
         logger.info("Updating ability repository")
         await Ability.update_repository(session)
         logger.info("Updating coability repository")
         await CoAbility.update_repository(session)
         logger.info("Updating adventurer repository")
         await Adventurer.update_repository(session)
-        logger.info("Updated all repositories")
+        logger.info("Updated all repositories.")
 
 
-def strip_wikicode(wikitext):
+def clean_wikitext(wikitext):
     """
-    Strips wikicode from wikitext, so that it can be displayed as plain text.
-    :param wikitext: wikitext to strip wikicode from
+    Applies several transformations to wikitext, so that it's suitable for display in a message. This function does NOT
+    sanitise the input, so the output of this method isn't safe for use in a HTML document. This method, in no
+    particular order:
+     - Strips spaces from the ends
+     - Strips wikicode
+     - Decodes HTML entities then strips HTML tags
+     - Reduces consecutive spaces
+    :param wikitext: wikitext to strip
     :return: string representing the stripped wikitext
     """
-    return mwparserfromhell.parse(wikitext).strip_code()
+    html_removed = re.sub(r"(<[^<]+?>)", "", html.unescape(wikitext))
+    wikicode_removed = mwparserfromhell.parse(html_removed).strip_code()
+    spaces_reduced = re.sub(r" {2,}", " ", wikicode_removed)
+    return spaces_reduced.strip()
 
 
 async def process_cargo_query(session: aiohttp.ClientSession, base_url: str, limit=500):
@@ -114,8 +127,8 @@ class Adventurer:
             adv.full_name = a["FullName"] or None
             adv.name = a["Name"] or None
             adv.title = a["Title"] or None
-            adv.description = strip_wikicode(a["Description"]) or None
-            adv.obtained = strip_wikicode(a["Obtain"]) or None
+            adv.description = clean_wikitext(a["Description"]) or None
+            adv.obtained = clean_wikitext(a["Obtain"]) or None
             adv.release_date = a["ReleaseDate"] or None
             wt_id = safe_int(a["WeaponTypeId"], None)
             adv.weapon_type = None if wt_id is None else WeaponType(wt_id)
@@ -153,8 +166,6 @@ class Adventurer:
             except TypeError:
                 adv.max_str = None
 
-            # TODO: max might, skills
-
             # add all abilities that exist
             ability_slots = [adv.ability_1, adv.ability_2, adv.ability_3]
             for slot in range(3):
@@ -167,8 +178,28 @@ class Adventurer:
                 coability = CoAbility.coabilities.get(a["ExAbilityData{0}".format(pos + 1)])
                 adv.coability += filter(None, [coability])
 
-            adv.max_hp = adv.max_hp + adv.max_str + adv.coability[-1].might + 120 + \
-                adv.ability_1[-1].might + adv.ability_2[-1].might + adv.ability_2[-1].might
+            # add skills
+            s1_name = a["Skill1Name"].strip()
+            s2_name = a["Skill2Name"].strip()
+            search_s1 = s1_name != ""
+            search_s2 = s2_name != ""
+            if search_s1 or search_s2:
+                for skill in Skill.skills.values():
+                    if not search_s1 and not search_s2:
+                        break
+                    if search_s1 and skill.name == s1_name:
+                        adv.skill_1 = skill
+                        search_s1 = False
+                    if search_s2 and skill.name == s2_name:
+                        adv.skill_2 = skill
+                        search_s2 = False
+
+            # max might adds 500 for all max level skills, 120 for force strike level 2
+            adv.max_might = adv.max_hp + adv.max_str + 500 + 120 + \
+                adv.ability_1[-1].might + \
+                adv.ability_2[-1].might + \
+                adv.ability_3[-1].might + \
+                adv.coability[-1].might
 
             adventurers_new[adv_id] = adv
 
@@ -189,13 +220,86 @@ class Adventurer:
         self.max_str = 0
         self.max_might = 0
 
-        # list of IDs
-        self.skill_1 = []
-        self.skill_2 = []
+        self.skill_1 = None
+        self.skill_2 = None
         self.ability_1 = []
         self.ability_2 = []
         self.ability_3 = []
         self.coability = []
+
+    def dump(self):
+        dump_dict = vars(self)
+        dump_dict["weapon_type"] = str(dump_dict["weapon_type"])
+        dump_dict["element"] = str(dump_dict["element"])
+        dump_dict["skill_1"] = vars(dump_dict["skill_1"])
+        dump_dict["skill_1"]["levels"] = [vars(d) for d in dump_dict["skill_1"]["levels"]]
+        dump_dict["skill_2"] = vars(dump_dict["skill_2"])
+        dump_dict["skill_2"]["levels"] = [vars(d) for d in dump_dict["skill_2"]["levels"]]
+        dump_dict["ability_1"] = [vars(d) for d in dump_dict["ability_1"]]
+        dump_dict["ability_2"] = [vars(d) for d in dump_dict["ability_2"]]
+        dump_dict["ability_3"] = [vars(d) for d in dump_dict["ability_3"]]
+        dump_dict["coability"] = [vars(d) for d in dump_dict["coability"]]
+        return dump_dict
+
+
+class Skill:
+    """
+    Represents a skill and some of its associated data
+    """
+    skills = {}
+
+    @classmethod
+    async def update_repository(cls, session: aiohttp.ClientSession):
+        base_url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Skills&format=json&limit=500&fields=" \
+                   "SkillId,Name,Description1,Description2,Description3,HideLevel3,Sp,SPLv2" \
+                   "&order_by=SkillId&offset="
+
+        skill_info_list = await process_cargo_query(session, base_url)
+
+        skills_new = {}
+
+        safe_int = util.safe_int
+        for s in skill_info_list:
+            sk_id = s["SkillId"] or None
+            if sk_id is None:
+                continue
+
+            sk = cls(sk_id)
+            sk.name = s["Name"] or None
+
+            s1 = SkillLevel(
+                clean_wikitext(s["Description1"]) or None,
+                safe_int(s["Sp"], None)
+            )
+
+            s2 = SkillLevel(
+                clean_wikitext(s["Description2"]) or None,
+                safe_int(s["SPLv2"], None)
+            )
+
+            s3 = SkillLevel(
+                clean_wikitext(s["Description3"]) or None,
+                safe_int(s["SPLv2"], None)
+            )
+
+            sk.levels = [s1, s2]
+            if s["HideLevel3"] != "1":
+                sk.levels.append(s3)
+
+            skills_new[sk_id] = sk
+
+        cls.skills = skills_new
+
+    def __init__(self, id_str: str):
+        self.id_str = id_str
+        self.name = ""
+        self.levels = []
+
+
+class SkillLevel:
+    def __init__(self, desc: str, sp: int):
+        self.description = desc
+        self.sp = sp
 
 
 class Ability:
@@ -222,7 +326,7 @@ class Ability:
 
             ab = cls(ab_id)
             ab.name = a["Name"] or None
-            ab.description = strip_wikicode(a["Details"]) or None
+            ab.description = clean_wikitext(a["Details"]) or None
             ab.might = safe_int(a["PartyPowerWeight"], None)
 
             abilities_new[ab_id] = ab
@@ -260,7 +364,7 @@ class CoAbility:
 
             cab = cls(cab_id)
             cab.name = c["Name"] or None
-            cab.description = strip_wikicode(c["Details"]) or None
+            cab.description = clean_wikitext(c["Details"]) or None
             cab.might = safe_int(c["PartyPowerWeight"], None)
 
             coabilities_new[cab_id] = cab
