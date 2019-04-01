@@ -15,6 +15,7 @@ client = discord.Client()
 bot_modules.import_modules()
 initialised = False
 
+config.Config.init_configuration()
 
 # Standard events:
 # on_init(client:discord.Client)
@@ -37,7 +38,6 @@ initialised = False
 async def on_ready():
     global initialised
     if not initialised:
-        config.Config.init_configuration()
         await data.update_repositories()
         await Hook.get("on_init")(client)
         initialised = True
@@ -49,12 +49,11 @@ async def on_ready():
 @client.event
 async def on_message(message: discord.Message):
     if not message.author.bot and (message.channel.is_private or message.channel.permissions_for(message.server.me).send_messages):
-        if not initialised:
-            await client.send_message(message.channel, "I've only just woken up, give me a second please!")
-            return
-
         token = config.get_response_token(message.server)
         if message.content.startswith(token):
+            if not initialised:
+                await client.send_message(message.channel, "I've only just woken up, give me a second please!")
+                return
             command = message.content[len(token):].split(" ")[0].lower()  # just command text
             args = message.content[len(token) + len(command) + 1:]
             if Hook.exists("public!"+command) and util.check_command_permissions(message, "public"):
@@ -66,6 +65,8 @@ async def on_message(message: discord.Message):
             else:
                 await client.send_message(message.channel, "I don't know that command, sorry! Use the `help` command for a list of commands.")
         else:
+            if not initialised:
+                return
             await Hook.get("on_message")(message)
             if discord.utils.find(lambda m: m.id == client.user.id, message.mentions) is not None:
                 await Hook.get("on_mention")(message)
