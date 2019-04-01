@@ -58,11 +58,16 @@ def get_adventurer_embed(adv: data.Adventurer):
 async def get_info(message):
     if "[[" in message.content:
         matches = re.findall(r"\[\[(.+?)\]\]", message.content.lower())
+        found_result = False
         for search in matches:
             adv_name = string.capwords(search)
             if adv_name in data.Adventurer.adventurers:
                 adv = data.Adventurer.adventurers[adv_name]
                 await client.send_message(message.channel, embed=get_adventurer_embed(adv))
+                found_result = True
+
+        if not found_result:
+            await client.send_message(message.channel, "I don't know what you're looking for. Try the name of an adventurer!")
 
 
 Hook.get("on_init").attach(on_init)
