@@ -6,6 +6,7 @@ import html
 import re
 from enum import Enum
 from aenum import MultiValueEnum
+from hook import Hook
 
 logger = logging.getLogger(__name__)
 
@@ -67,11 +68,11 @@ async def process_cargo_query(session: aiohttp.ClientSession, base_url: str, lim
 
 
 class Element(MultiValueEnum):
-    FIRE = 1, "Flame"
+    FIRE = 1, "Fire", "Flame"
     WATER = 2, "Water"
     WIND = 3, "Wind"
     LIGHT = 4, "Light"
-    DARK = 5, "Shadow"
+    DARK = 5, "Dark", "Shadow"
 
     def __str__(self):
         return self.name.capitalize()
@@ -86,6 +87,21 @@ class WeaponType(Enum):
     BOW = 6
     WAND = 7
     STAFF = 8
+
+    def __str__(self):
+        return self.name.capitalize()
+
+
+class Resistance(MultiValueEnum):
+    POISON = "Poison"
+    BURN = "Burn", "Burning"
+    FREEZE = "Freeze", "Freezing"
+    PARALYSIS = "Paralysis"
+    BLIND = "Blind", "Blindness"
+    STUN = "Stun"
+    CURSE = "Curse", "Curses"
+    BOG = "Bog"
+    SLEEP = "Sleep"
 
     def __str__(self):
         return self.name.capitalize()
@@ -117,14 +133,13 @@ class Adventurer:
 
         safe_int = util.safe_int
         for a in adventurer_info_list:
-            adv_id = a["Id"] or None
-            if adv_id is None:
+            adv = cls()
+            adv.full_name = a["FullName"] or None
+
+            if adv.full_name is None:
                 continue
 
-            adv = cls(adv_id)
-
             # basic info
-            adv.full_name = a["FullName"] or None
             adv.name = a["Name"] or None
             adv.title = a["Title"] or None
             adv.description = clean_wikitext(a["Description"]) or None
@@ -201,12 +216,11 @@ class Adventurer:
                 adv.ability_3[-1].might + \
                 adv.coability[-1].might
 
-            adventurers_new[adv_id] = adv
+            adventurers_new[adv.full_name] = adv
 
         cls.adventurers = adventurers_new
 
-    def __init__(self, id_str: str):
-        self.id_str = id_str
+    def __init__(self):
         self.full_name = ""
         self.name = ""
         self.title = ""
@@ -376,3 +390,6 @@ class CoAbility:
         self.name = ""
         self.description = ""
         self.might = 0
+
+
+Hook.get("download_data").attach(update_repositories)

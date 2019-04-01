@@ -56,10 +56,12 @@ def create_daily_hook(name, hour, minute=0, second=0):
 
 def get_emote(name) -> str:
     """
-    Gets the emote string for the given emote name
+    Gets the emote string for the given emote name. Emote names are case-insensitive.
+    An object may be passed in as an emote, where str(name) will be used as the name of the emote.
     :param name: name of the emote
     :return: emote string for the given name
     """
+    name = str(name).lower()
     emote_map = config.get_global_config()["emotes"]
     return emote_map[name] if name in emote_map else ""
 

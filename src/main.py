@@ -25,6 +25,7 @@ initialised = False
 # on_mention(message:discord.Message)
 # on_reset()
 # before_reset()
+# download_data()
 #
 # Command events:
 # public!COMMAND(message:discord.Message, args:string)
@@ -79,6 +80,7 @@ async def on_server_join(server):
 
 util.create_daily_hook("on_reset", 6, 0, 1)
 util.create_daily_hook("before_reset", 5, 59, 54)
+util.create_daily_hook("download_data", 5, 59, 0)
 
 
 client.run(os.environ["DISCORD_CLIENT_TOKEN"])
