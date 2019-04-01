@@ -60,7 +60,7 @@ def get_adventurer_embed(adv: data.Adventurer):
     except (IndexError, ValueError, TypeError):
         coability_str = "**Co-ability:** ???\n\n"
 
-    footer_str = "*Obtained from:  {0}*\n*Release Date:  {1}*".format(
+    footer_str = "*Obtained from:  {0}* \n*Release Date:  {1}* ".format(
         adv.obtained or "???",
         adv.release_date or "???"
     )
@@ -124,7 +124,7 @@ def get_dragon_embed(dragon: data.Dragon):
         ability_str += "\n" + dragon.ability_2[-1].name
     ability_str += "\n\n"
 
-    footer_str = "*Favourite gift:  {0}*\n*Obtained from:  {1}*\n*Release Date:  {2}*".format(
+    footer_str = "*Favourite gift:  {0}* \n*Obtained from:  {1}* \n*Release Date:  {2}* ".format(
         "???" if not dragon.favourite_gift else "{0} ({1})".format(str(dragon.favourite_gift), calendar.day_name[dragon.favourite_gift.value-1]),
         dragon.obtained or "???",
         dragon.release_date or "???"
@@ -169,7 +169,7 @@ async def get_info(message):
                     found_result = True
 
             if not found_result:
-                await client.send_message(message.channel, "I don't know what you're looking for. Try the name of an adventurer!")
+                await client.send_message(message.channel, "I don't know what you're looking for. Try the name of an adventurer or dragon!")
 
 
 Hook.get("on_init").attach(on_init)
