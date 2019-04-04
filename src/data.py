@@ -4,6 +4,8 @@ import logging
 import mwparserfromhell
 import html
 import re
+import discord
+import calendar
 from enum import Enum
 from aenum import MultiValueEnum
 from hook import Hook
@@ -78,6 +80,9 @@ class Element(MultiValueEnum):
 
     def __str__(self):
         return self.name.capitalize()
+
+    def get_colour(self):
+        return [0xE73031, 0x1790E0, 0x00D770, 0xFFBA10, 0xA738DE][self.value-1]
 
 
 class WeaponType(Enum):
@@ -246,19 +251,76 @@ class Adventurer:
         self.ability_3 = []
         self.coability = []
 
-    def dump(self):
-        dump_dict = vars(self)
-        dump_dict["weapon_type"] = str(dump_dict["weapon_type"])
-        dump_dict["element"] = str(dump_dict["element"])
-        dump_dict["skill_1"] = vars(dump_dict["skill_1"])
-        dump_dict["skill_1"]["levels"] = [vars(d) for d in dump_dict["skill_1"]["levels"]]
-        dump_dict["skill_2"] = vars(dump_dict["skill_2"])
-        dump_dict["skill_2"]["levels"] = [vars(d) for d in dump_dict["skill_2"]["levels"]]
-        dump_dict["ability_1"] = [vars(d) for d in dump_dict["ability_1"]]
-        dump_dict["ability_2"] = [vars(d) for d in dump_dict["ability_2"]]
-        dump_dict["ability_3"] = [vars(d) for d in dump_dict["ability_3"]]
-        dump_dict["coability"] = [vars(d) for d in dump_dict["coability"]]
-        return dump_dict
+    def __str__(self):
+        return "{0}: {1} ({2})".format(self.name, self.title, self.full_name)
+
+    def get_embed(self) -> discord.Embed:
+        """
+        Gets a discord embed representing this adventurer.
+        :return: discord.Embed with information about the adventurer.
+        """
+        header_str = "{0}{1}{2} {3}: {4}".format(
+            util.get_emote("rarity" + str(self.rarity)),
+            util.get_emote(self.element or ""),
+            util.get_emote(self.weapon_type or ""),
+            self.name or "???",
+            self.title or "???"
+        )
+
+        stats_str = "{0} HP  /  {1} Str  /  {2} Might\n\n".format(
+            self.max_hp or "???",
+            self.max_str or "???",
+            self.max_might or "???"
+        )
+
+        skill_str = "**Skills**\n{0}\n{1}\n\n".format(
+            "???" if (not self.skill_1 or not self.skill_1.name) else self.skill_1.name,
+            "???" if (not self.skill_2 or not self.skill_2.name) else self.skill_2.name,
+        )
+
+        ability_str = "**Abilities**\n{0}\n{1}\n{2}\n\n".format(
+            "???" if (not self.ability_1 or not self.ability_1[-1].name) else self.ability_1[-1].name,
+            "???" if (not self.ability_2 or not self.ability_2[-1].name) else self.ability_2[-1].name,
+            "???" if (not self.ability_3 or not self.ability_3[-1].name) else self.ability_3[-1].name
+        )
+
+        try:
+            cab_min = self.coability[0].name or "???"
+            cab_max = self.coability[-1].name or "???"
+            coability_str = "**Co-ability:** {0}({1}-{2})%\n\n".format(
+                cab_min[:cab_min.index("+") + 1],
+                re.findall(r"(\d+)%", cab_min)[0],
+                re.findall(r"(\d+)%", cab_max)[0]
+            )
+        except (IndexError, ValueError, TypeError):
+            coability_str = "**Co-ability:** ???\n\n"
+
+        footer_str = "*Obtained from:  {0}* \n*Release Date:  {1}* ".format(
+            self.obtained or "???",
+            self.release_date or "???"
+        )
+
+        desc = "".join((
+            stats_str,
+            skill_str,
+            ability_str,
+            coability_str,
+            footer_str
+        ))
+
+        if self.element is not None:
+            embed = discord.Embed(
+                title=header_str,
+                description=desc,
+                colour=self.element.get_colour()
+            )
+        else:
+            embed = discord.Embed(
+                title=header_str,
+                description=desc
+            )
+
+        return embed
 
 
 class Dragon:
@@ -341,16 +403,64 @@ class Dragon:
         self.ability_1 = []
         self.ability_2 = []
 
-    def dump(self):
-        dump_dict = vars(self)
-        dump_dict["element"] = str(dump_dict["element"])
-        dump_dict["favourite_gift"] = str(dump_dict["favourite_gift"])
-        if dump_dict["skill"] is not None:
-            dump_dict["skill"] = vars(dump_dict["skill"])
-            dump_dict["skill"]["levels"] = [vars(d) for d in dump_dict["skill"]["levels"]]
-        dump_dict["ability_1"] = [vars(d) for d in dump_dict["ability_1"]]
-        dump_dict["ability_2"] = [vars(d) for d in dump_dict["ability_2"]]
-        return dump_dict
+    def __str__(self):
+        return "{0}: {1} ({2})".format(self.name, self.title, self.full_name) if self.title else self.full_name
+
+    def get_embed(self) -> discord.Embed:
+        """
+        Gets a discord embed representing this dragon.
+        :return: discord.Embed with information about the dragon.
+        """
+        header_str = "{0}{1} {2}{3}".format(
+            util.get_emote("rarity" + str(self.rarity)),
+            util.get_emote(self.element or ""),
+            self.name or "???",
+            "" if not self.title else ": " + self.title
+        )
+
+        stats_str = "{0} HP  /  {1} Str  /  {2} Might\n\n".format(
+            self.max_hp or "???",
+            self.max_str or "???",
+            self.max_might or "???"
+        )
+
+        skill_str = "**Skill:** {0}\n\n".format(
+            "???" if (not self.skill or not self.skill.name) else self.skill.name,
+        )
+
+        ability_str = "**Abilities**\n" + (
+            "???" if (not self.ability_1 or not self.ability_1[-1].name) else self.ability_1[-1].name)
+        if self.ability_2 and self.ability_2[-1].name:
+            ability_str += "\n" + self.ability_2[-1].name
+        ability_str += "\n\n"
+
+        footer_str = "*Favourite gift:  {0}* \n*Obtained from:  {1}* \n*Release Date:  {2}* ".format(
+            "???" if not self.favourite_gift else "{0} ({1})".format(str(self.favourite_gift), calendar.day_name[
+                self.favourite_gift.value - 1]),
+            self.obtained or "???",
+            self.release_date or "???"
+        )
+
+        desc = "".join((
+            stats_str,
+            skill_str,
+            ability_str,
+            footer_str
+        ))
+
+        if self.element is not None:
+            embed = discord.Embed(
+                title=header_str,
+                description=desc,
+                colour=self.element.get_colour()
+            )
+        else:
+            embed = discord.Embed(
+                title=header_str,
+                description=desc
+            )
+
+        return embed
 
 
 class Skill:
