@@ -4,7 +4,6 @@ import config
 import logging
 from hook import Hook
 import Levenshtein
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -63,11 +62,9 @@ async def get_info(message):
                 await client.send_message(message.channel, "Too many queries, only the first three will be shown.")
 
             for match in matches[:3]:
-                if len(match) > 50:
+                if len(match) > 30:
                     await client.send_message(message.channel, "That's way too long, I'm not looking for that.")
                     continue
-
-                t1 = time.clock()
 
                 search_term = match.lower()
                 dist = Levenshtein.distance
@@ -81,7 +78,6 @@ async def get_info(message):
                 match_len = max(len(best_match[2]), len(search_term))
                 match_threshold = 0.4 + 0.2*match_len
 
-                print(time.clock() - t1)
                 if best_match[1] <= match_threshold:
                     await client.send_message(message.channel, embed=best_match[0].get_embed())
                 else:
