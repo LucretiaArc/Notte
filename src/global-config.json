@@ -51,5 +51,73 @@
     "bow": "<:weapon_bow:562156792751325184>",
     "wand": "<:weapon_wand:562156792872697892>",
     "staff": "<:weapon_staff:562156792600330250>"
+  },
+  "query_shortcuts": {
+    "adventurer": {
+      "hilde":    "hildegarde",
+      "xain": "xainfried",
+      "eli": "elisanne",
+      "hein": "heinwald",
+      "eze": "ezelith",
+      "nef": "nefaria",
+      "mari": "maribelle",
+      "lucre": "lucretia",
+      "juli": "julietta",
+
+      "hedward": "halloween edward",
+      "helisanne": "halloween elisanne",
+      "heli": "halloween elisanne",
+      "halthemia": "halloween althemia",
+
+      "dycleo": "dragonyule cleo",
+      "christmas cleo": "dragonyule cleo",
+      "dynefaria": "dragonyule nefaria",
+      "dynef": "dragonyule nefaria",
+      "xnef": "dragonyule nefaria",
+      "christmas nefaria": "dragonyule nefaria",
+      "christmas nef": "dragonyule nefaria",
+      "dyxander": "dragonyule xander",
+      "christmas xander": "dragonyule xander",
+
+      "vilde": "valentine's hildegarde",
+      "vildegarde": "valentine's hildegarde",
+      "vhildegarde": "valentine's hildegarde",
+      "vezelith": "valentine's hildegarde",
+      "veze": "valentine's hildegarde",
+      "vorion": "valentine's orion",
+
+      "sarisse": "gala sarisse",
+      "granzal": "gala ranzal"
+    },
+    "dragon": {
+      "jeanne": "jeanne d'arc",
+      "cerb": "cerberus",
+      "prom": "prometheus",
+      "levi": "leviathan",
+      "vody": "vodyanoy",
+      "poli": "poli\u02BBahu",
+      "posei": "poseidon",
+      "nyathot": "nyarlathotep",
+      "jugg": "juggernaut",
+
+      "brun": "brunhilda",
+      "hbh": "high brunhilda",
+      "hbrun": "high brunhilda",
+      "hbrunhilda": "high brunhilda",
+
+      "mid": "midgardsormr",
+      "midgard": "midgardsormr",
+      "hms": "high midgardsormr",
+      "hmid": "high midgardsormr",
+      "hmidgard": "high midgardsormr",
+      "hmidgardsormr": "high midgardsormr",
+
+      "hsilke": "halloween silke",
+
+      "dyjeanne": "dragonyule jeanne"
+    }
+  },
+  "query_messages": {
+
   }
 }
