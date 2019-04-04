@@ -33,7 +33,7 @@ async def update_gift_string():
     reset_day = util.get_reset_day()
 
     if reset_day >= 5:
-        gift_target = "your favourite dragon!"
+        gift_target = "your favourite dragon! " + util.get_emote("notte_smile")
     else:
         gift = data.DragonGift(reset_day + 1)
 

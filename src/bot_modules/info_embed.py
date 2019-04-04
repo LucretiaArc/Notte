@@ -2,8 +2,10 @@ import data
 import re
 import config
 import logging
-from hook import Hook
+import util
 import Levenshtein
+import discord
+from hook import Hook
 
 logger = logging.getLogger(__name__)
 
@@ -51,29 +53,37 @@ async def get_info(message):
     if "[[" in message.content:
         matches = re.findall(r"\[\[(.+?)\]\]", message.content.lower())
         if len(matches) > 0:
+            query_messages = config.get_global_config()["query_messages"]
             search_locations = [
+                shortcuts,
                 data.Adventurer.adventurers,
                 data.Dragon.dragons,
-                data.Wyrmprint.wyrmprints,
-                shortcuts
+                data.Wyrmprint.wyrmprints
             ]
 
             if len(matches) > 3:
                 await client.send_message(message.channel, "Too many queries, only the first three will be shown.")
 
             for match in matches[:3]:
+                search_term = match.lower()
                 if len(match) > 30:
-                    await client.send_message(message.channel, "That's way too long, I'm not looking for that.")
+                    await client.send_message(message.channel, "That's way too long, I'm not looking for that! " + util.get_emote("notte_stop"))
                     continue
 
-                search_term = match.lower()
+                if search_term in query_messages:
+                    await client.send_message(message.channel, embed=discord.Embed(
+                        title=query_messages[search_term][0],
+                        description=query_messages[search_term][1]
+                    ))
+                    continue
+
                 dist = Levenshtein.distance
-                best_match = (None, 100, "")  # (matching item, match percent, match string)
+                best_match = (None, 100, "")  # (matching item, match distance, match string)
                 for loc in search_locations:
-                    for key, ent in loc.items():
+                    for key in sorted(loc.keys()):
                         d = dist(search_term, key)
                         if d < best_match[1]:
-                            best_match = (ent, d, key)
+                            best_match = (loc[key], d, key)
 
                 match_len = max(len(best_match[2]), len(search_term))
                 match_threshold = 0.4 + 0.2*match_len

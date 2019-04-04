@@ -3,21 +3,27 @@
   "owner_name": "Struct",
   "report_channel": "559212035401842718",
   "random_statuses": [
-    ["Dragalia Lost", 1],
-    ["Fire Emblem: Heroes", 1],
-    ["MI SE TE YO", 1],
+    ["Dragalia Lost", 3],
+    ["Void Battles", 2],
+    ["Elemental Ruins", 2],
+    ["Avenue to Power", 2],
+    ["Avenue to Fortune", 2],
+    ["Imperial Onslaught", 2],
+    ["Dragon Trials", 2],
+    ["High Midgardsormr: Prelude", 1],
     ["High Midgardsormr", 1],
     ["High Brunhilda", 1],
-    ["Void Battles", 1],
-    ["Elemental Ruins", 1],
-    ["Avenue to Power", 1],
-    ["Avenue to Fortune", 1],
-    ["High Midgardsormr: Prelude", 1],
-    ["Imperial Onslaught", 1],
-    ["Dragon Trials", 1],
-    ["Lily against Blazing Ghost", 1],
-    ["with an owl", 1],
-    ["regular ass midgard", 1]
+    ["High Mercury", 1],
+    ["Fire Emblem: Heroes", 0.5],
+    ["MI SE TE YO", 0.5],
+    ["Lily against Blazing Ghost", 0.3],
+    ["with an owl", 0.3],
+    ["regular ass midgard", 0.2],
+    ["against the triangle", 0.2],
+    ["Dragalia Lost on the Nintendo Switch", 0.2],
+    ["Low Midgardsormr", 0.2],
+    ["the next event", 0.1],
+    ["Notte's Slumber Shot", 0.03]
   ],
   "emotes": {
     "blank": "<:blank:558990003292864513>",
@@ -52,7 +58,10 @@
     "lance": "<:weapon_lance:562156792398741515>",
     "bow": "<:weapon_bow:562156792751325184>",
     "wand": "<:weapon_wand:562156792872697892>",
-    "staff": "<:weapon_staff:562156792600330250>"
+    "staff": "<:weapon_staff:562156792600330250>",
+
+    "notte_smile": "<:NotteSmile:563367918277230603>",
+    "notte_stop": "<:NotteNO:563372938842079232>"
   },
   "query_shortcuts": {
     "adventurer": {
@@ -127,6 +136,9 @@
     }
   },
   "query_messages": {
-
+    "bog": ["Bog", "<:affliction_bog:558978733462126594> Bog is an affliction which reduces movement speed by 50% and increases damage received by 50% for a limited amount of time."],
+    "notte": ["Notte", "That's me! <:NotteSmile:563367918277230603>"],
+    "struct": ["Struct", "That's the guy that made me! Use the `report` command if you want to tell him something."],
+    "alphadk": ["AlphaDK", "A close friend that helped Struct out a lot when he was making me!"]
   }
 }

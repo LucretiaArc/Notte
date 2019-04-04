@@ -13,7 +13,7 @@ async def on_init(discord_client):
 
 async def handle_message(message):
     responses = {
-        "thanks notte": "You're welcome!",
+        "thanks notte": util.get_emote("notte_smile") + " You're welcome!",
         "what is bog?": util.get_emote("bog") + " **Bog** is an affliction which reduces movement speed by 50% and increases damage received by 50% for a limited amount of time."
     }
     content = message.content.lower()
