@@ -2,9 +2,8 @@ import data
 import re
 import config
 import logging
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
 from hook import Hook
+import Levenshtein
 import time
 
 logger = logging.getLogger(__name__)
@@ -64,24 +63,29 @@ async def get_info(message):
                 await client.send_message(message.channel, "Too many queries, only the first three will be shown.")
 
             for match in matches[:3]:
-                query_start_time = time.clock()
                 if len(match) > 50:
                     await client.send_message(message.channel, "That's way too long, I'm not looking for that.")
+                    continue
+
+                t1 = time.clock()
 
                 search_term = match.lower()
-
-                best_match = (None, 0, "")  # (matching item, match percent, match string)
+                dist = Levenshtein.distance
+                best_match = (None, 100, "")  # (matching item, match percent, match string)
                 for loc in search_locations:
-                    result = process.extractOne(search_term, loc.keys(), scorer=fuzz.ratio)
-                    if result[1] > best_match[1]:
-                        best_match = (loc.get(result[0]), result[1], result[0])
+                    for key, ent in loc.items():
+                        d = dist(search_term, key)
+                        if d < best_match[1]:
+                            best_match = (ent, d, key)
 
                 match_len = max(len(best_match[2]), len(search_term))
-                match_threshold = min(80.0, 90 - 60*2**(-0.45*match_len))
-                if best_match[1] >= match_threshold:
+                match_threshold = 0.4 + 0.2*match_len
+
+                print(time.clock() - t1)
+                if best_match[1] <= match_threshold:
                     await client.send_message(message.channel, embed=best_match[0].get_embed())
                 else:
-                    if best_match[1] > 50:
+                    if best_match[1] < match_threshold*2:
                         if best_match[2] in shortcuts:
                             await client.send_message(
                                 message.channel,
