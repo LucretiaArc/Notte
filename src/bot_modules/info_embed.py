@@ -82,7 +82,18 @@ async def get_info(message):
                     await client.send_message(message.channel, embed=best_match[0].get_embed())
                 else:
                     if best_match[1] > 0:
-                        await client.send_message(message.channel, "I'm not sure what \"{0}\" is, did you mean \"{1}\"?".format(search_term, best_match[2]))
+                        if best_match[2] in shortcuts:
+                            await client.send_message(
+                                message.channel,
+                                "I'm not sure what \"{0}\" is, did you mean \"{1}\"? "
+                                "If so, you can use the shortcut \"{2}\".".format(
+                                    search_term,
+                                    str(best_match[0]).lower(),
+                                    best_match[2]
+                                )
+                            )
+                        else:
+                            await client.send_message(message.channel, "I'm not sure what \"{0}\" is, did you mean \"{1}\"?".format(search_term, best_match[2]))
                     else:
                         await client.send_message(message.channel, "I'm not sure what \"{0}\" is.".format(search_term))
 

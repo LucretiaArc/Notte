@@ -153,14 +153,14 @@ class Adventurer:
         safe_int = util.safe_int
         for a in adventurer_info_list:
             adv = cls()
-            adv.full_name = a["FullName"] or None
+            adv.full_name = clean_wikitext(a["FullName"]) or None
 
             if adv.full_name is None:
                 continue
 
             # basic info
-            adv.name = a["Name"] or None
-            adv.title = a["Title"] or None
+            adv.name = clean_wikitext(a["Name"]) or None
+            adv.title = clean_wikitext(a["Title"]) or None
             adv.description = clean_wikitext(a["Description"]) or None
             adv.obtained = clean_wikitext(a["Obtain"]) or None
             adv.release_date = a["ReleaseDate"] if a["ReleaseDate"] and not a["ReleaseDate"].startswith("1970") else None
@@ -204,17 +204,17 @@ class Adventurer:
             ability_slots = [adv.ability_1, adv.ability_2, adv.ability_3]
             for slot in range(3):
                 for pos in range(4):
-                    ability = Ability.abilities.get(a["Abilities{0}{1}".format(slot+1, pos+1)])
+                    ability = Ability.abilities.get(clean_wikitext(a["Abilities{0}{1}".format(slot+1, pos+1)]))
                     ability_slots[slot] += filter(None, [ability])
 
             # add all coabilities that exist
             for pos in range(5):
-                coability = CoAbility.coabilities.get(a["ExAbilityData{0}".format(pos + 1)])
+                coability = CoAbility.coabilities.get(clean_wikitext(a["ExAbilityData{0}".format(pos + 1)]))
                 adv.coability += filter(None, [coability])
 
             # add skills
-            adv.skill_1 = Skill.skills.get(a["Skill1Name"].strip())
-            adv.skill_2 = Skill.skills.get(a["Skill2Name"].strip())
+            adv.skill_1 = Skill.skills.get(clean_wikitext(a["Skill1Name"]))
+            adv.skill_2 = Skill.skills.get(clean_wikitext(a["Skill2Name"]))
 
             # max might adds 500 for all max level skills, 120 for force strike level 2
             try:
@@ -252,7 +252,7 @@ class Adventurer:
         self.coability = []
 
     def __str__(self):
-        return "{0}: {1} ({2})".format(self.name, self.title, self.full_name)
+        return self.full_name
 
     def get_embed(self) -> discord.Embed:
         """
@@ -344,15 +344,15 @@ class Dragon:
         safe_int = util.safe_int
         for d in dragon_info_list:
             dragon = cls()
-            dragon.full_name = d["FullName"] or None
+            dragon.full_name = clean_wikitext(d["FullName"]) or None
 
             if dragon.full_name is None:
                 continue
 
             # basic info
-            dragon.name = d["Name"] or None
-            dragon.title = d["Title"] or None
-            dragon.description = d["ProfileText"] or None
+            dragon.name = clean_wikitext(d["Name"]) or None
+            dragon.title = clean_wikitext(d["Title"]) or None
+            dragon.description = clean_wikitext(d["ProfileText"]) or None
             dragon.obtained = clean_wikitext(d["Obtain"]) or None
             dragon.release_date = d["ReleaseDate"] if d["ReleaseDate"] and not d["ReleaseDate"].startswith("1970") else None
             dragon.rarity = safe_int(d["Rarity"], None)
@@ -367,11 +367,11 @@ class Dragon:
             ability_slots = [dragon.ability_1, dragon.ability_2]
             for slot in range(2):
                 for pos in range(2):
-                    ability = Ability.abilities.get(d["Abilities{0}{1}".format(slot+1, pos+1)])
+                    ability = Ability.abilities.get(clean_wikitext(d["Abilities{0}{1}".format(slot+1, pos+1)]))
                     ability_slots[slot] += filter(None, [ability])
 
             # add skill
-            dragon.skill = Skill.skills.get(d["SkillName"].strip())
+            dragon.skill = Skill.skills.get(clean_wikitext(d["SkillName"]))
 
             # max might adds 300 for bond 30, 100 for skill 1
             try:
@@ -404,7 +404,7 @@ class Dragon:
         self.ability_2 = []
 
     def __str__(self):
-        return "{0}: {1} ({2})".format(self.name, self.title, self.full_name) if self.title else self.full_name
+        return self.full_name
 
     def get_embed(self) -> discord.Embed:
         """
@@ -481,7 +481,7 @@ class Skill:
 
         safe_int = util.safe_int
         for s in skill_info_list:
-            sk_name = s["Name"] or None
+            sk_name = clean_wikitext(s["Name"]) or None
             if sk_name is None:
                 continue
 
@@ -544,7 +544,7 @@ class Ability:
                 continue
 
             ab = cls(ab_id)
-            ab.name = a["Name"] or None
+            ab.name = clean_wikitext(a["Name"]) or None
             ab.description = clean_wikitext(a["Details"]) or None
             ab.might = safe_int(a["PartyPowerWeight"], None)
 
@@ -582,7 +582,7 @@ class CoAbility:
                 continue
 
             cab = cls(cab_id)
-            cab.name = c["Name"] or None
+            cab.name = clean_wikitext(c["Name"]) or None
             cab.description = clean_wikitext(c["Details"]) or None
             cab.might = safe_int(c["PartyPowerWeight"], None)
 
