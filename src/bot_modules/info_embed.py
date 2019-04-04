@@ -22,7 +22,8 @@ async def on_init(discord_client):
     shortcut_config = config.get_global_config()["query_shortcuts"]
     entity_maps = {
         "adventurer": data.Adventurer.adventurers,
-        "dragon": data.Dragon.dragons
+        "dragon": data.Dragon.dragons,
+        "wyrmprint": data.Wyrmprint.wyrmprints
     }
 
     for etype in entity_maps:
@@ -55,6 +56,7 @@ async def get_info(message):
             search_locations = [
                 data.Adventurer.adventurers,
                 data.Dragon.dragons,
+                data.Wyrmprint.wyrmprints,
                 shortcuts
             ]
 
@@ -68,8 +70,6 @@ async def get_info(message):
 
                 search_term = match.lower()
 
-                # check shortcuts
-
                 best_match = (None, 0, "")  # (matching item, match percent, match string)
                 for loc in search_locations:
                     result = process.extractOne(search_term, loc.keys(), scorer=fuzz.ratio)
@@ -81,7 +81,7 @@ async def get_info(message):
                 if best_match[1] >= match_threshold:
                     await client.send_message(message.channel, embed=best_match[0].get_embed())
                 else:
-                    if best_match[1] > 0:
+                    if best_match[1] > 50:
                         if best_match[2] in shortcuts:
                             await client.send_message(
                                 message.channel,
@@ -96,8 +96,6 @@ async def get_info(message):
                             await client.send_message(message.channel, "I'm not sure what \"{0}\" is, did you mean \"{1}\"?".format(search_term, best_match[2]))
                     else:
                         await client.send_message(message.channel, "I'm not sure what \"{0}\" is.".format(search_term))
-
-                logger.info("Info query for \"{0}\" took {1} seconds".format(search_term, time.clock() - query_start_time))
 
 
 Hook.get("on_init").attach(on_init)

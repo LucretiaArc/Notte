@@ -25,6 +25,8 @@ async def update_repositories():
         await Adventurer.update_repository(session)
         logger.info("Updating dragon repository")
         await Dragon.update_repository(session)
+        logger.info("Updating wyrmprint repository")
+        await Wyrmprint.update_repository(session)
         logger.info("Updated all repositories.")
 
 
@@ -202,7 +204,7 @@ class Adventurer:
 
             # add all abilities that exist
             ability_slots = [adv.ability_1, adv.ability_2, adv.ability_3]
-            for slot in range(3):
+            for slot in range(len(ability_slots)):
                 for pos in range(4):
                     ability = Ability.abilities.get(clean_wikitext(a["Abilities{0}{1}".format(slot+1, pos+1)]))
                     ability_slots[slot] += filter(None, [ability])
@@ -365,7 +367,7 @@ class Dragon:
 
             # add all abilities that exist
             ability_slots = [dragon.ability_1, dragon.ability_2]
-            for slot in range(2):
+            for slot in range(len(ability_slots)):
                 for pos in range(2):
                     ability = Ability.abilities.get(clean_wikitext(d["Abilities{0}{1}".format(slot+1, pos+1)]))
                     ability_slots[slot] += filter(None, [ability])
@@ -453,6 +455,125 @@ class Dragon:
                 title=header_str,
                 description=desc,
                 colour=self.element.get_colour()
+            )
+        else:
+            embed = discord.Embed(
+                title=header_str,
+                description=desc
+            )
+
+        return embed
+
+
+class Wyrmprint:
+    """
+    Represents a wyrmprint and some of its associated data
+    """
+    wyrmprints = {}
+
+    @classmethod
+    async def update_repository(cls, session: aiohttp.ClientSession):
+        base_url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Wyrmprints&format=json&limit=500&fields=" \
+                   "Name,Rarity,MaxHp,MaxAtk,Obtain,DATE(ReleaseDate)%3DReleaseDate," \
+                   "Abilities11,Abilities12," \
+                   "Abilities21,Abilities22," \
+                   "Abilities31,Abilities32" \
+                   "&order_by=Name&offset="
+
+        wyrmprint_info_list = await process_cargo_query(session, base_url)
+
+        wyrmprints_new = {}
+
+        safe_int = util.safe_int
+        for wp in wyrmprint_info_list:
+            wyrmprint = cls()
+            wyrmprint.name = clean_wikitext(wp["Name"]) or None
+
+            if wyrmprint.name is None:
+                continue
+
+            # basic info
+            wyrmprint.rarity = safe_int(wp["Rarity"], None)
+            wyrmprint.max_hp = safe_int(wp["MaxHp"], None)
+            wyrmprint.max_str = safe_int(wp["MaxAtk"], None)
+            wyrmprint.obtained = clean_wikitext(wp["Obtain"]) or None
+            wyrmprint.release_date = wp["ReleaseDate"] if wp["ReleaseDate"] and not wp["ReleaseDate"].startswith("1970") else None
+
+            # add all abilities that exist
+            ability_slots = [wyrmprint.ability_1, wyrmprint.ability_2, wyrmprint.ability_3]
+            for slot in range(len(ability_slots)):
+                for pos in range(2):
+                    ability = Ability.abilities.get(clean_wikitext(wp["Abilities{0}{1}".format(slot+1, pos+1)]))
+                    ability_slots[slot] += filter(None, [ability])
+
+            try:
+                wyrmprint.max_might = wyrmprint.max_hp + wyrmprint.max_str + \
+                                   (0 if not wyrmprint.ability_1 else wyrmprint.ability_1[-1].might) + \
+                                   (0 if not wyrmprint.ability_2 else wyrmprint.ability_2[-1].might) + \
+                                   (0 if not wyrmprint.ability_3 else wyrmprint.ability_3[-1].might)
+            except (IndexError, TypeError):
+                wyrmprint.max_might = None
+
+            wyrmprints_new[wyrmprint.name.lower()] = wyrmprint
+
+        cls.wyrmprints = wyrmprints_new
+
+    def __init__(self):
+        self.name = ""
+        self.rarity = 0
+        self.obtained = ""
+        self.release_date = ""
+        self.max_hp = 0
+        self.max_str = 0
+        self.max_might = 0
+
+        self.ability_1 = []
+        self.ability_2 = []
+        self.ability_3 = []
+
+    def __str__(self):
+        return self.name
+
+    def get_embed(self) -> discord.Embed:
+        """
+        Gets a discord embed representing this wyrmprint.
+        :return: discord.Embed with information about the wyrmprint.
+        """
+        header_str = "{0} {1}".format(
+            util.get_emote("rarity" + str(self.rarity)),
+            self.name or "???",
+        )
+
+        stats_str = "{0} HP  /  {1} Str  /  {2} Might\n\n".format(
+            self.max_hp or "???",
+            self.max_str or "???",
+            self.max_might or "???"
+        )
+
+        ability_str = "**Abilities**\n" + (
+            "???" if (not self.ability_1 or not self.ability_1[-1].name) else self.ability_1[-1].name)
+        if self.ability_2 and self.ability_2[-1].name:
+            ability_str += "\n" + self.ability_2[-1].name
+        if self.ability_3 and self.ability_3[-1].name:
+            ability_str += "\n" + self.ability_3[-1].name
+        ability_str += "\n\n"
+
+        footer_str = "*Obtained from:  {0}* \n*Release Date:  {1}* ".format(
+            self.obtained or "???",
+            self.release_date or "???"
+        )
+
+        desc = "".join((
+            stats_str,
+            ability_str,
+            footer_str
+        ))
+
+        if self.rarity is not None:
+            embed = discord.Embed(
+                title=header_str,
+                description=desc,
+                colour=[0xA39884, 0xA3E47A, 0xE29452, 0xCEE7FF, 0xFFCD26][self.rarity-1]
             )
         else:
             embed = discord.Embed(

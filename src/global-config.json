@@ -32,6 +32,8 @@
     "rarity5": "<:rarity_5:558909753720307716>",
     "rarity4": "<:rarity_4:558909753695272960>",
     "rarity3": "<:rarity_3:558909755175731213>",
+    "rarity2": "<:rarity_2:563336708100456458>",
+    "rarity1": "<:rarity_1:563339149059424257>",
 
     "poison": "<:affliction_poison:558978734447919134>",
     "burn": "<:affliction_burn:558978733969506315>",
@@ -115,6 +117,12 @@
       "hsilke": "halloween silke",
 
       "dyjeanne": "dragonyule jeanne"
+    },
+    "wyrmprint": {
+      "gmyw": "give me your wounded",
+      "resounding": "resounding rendition",
+      "levin's": "levin's champion",
+      "heralds": "heralds of hinomoto"
     }
   },
   "query_messages": {
