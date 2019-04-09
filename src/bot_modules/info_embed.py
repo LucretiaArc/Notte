@@ -62,6 +62,7 @@ async def get_info(message):
         matches = re.findall(r"\[\[(.+?)\]\]", message.content.lower())
         if len(matches) > 0:
             query_messages = config.get_global_config()["query_messages"]
+            special_query_messages = config.get_global_config()["special_query_messages"]
             search_locations = [
                 shortcuts,
                 data.Adventurer.adventurers,
@@ -82,6 +83,13 @@ async def get_info(message):
                     await message.channel.send(embed=discord.Embed(
                         title=query_messages[search_term][0],
                         description=query_messages[search_term][1]
+                    ))
+                    continue
+
+                if search_term in special_query_messages and util.is_special_guild(message.guild):
+                    await message.channel.send(embed=discord.Embed(
+                        title=special_query_messages[search_term][0],
+                        description=special_query_messages[search_term][1]
                     ))
                     continue
 

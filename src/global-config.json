@@ -136,9 +136,22 @@
     }
   },
   "query_messages": {
-    "bog": ["Bog", "<:affliction_bog:558978733462126594> Bog is an affliction which reduces movement speed by 50% and increases damage received by 50% for a limited amount of time."],
     "notte": ["Notte", "That's me! <:NotteSmile:563367918277230603>"],
     "struct": ["Struct", "That's the guy that made me! Use the `report` command if you want to tell him something."],
     "alphadk": ["AlphaDK", "A close friend that helped Struct out a lot when he was making me!"]
+  },
+  "special_guilds": [
+    225787022353235969,
+    192064072819277824,
+    558903766091431957
+  ],
+  "special_query_messages": {
+    "bog": ["Bog", "<:affliction_bog:558978733462126594> Bog is an affliction which reduces movement speed by 50% and increases damage received by 50% for a limited amount of time."],
+    "gogomic": ["GoGoMic", "Have you seen my Julietta?"],
+    "mtn64": ["Mtn64", "stupid whale\n\nhacker cheater"],
+    "mike's julietta": ["Mike's Julietta", "and here's where I'd put an image of mike's julietta\n\nif I had one"],
+    "gogomic's julietta": ["GoGoMic's Julietta", "and here's where I'd put an image of GoGoMic's julietta\n\nif I had one"],
+    "cygames": ["Cygames", "how in the hell removing Event prints a good thing , they basically flip off Casual and f2p players. Cause now they are forcing those players to summon for one time use WP. Greedy CYgames"],
+    "jeri": ["The heck, man?!", "JERI, it took me SEVENTEEN PULLS to get HALLOWEEN ELISANNE. It took me FOURTEEN PULLS TO GET JEANNE D'ARC IN THE LAUNCH BANNER. IT TOOK ME NINE PULLS TO GET CERBERUS in the Naveed banner. I don't want to hear SHIT, ABOUT YOUR SEVEN PULLS TO GET CUPID, WOE IS ME."]
   }
 }
