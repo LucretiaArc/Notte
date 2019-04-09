@@ -4,4 +4,5 @@ boto3==1.9.120
 botocore==1.12.120
 aenum==2.1.2
 mwparserfromhell==0.5.3
-python-Levenshtein==0.12.0
+numpy==1.16.2
+pyxDamerauLevenshtein==1.5.3

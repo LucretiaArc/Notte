@@ -3,8 +3,8 @@ import re
 import config
 import logging
 import util
-import Levenshtein
 import discord
+from pyxdameraulevenshtein import damerau_levenshtein_distance as edit_distance
 from hook import Hook
 
 logger = logging.getLogger(__name__)
@@ -77,11 +77,10 @@ async def get_info(message):
                     ))
                     continue
 
-                dist = Levenshtein.distance
                 best_match = (None, 100, "")  # (matching item, match distance, match string)
                 for loc in search_locations:
                     for key in sorted(loc.keys()):
-                        d = dist(search_term, key)
+                        d = edit_distance(search_term, key)
                         if d < best_match[1]:
                             best_match = (loc[key], d, key)
 
