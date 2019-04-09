@@ -4,13 +4,21 @@ import config
 import logging
 import util
 import discord
-from pyxdameraulevenshtein import damerau_levenshtein_distance as edit_distance
+import jellyfish
+import jellyfish._jellyfish as py_jellyfish
 from hook import Hook
 
 logger = logging.getLogger(__name__)
 
 client = None
 shortcuts = {}
+
+
+def edit_distance(a, b):
+    try:
+        return jellyfish.damerau_levenshtein_distance(a, b)
+    except ValueError:
+        return py_jellyfish.damerau_levenshtein_distance(a, b)
 
 
 async def on_init(discord_client):
