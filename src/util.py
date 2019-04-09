@@ -2,6 +2,7 @@ import datetime
 import asyncio
 import logging
 import config
+import discord
 from hook import Hook
 
 
@@ -105,6 +106,6 @@ def check_command_permissions(message, level) -> bool:
     if level == "public":
         return True
     elif level == "admin":
-        return not message.channel.is_private and message.author.server_permissions.manage_server
+        return isinstance(message.channel, discord.abc.GuildChannel) and message.author.guild_permissions.manage_guild
     elif level == "owner":
         return message.author.id == config.get_global_config()["owner_id"]

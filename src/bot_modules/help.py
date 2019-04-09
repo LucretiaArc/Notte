@@ -2,6 +2,7 @@ import inspect
 import logging
 import config
 import util
+import discord
 from hook import Hook
 
 logger = logging.getLogger(__name__)
@@ -39,13 +40,13 @@ async def help_message(message, args):
         command_methods = []
         command_methods.extend(Hook.get("public!" + cmd).methods())
         command_methods.extend(Hook.get("admin!" + cmd).methods())
-        help_msg = "**" + config.get_response_token(message.server) + cmd + "**" + "\n"
+        help_msg = "**" + config.get_response_token(message.guild) + cmd + "**" + "\n"
         help_msg += ("\n"+"\u2E3B"*16+"\n").join(inspect.getdoc(method) for method in command_methods if inspect.getdoc(method) != "")
     else:
         # unknown command
         help_msg = "I don't know what you mean! Use `help` for help."
 
-    await client.send_message(message.channel, help_msg)
+    await message.channel.send(help_msg)
 
 
 async def about_message(message, args):
@@ -56,10 +57,10 @@ async def about_message(message, args):
           "You can find my source code here: <https://gitlab.com/VStruct/notte>\n" \
           "Special thanks to AlphaDK for all of his help and feedback!\n" \
           "If you find a bug, want a feature, or have something else to say, you can use `" + \
-          config.get_response_token(message.server) + "report`, and I'll let " + \
+          config.get_response_token(message.guild) + "report`, and I'll let " + \
           config.get_global_config()["owner_name"] + " know."
 
-    await client.send_message(message.channel, msg)
+    await message.channel.send(msg)
 
 
 async def report(message, args):
@@ -68,7 +69,7 @@ async def report(message, args):
     """
 
     if len(args.strip()) == 0:
-        await client.send_message(message.channel, "I need something to report! Type a message after the command.")
+        await message.channel.send("I need something to report! Type a message after the command.")
         return
 
     try:
@@ -76,16 +77,16 @@ async def report(message, args):
         channel = message.channel
 
         author_name = "{0}#{1}".format(author.name, author.discriminator) + \
-                      ("" if (channel.is_private or author.nick is None) else " ({0})".format(author.nick))
-        location = "a direct message" if channel.is_private else ("#{0} ({1})".format(channel.name, message.server.name))
+                      ("" if (isinstance(message.channel, discord.abc.PrivateChannel) or author.nick is None) else " ({0})".format(author.nick))
+        location = "a direct message" if isinstance(message.channel, discord.abc.PrivateChannel) else ("#{0} ({1})".format(channel.name, message.guild.name))
 
-        await client.send_message(client.get_channel(config.get_global_config()["report_channel"]),
+        await client.get_channel(config.get_global_config()["report_channel"]).send(
                                   "{0} in {1} reports:\n{2}".format(author_name, location, args))
     except Exception:
-        await client.send_message(client.get_channel(config.get_global_config()["report_channel"]), "Report generated exception: " + args)
+        await client.get_channel(config.get_global_config()["report_channel"]).send("This report generated an exception: " + args)
         raise
     finally:
-        await client.send_message(message.channel, "Thanks for the report! I've let " + config.get_global_config()["owner_name"] + " know.")
+        await message.channel.send("Thanks for the report! I've let " + config.get_global_config()["owner_name"] + " know.")
 
 
 Hook.get("on_init").attach(on_init)

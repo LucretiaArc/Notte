@@ -1,3 +1,4 @@
+import discord
 from hook import Hook
 
 client = None
@@ -15,16 +16,16 @@ async def xmus(message, args):
     """
     Posts a labelled X-Muspelheim pattern, so that groups playing High Brunhilda can negotiate where they're going to move to during that attack.
     """
-    if message.channel.permissions_for(message.server.me).attach_files:
-        await client.send_file(message.channel, "../assets/images/xmus.png", content="Pick an area for X-Muspelheim!")
-    elif message.channel.permissions_for(message.server.me).embed_links:
-        await client.send_message(message.channel, "Pick an area for X-Muspelheim! https://cdn.discordapp.com/attachments/560454966154756107/560455072073646082/xmus.png")
+    if message.channel.permissions_for(message.guild.me).attach_files:
+        await message.channel.send("Pick an area for X-Muspelheim!", file=discord.File("../assets/images/xmus.png"))
+    elif message.channel.permissions_for(message.guild.me).embed_links:
+        await message.channel.send("Pick an area for X-Muspelheim! https://cdn.discordapp.com/attachments/560454966154756107/560455072073646082/xmus.png")
     else:
-        await client.send_message(message.channel, "Pick an area for X-Muspelheim! https://cdn.discordapp.com/attachments/560454966154756107/560455072073646082/xmus.png\n"
-                                                   "A is top\n"
-                                                   "B is right\n"
-                                                   "C is bottom\n"
-                                                   "D is left")
+        await message.channel.send("Pick an area for X-Muspelheim! https://cdn.discordapp.com/attachments/560454966154756107/560455072073646082/xmus.png\n"
+                                   "A is top\n"
+                                   "B is right\n"
+                                   "C is bottom\n"
+                                   "D is left")
 
 
 async def threshold(message, args):
@@ -66,16 +67,15 @@ async def threshold(message, args):
 
     dragon = args.strip().lower()
     if dragon == "":
-        await client.send_message(message.channel, "Please me know which dragon you'd like the thresholds for.")
+        await message.channel.send("Please me know which dragon you'd like the thresholds for.")
         return
 
     if dragon in aliases:
         dragon = aliases[dragon]
     if dragon in tables:
-        await client.send_message(message.channel,
-                                  "Please be sure that your adventurer is on-element, and has the appropriate wyrmprint equipped!\n"
-                                  "```\n" + tables[dragon] + "```")
+        await message.channel.send("Please be sure that your adventurer is on-element, and has the appropriate wyrmprint equipped!\n"
+                                   "```\n" + tables[dragon] + "```")
     else:
-        await client.send_message(message.channel, "I haven't seen that high dragon before, they must be scary!")
+        await message.channel.send("I haven't seen that high dragon before, they must be scary!")
 
 Hook.get("on_init").attach(on_init)

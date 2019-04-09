@@ -62,16 +62,16 @@ async def get_info(message):
             ]
 
             if len(matches) > 3:
-                await client.send_message(message.channel, "Too many queries, only the first three will be shown.")
+                await message.channel.send("Too many queries, only the first three will be shown.")
 
             for match in matches[:3]:
                 search_term = match.lower()
                 if len(match) > 30:
-                    await client.send_message(message.channel, "That's way too long, I'm not looking for that! " + util.get_emote("notte_stop"))
+                    await message.channel.send("That's way too long, I'm not looking for that! " + util.get_emote("notte_stop"))
                     continue
 
                 if search_term in query_messages:
-                    await client.send_message(message.channel, embed=discord.Embed(
+                    await message.channel.send(embed=discord.Embed(
                         title=query_messages[search_term][0],
                         description=query_messages[search_term][1]
                     ))
@@ -89,12 +89,11 @@ async def get_info(message):
                 match_threshold = 0.4 + 0.2*match_len
 
                 if best_match[1] <= match_threshold:
-                    await client.send_message(message.channel, embed=best_match[0].get_embed())
+                    await message.channel.send(embed=best_match[0].get_embed())
                 else:
                     if best_match[1] < match_threshold*2:
                         if best_match[2] in shortcuts:
-                            await client.send_message(
-                                message.channel,
+                            await message.channel.send(
                                 "I'm not sure what \"{0}\" is, did you mean \"{1}\"? "
                                 "If so, you can use the shortcut \"{2}\".".format(
                                     search_term,
@@ -103,9 +102,9 @@ async def get_info(message):
                                 )
                             )
                         else:
-                            await client.send_message(message.channel, "I'm not sure what \"{0}\" is, did you mean \"{1}\"?".format(search_term, best_match[2]))
+                            await message.channel.send("I'm not sure what \"{0}\" is, did you mean \"{1}\"?".format(search_term, best_match[2]))
                     else:
-                        await client.send_message(message.channel, "I'm not sure what \"{0}\" is.".format(search_term))
+                        await message.channel.send("I'm not sure what \"{0}\" is.".format(search_term))
 
 
 Hook.get("on_init").attach(on_init)

@@ -14,20 +14,20 @@ async def on_init(discord_client):
 
 
 async def before_reset():
-    for server in client.servers:
-        active_channel = config.get_server_config(server.id)["active_channel"]
-        channel = server.get_channel(active_channel)
-        if channel is not None and channel.permissions_for(server.me).send_messages:
-            await client.send_typing(channel)
+    for guild in client.guilds:
+        active_channel = config.get_guild_config(guild)["active_channel"]
+        channel = guild.get_channel(active_channel)
+        if channel is not None and channel.permissions_for(guild.me).send_messages:
+            await channel.trigger_typing()
 
 
 async def on_reset():
     message_string = get_reset_message(datetime.datetime.utcnow().weekday())
-    for server in client.servers:
-        active_channel = config.get_server_config(server.id)["active_channel"]
-        channel = server.get_channel(active_channel)
-        if channel is not None and channel.permissions_for(server.me).send_messages:
-            await client.send_message(channel, message_string)
+    for guild in client.guilds:
+        active_channel = config.get_guild_config(guild)["active_channel"]
+        channel = guild.get_channel(active_channel)
+        if channel is not None and channel.permissions_for(guild.me).send_messages:
+            await channel.send(message_string)
 
 
 def get_reset_message(day):

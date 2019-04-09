@@ -90,10 +90,10 @@ async def resist_search(message, args):
 
     # too broad or no keywords
     if len(specified_elements) == 0 and len(specified_resists) == 0:
-        await client.send_message(message.channel, "I need something to work with, give me an element or resistance!")
+        await message.channel.send("I need something to work with, give me an element or resistance!")
         return
     elif len(resist_list) > 1 and len(element_list) > 1:
-        await client.send_message(message.channel, "Too much! Try narrowing down your search.")
+        await message.channel.send("Too much! Try narrowing down your search.")
         return
 
     result_sections = []
@@ -140,19 +140,19 @@ async def resist_search(message, args):
         result_sections.append(result_string)
 
     if len(result_sections) == 0:
-        await client.send_message(message.channel, "I didn't find anything! Maybe there's nobody that matches your search?")
+        await message.channel.send("I didn't find anything! Maybe there's nobody that matches your search?")
 
     # avoid huge messages by breaking them up at every resist
     output_message = ""
     for section in result_sections:
         section = section.strip()
         if len(output_message + "\n" + section) > 2000:
-            await client.send_message(message.channel, output_message)
+            await message.channel.send(output_message)
             output_message = section
         else:
             output_message += "\n" + section
 
-    await client.send_message(message.channel, output_message)
+    await message.channel.send(output_message)
 
 
 async def index_adventurer_resists():

@@ -19,7 +19,7 @@ async def handle_message(message):
     content = message.content.lower()
     for response in responses:
         if response in content:
-            await client.send_message(message.channel, responses[response])
+            await message.channel.send(responses[response])
 
 
 Hook.get("on_init").attach(on_init)
