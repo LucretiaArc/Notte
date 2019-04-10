@@ -224,8 +224,8 @@ class Adventurer:
                 adv.coability += filter(None, [coability])
 
             # add skills
-            adv.skill_1 = Skill.skills.get(clean_wikitext(a["Skill1Name"]))
-            adv.skill_2 = Skill.skills.get(clean_wikitext(a["Skill2Name"]))
+            adv.skill_1 = Skill.skills.get(clean_wikitext(a["Skill1Name"]).lower())
+            adv.skill_2 = Skill.skills.get(clean_wikitext(a["Skill2Name"]).lower())
 
             # max might adds 500 for all max level skills, 120 for force strike level 2
             try:
@@ -382,7 +382,7 @@ class Dragon:
                     ability_slots[slot] += filter(None, [ability])
 
             # add skill
-            dragon.skill = Skill.skills.get(clean_wikitext(d["SkillName"]))
+            dragon.skill = Skill.skills.get(clean_wikitext(d["SkillName"]).lower())
 
             # max might adds 300 for bond 30, 100 for skill 1
             try:
@@ -638,7 +638,7 @@ class Weapon:
             weapon.ability_2 = Ability.abilities.get(clean_wikitext(w["Abilities21"]))
 
             # add skill
-            weapon.skill = Skill.skills.get(clean_wikitext(w["SkillName"]))
+            weapon.skill = Skill.skills.get(clean_wikitext(w["SkillName"]).lower())
 
             # max might adds 100 for skill if it exists
             try:
@@ -820,7 +820,7 @@ class Skill:
             if s["HideLevel3"] != "1":
                 sk.levels.append(s3)
 
-            skills_new[sk.name] = sk
+            skills_new[sk.name.lower()] = sk
 
         cls.skills = skills_new
 

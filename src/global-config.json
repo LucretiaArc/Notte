@@ -137,6 +137,9 @@
       "resounding": "resounding rendition",
       "levin's": "levin's champion",
       "heralds": "heralds of hinomoto"
+    },
+    "skill": {
+      "holy water": "holy water (skill)"
     }
   },
   "query_messages": {

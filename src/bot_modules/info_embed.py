@@ -31,7 +31,8 @@ async def on_init(discord_client):
     entity_maps = {
         "adventurer": data.Adventurer.adventurers,
         "dragon": data.Dragon.dragons,
-        "wyrmprint": data.Wyrmprint.wyrmprints
+        "wyrmprint": data.Wyrmprint.wyrmprints,
+        "skill": data.Skill.skills
     }
 
     for etype in entity_maps:
@@ -77,7 +78,7 @@ async def get_info(message):
 
             for match in matches[:3]:
                 search_term = match.lower()
-                if len(match) > 30:
+                if len(match) > 50:
                     await message.channel.send("That's way too long, I'm not looking for that! " + util.get_emote("notte_stop"))
                     continue
 
