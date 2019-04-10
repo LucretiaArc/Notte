@@ -6,6 +6,7 @@ import html
 import re
 import discord
 import calendar
+import collections
 from enum import Enum
 from aenum import MultiValueEnum
 from hook import Hook
@@ -27,6 +28,8 @@ async def update_repositories():
         await Dragon.update_repository(session)
         logger.info("Updating wyrmprint repository")
         await Wyrmprint.update_repository(session)
+        logger.info("Updating weapon repository")
+        await Weapon.update_repository(session)
         logger.info("Updated all repositories.")
 
 
@@ -74,7 +77,7 @@ async def process_cargo_query(session: aiohttp.ClientSession, base_url: str, lim
 
 
 def get_rarity_colour(rarity):
-    if 1 < rarity <= 5:
+    if 1 <= rarity <= 5:
         return [0xA39884, 0xA3E47A, 0xE29452, 0xCEE7FF, 0xFFCD26][rarity-1]
     return 0
 
@@ -576,6 +579,190 @@ class Wyrmprint:
         ))
 
         if self.rarity is not None:
+            embed = discord.Embed(
+                title=header_str,
+                description=desc,
+                colour=get_rarity_colour(self.rarity)
+            )
+        else:
+            embed = discord.Embed(
+                title=header_str,
+                description=desc
+            )
+
+        return embed
+
+
+class Weapon:
+    """
+    Represents a weapon and some of its associated data
+    """
+    weapons = {}
+
+    @classmethod
+    async def update_repository(cls, session: aiohttp.ClientSession):
+        base_url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Weapons&format=json&limit=500&fields=" \
+                   "WeaponName,Rarity,TypeId,ElementalTypeId,Obtain,MaxHp,MaxAtk," \
+                   "SkillName,Abilities11,Abilities21," \
+                   "CraftNodeId,ParentCraftNodeId,CraftGroupId" \
+                   "&order_by=WeaponName&offset="
+
+        weapon_info_list = await process_cargo_query(session, base_url)
+
+        weapons_new = {}
+        craft_groups = collections.defaultdict(lambda: collections.defaultdict(list))
+        craft_index = {}
+
+        safe_int = util.safe_int
+        # initial pass for basic info
+        for w in weapon_info_list:
+            weapon = cls()
+            weapon.name = clean_wikitext(w["WeaponName"]) or None
+
+            if weapon.name is None:
+                continue
+
+            # basic info
+            weapon.rarity = safe_int(w["Rarity"], None)
+            wt_id = safe_int(w["TypeId"], None)
+            weapon.weapon_type = None if wt_id is None else WeaponType(wt_id)
+            el_id = safe_int(w["ElementalTypeId"], None)
+            weapon.element = None if (el_id is None or el_id == 99) else Element(el_id)
+
+            weapon.obtained = clean_wikitext(w["Obtain"]) or None
+            weapon.max_hp = safe_int(w["MaxHp"], None)
+            weapon.max_str = safe_int(w["MaxAtk"], None)
+
+            # add all abilities that exist
+            weapon.ability_1 = Ability.abilities.get(clean_wikitext(w["Abilities11"]))
+            weapon.ability_2 = Ability.abilities.get(clean_wikitext(w["Abilities21"]))
+
+            # add skill
+            weapon.skill = Skill.skills.get(clean_wikitext(w["SkillName"]))
+
+            # max might adds 100 for skill if it exists
+            try:
+                weapon.max_might = weapon.max_hp + weapon.max_str + \
+                                   (0 if not weapon.ability_1 else weapon.ability_1.might) + \
+                                   (0 if not weapon.ability_2 else weapon.ability_2.might) + \
+                                   (0 if not weapon.skill else 100)
+            except (IndexError, TypeError):
+                weapon.max_might = None
+
+            # add to craft groups map for second pass
+            group_id = clean_wikitext(w["CraftGroupId"])
+            if group_id:
+                node_id = clean_wikitext(w["CraftNodeId"])
+                parent_node_id = clean_wikitext(w["ParentCraftNodeId"])
+                craft_groups[group_id][parent_node_id].append(node_id)
+                craft_index[group_id, node_id] = weapon
+
+            weapons_new[weapon.name.lower()] = weapon
+
+        # additional pass for crafting info
+
+        for group_id, group in craft_groups.items():
+            for parent_id, child_ids in group.items():
+                parent = craft_index.get((group_id, parent_id))
+                children = list(filter(None, (craft_index.get((group_id, ch_id)) for ch_id in child_ids)))
+                if parent:
+                    parent.crafted_to = children
+                    for child in children:
+                        child.crafted_from = parent
+
+        cls.weapons = weapons_new
+
+    def __init__(self):
+        self.name = ""
+        self.rarity = 0
+        self.element = None
+        self.weapon_type = None
+        self.obtained = ""
+
+        self.max_hp = 0
+        self.max_str = 0
+        self.max_might = 0
+
+        self.skill = None
+        self.ability_1 = None
+        self.ability_2 = None
+
+        self.crafted_from = None
+        self.crafted_to = []
+
+    def __str__(self):
+        return self.name
+
+    def get_title_string(self):
+        w_tier = 0
+        w_node = self
+        while w_node is not None:
+            w_node = w_node.crafted_from
+            w_tier += 1
+
+        return "{0}{1} {2} {3}{4}".format(
+            util.get_emote("rarity" + str(self.rarity)),
+            util.get_emote(("wtier" + str(w_tier)) if self.obtained == "Crafting" else ""),
+            self.name or "???",
+            util.get_emote(self.element or "none"),
+            util.get_emote(self.weapon_type or "")
+        )
+
+    def get_embed(self) -> discord.Embed:
+        """
+        Gets a discord embed representing this weapon.
+        :return: discord.Embed with information about the weapon.
+        """
+
+        header_str = self.get_title_string()
+
+        stats_str = "{0} HP  /  {1} Str  /  {2} Might\n\n".format(
+            self.max_hp or "???",
+            self.max_str or "???",
+            self.max_might or "???"
+        )
+
+        extra_str = ""
+        if self.skill:
+            extra_str += "**Skill:** {0}\n\n".format(
+                "???" if (not self.skill or not self.skill.name) else self.skill.name,
+            )
+
+        if self.ability_1 or self.ability_2:
+            extra_str += "**Abilities**\n" + (
+                "???" if (not self.ability_1 or not self.ability_1.name) else self.ability_1.name)
+            if self.ability_2 and self.ability_2.name:
+                extra_str += "\n" + self.ability_2.name
+            extra_str += "\n\n"
+
+        if self.obtained == "Crafting":
+            footer_str = ""
+            if self.crafted_from is not None:
+                footer_str += "{0}{0} **Crafted from**\n{1}\n\n".format(
+                    util.get_emote("blank"),
+                    self.crafted_from.get_title_string()
+                )
+            if len(self.crafted_to) > 0:
+                footer_str += "{0}{0} **Used to craft**".format(util.get_emote("blank"))
+                for child in self.crafted_to:
+                    footer_str += "\n" + child.get_title_string()
+            footer_str = footer_str.strip()
+        else:
+            footer_str = "*Obtained from:  {0}*".format(self.obtained or "???")
+
+        desc = "".join((
+            stats_str,
+            extra_str,
+            footer_str
+        ))
+
+        if self.element is not None:
+            embed = discord.Embed(
+                title=header_str,
+                description=desc,
+                colour=self.element.get_colour()
+            )
+        elif self.rarity is not None:
             embed = discord.Embed(
                 title=header_str,
                 description=desc,

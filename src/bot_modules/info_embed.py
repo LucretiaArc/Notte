@@ -68,7 +68,8 @@ async def get_info(message):
                 data.Adventurer.adventurers,
                 data.Dragon.dragons,
                 data.Wyrmprint.wyrmprints,
-                data.Skill.skills
+                data.Skill.skills,
+                data.Weapon.weapons
             ]
 
             if len(matches) > 3:
