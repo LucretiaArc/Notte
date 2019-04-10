@@ -73,6 +73,12 @@ async def process_cargo_query(session: aiohttp.ClientSession, base_url: str, lim
                 return result_items
 
 
+def get_rarity_colour(rarity):
+    if 1 < rarity <= 5:
+        return [0xA39884, 0xA3E47A, 0xE29452, 0xCEE7FF, 0xFFCD26][rarity-1]
+    return 0
+
+
 class Element(MultiValueEnum):
     FIRE = 1, "Fire", "Flame"
     WATER = 2, "Water"
@@ -573,7 +579,7 @@ class Wyrmprint:
             embed = discord.Embed(
                 title=header_str,
                 description=desc,
-                colour=[0xA39884, 0xA3E47A, 0xE29452, 0xCEE7FF, 0xFFCD26][self.rarity-1]
+                colour=get_rarity_colour(self.rarity)
             )
         else:
             embed = discord.Embed(
@@ -634,6 +640,28 @@ class Skill:
     def __init__(self, name: str):
         self.name = name
         self.levels = []
+
+    def get_embed(self) -> discord.Embed:
+        """
+        Gets a discord embed representing the highest level of this skill.
+        :return: discord.Embed with information about the skill.
+        """
+        skill_level = self.levels[-1]
+
+        title_str = "{0} (Lv. {1} Skill)".format(self.name, len(self.levels))
+
+        desc_str = "{0}\n\n**Cost: **{1} SP".format(
+            skill_level.description or "???",
+            str(skill_level.sp) or "???"
+        )
+
+        embed = discord.Embed(
+            title=title_str,
+            description=desc_str,
+            color=get_rarity_colour(len(self.levels)+2)
+        )
+
+        return embed
 
 
 class SkillLevel:
