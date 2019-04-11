@@ -1,5 +1,6 @@
 import discord
 import config
+import data
 from hook import Hook
 
 client = None
@@ -72,6 +73,15 @@ async def threshold(message, args):
                "└────────┴──────┴──────┴──────┴──────┴──────┘\n"
     }
 
+    # (proper name, adventurer element, wyrmprint name, dragon element)
+    encounter_details = {
+        "hbh": ("High Brunhilda", data.Element.FIRE, data.Element.WATER, "MUB Volcanic Queen"),
+        "hmc": ("High Mercury", data.Element.WATER, data.Element.WIND, "the appropriate wyrmprint"),
+        "hms": ("High Midgardsormr", data.Element.WIND, data.Element.FIRE, "MUB Glorious Tempest"),
+        "hjp": ("High Jupiter", data.Element.LIGHT, data.Element.DARK, "the appropriate wyrmprint"),
+        "hzd": ("High Zodiark", data.Element.DARK, data.Element.LIGHT, "the appropriate wyrmprint")
+    }
+
     replacements = config.get_global_config()["high_dragon_shortcuts"]
 
     dragon = args.strip().lower()
@@ -82,9 +92,15 @@ async def threshold(message, args):
     if dragon in replacements:
         dragon = replacements[dragon]
     if dragon in tables:
-        await message.channel.send("Please be sure that your adventurer is on-element, and has the appropriate wyrmprint equipped!\n"
-                                   "```\n" + tables[dragon] + "```")
+        details = encounter_details[dragon]
+        embed = discord.Embed(
+            title="{0} HP Requirement".format(details[0]),
+            description="```\n" + tables[dragon] + "\n```",
+            color=details[1].get_colour()
+        )
+        embed.set_footer(text="Assumes a {0} adventurer with {1} equipped.".format(str(details[2]).lower(), details[3]))
+        await message.channel.send(embed=embed)
     else:
-        await message.channel.send("I haven't seen that high dragon before, they must be scary!")
+        await message.channel.send("I haven't seen that dragon before, they must be scary!")
 
 Hook.get("on_init").attach(on_init)
