@@ -3,6 +3,7 @@ import logging
 import re
 import util
 import data
+import config
 from hook import Hook
 
 logger = logging.getLogger(__name__)
@@ -36,12 +37,19 @@ async def resist_search(message, args):
     **hmc** (High Mercury) = *wind*, *bog*, *100*
 
     """
-    arg_list = list(map(str.strip, args.lower().split(" ")))
+    replacements = config.get_global_config()["resist_shortcuts"]
+    args = args.lower()
+    for long, short in replacements.items():
+        args = args.replace(long, short)
+
+    arg_list = list(map(str.strip, args.split(" ")))
 
     shortcuts = {
-        "hms": (data.Element.FIRE, data.Resistance.STUN, 100),
         "hbh": (data.Element.WATER, data.Resistance.BURN, 100),
         "hmc": (data.Element.WIND, data.Resistance.BOG, 100),
+        "hms": (data.Element.FIRE, data.Resistance.STUN, 100),
+        "hjp": (data.Element.DARK, data.Resistance.PARALYSIS, 100),
+        "hzd": (data.Element.LIGHT, data.Resistance.CURSE, 100),
     }
 
     specified_elements = set()

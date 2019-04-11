@@ -142,6 +142,45 @@
       "holy water": "holy water (skill)"
     }
   },
+  "resist_shortcuts": {
+    "high brunhilda": "hbh",
+    "high brun": "hbh",
+    "hbrunhilda": "hbh",
+    "hbrun": "hbh",
+    "brunhilda": "hbh",
+    "brun": "hbh",
+
+    "high mercury": "hmc",
+    "high merc": "hmc",
+    "hmercury": "hmc",
+    "hmerc": "hmc",
+    "mercury": "hmc",
+    "merc": "hmc",
+
+    "high midgardsormr": "hms",
+    "high midgard": "hms",
+    "high mid": "hms",
+    "hmidgardsormr": "hms",
+    "hmidgard": "hms",
+    "hmid": "hms",
+    "midgardsormr": "hms",
+    "midgard": "hms",
+    "mid": "hms",
+
+    "high jupiter": "hjp",
+    "high jup": "hjp",
+    "hjupiter": "hjp",
+    "hjup": "hjp",
+    "jupiter": "hjp",
+    "jup": "hjp",
+
+    "high zodiark": "hzd",
+    "high zod": "hzd",
+    "hzodiark": "hzd",
+    "hzod": "hzd",
+    "zodiark": "hzd",
+    "zod": "hzd"
+  },
   "query_messages": {
     "notte": ["Notte", "That's me! <:NotteSmile:563367918277230603>"],
     "struct": ["Struct", "That's the guy that made me! Use the `report` command if you want to tell him something."],
