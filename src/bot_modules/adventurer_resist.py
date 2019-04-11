@@ -37,7 +37,7 @@ async def resist_search(message, args):
     **hmc** (High Mercury) = *wind*, *bog*, *100*
 
     """
-    replacements = config.get_global_config()["resist_shortcuts"]
+    replacements = config.get_global_config()["high_dragon_shortcuts"]
     args = args.lower()
     for long, short in replacements.items():
         args = args.replace(long, short)
