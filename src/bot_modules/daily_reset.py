@@ -1,5 +1,6 @@
 import datetime
 import config
+import util
 from hook import Hook
 
 client = None
@@ -41,19 +42,14 @@ def get_reset_message(day):
         "all Elemental Ruins"
     ]
 
-    void_battles_available = [
-        "Steel Golem and Blazing Ghost",
-        "Raging Manticore and Obsidian Golem",
-        "Steel Golem and Frost Hermit",
-        "Void Zephyr and Obsidian Golem",
-        "Steel Golem and Blazing Ghost",
-        "Raging Manticore, Void Zephyr, and Frost Hermit",
-        "Steel Golem, Void Zephyr, Frost Hermit, Obsidian Golem, and Blazing Ghost"
-    ]
+    void_sched = config.get_global_config()["void_battle_schedule"]
+    void_order = void_sched["order"]
+    void_available = void_sched["availability"]
+    daily_battles = [battle for battle in void_order if void_available[battle][day]]
 
     message_string = "It's time for the daily reset!\n" +\
         "Expert difficulty is available in " + ruins_available[day] + "!\n" +\
-        "Today's Void Battles are " + void_battles_available[day] + "!"
+        "Today's Void Battles are " + util.readable_list(daily_battles) + "!"
 
     return message_string
 

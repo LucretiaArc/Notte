@@ -199,5 +199,25 @@
     "gogomic's julietta": ["GoGoMic's Julietta", "and here's where I'd put an image of GoGoMic's julietta\n\nif I had one"],
     "cygames": ["Cygames", "how in the hell removing Event prints a good thing , they basically flip off Casual and f2p players. Cause now they are forcing those players to summon for one time use WP. Greedy CYgames"],
     "jeri": ["The heck, man?!", "JERI, it took me SEVENTEEN PULLS to get HALLOWEEN ELISANNE. It took me FOURTEEN PULLS TO GET JEANNE D'ARC IN THE LAUNCH BANNER. IT TOOK ME NINE PULLS TO GET CERBERUS in the Naveed banner. I don't want to hear SHIT, ABOUT YOUR SEVEN PULLS TO GET CUPID, WOE IS ME."]
+  },
+  "void_battle_schedule": {
+    "order": [
+      "Blazing Ghost",
+      "Frost Hermit",
+      "Steel Golem",
+      "Obsidian Golem",
+      "Void Zephyr",
+      "Raging Manticore",
+      "Void Agni"
+    ],
+    "availability": {
+      "Blazing Ghost": [false, true, false, true, false, false, true],
+      "Frost Hermit": [true, false, true, false, true, true, true],
+      "Steel Golem": [true, false, false, true, false, false, false],
+      "Obsidian Golem": [false, true, true, false, true, true, true],
+      "Void Zephyr": [true, false, true, false, false, true, false],
+      "Raging Manticore": [false, false, true, false, false, false, false],
+      "Void Agni": [false, true, false, true, true, true, true]
+    }
   }
 }
