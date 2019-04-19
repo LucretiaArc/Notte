@@ -40,7 +40,7 @@ async def help_message(message, args):
         command_methods = []
         command_methods.extend(Hook.get("public!" + cmd).methods())
         command_methods.extend(Hook.get("admin!" + cmd).methods())
-        help_msg = "**" + config.get_response_token(message.guild) + cmd + "**" + "\n"
+        help_msg = "**" + config.get_prefix(message.guild) + cmd + "**" + "\n"
         help_msg += ("\n"+"\u2E3B"*16+"\n").join(inspect.getdoc(method) for method in command_methods if inspect.getdoc(method) != "")
     else:
         # unknown command
@@ -57,7 +57,7 @@ async def about_message(message, args):
           "You can find my source code here: <https://gitlab.com/VStruct/notte>\n" \
           "Special thanks to AlphaDK for all of his help and feedback!\n" \
           "If you find a bug, want a feature, or have something else to say, you can use `" + \
-          config.get_response_token(message.guild) + "report`, and I'll let " + \
+          config.get_prefix(message.guild) + "report`, and I'll let " + \
           config.get_global_config()["owner_name"] + " know."
 
     await message.channel.send(msg)

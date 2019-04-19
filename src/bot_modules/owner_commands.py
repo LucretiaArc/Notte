@@ -3,6 +3,7 @@ import config
 import json
 import util
 import re
+import data
 from hook import Hook
 
 client = None
@@ -16,6 +17,7 @@ async def on_init(discord_client):
     Hook.get("owner!getconfig").attach(get_config)
     Hook.get("owner!inspectconfigs").attach(inspect_configs)
     Hook.get("owner!voidschedule").attach(void_schedule_format)
+    Hook.get("owner!updatedata").attach(update_data)
 
 
 async def say(message, args):
@@ -59,5 +61,15 @@ async def void_schedule_format(message, args):
     output_message += "\n}"
     await message.channel.send(output_message)
 
+
+async def update_data(message, args):
+    await message.channel.send("Updating data, please wait...")
+    try:
+        await data.update_repositories()
+    except Exception:
+        await message.channel.send("There was an error updating the data. Check the logs for details!")
+        raise
+    else:
+        await message.channel.send("Updated data successfully.")
 
 Hook.get("on_init").attach(on_init)

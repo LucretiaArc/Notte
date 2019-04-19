@@ -186,9 +186,11 @@ async def index_adventurer_resists():
 
     for adv in data.Adventurer.adventurers.values():
         adv_resistances = []
-        adv_resistances += get_ability_resists(adv.ability_1[-1]) or [None]
-        adv_resistances += get_ability_resists(adv.ability_2[-1]) or [None]
-        adv_resistances += get_ability_resists(adv.ability_3[-1]) or [None]
+        abilities = [adv.ability_1, adv.ability_2, adv.ability_3]
+        for ab in abilities:
+            if ab:
+                adv_resistances += get_ability_resists(ab[-1]) or [None]
+
         for res in filter(None, adv_resistances):
             res_data[res[0]][adv.element][adv.full_name] += res[1]
 

@@ -46,9 +46,9 @@ async def threshold(message, args):
         "hmc": "┌────────┬──────┬──────┬──────┬──────┬──────┐\n"
                "│ Def    │ +0%  │ +7%  │ +9%  │ +11% │ +15% │\n"
                "├────────┼──────┼──────┼──────┼──────┼──────┤\n"
-               "│ Melee  │ ???? │ ???? │ ???? │ ???? │ ???? │\n"
+               "│ Melee  │ Low! │ Low! │ Low! │ Low! │ Low! │\n"
                "├────────┼──────┼──────┼──────┼──────┼──────┤\n"
-               "│ Ranged │ ???? │ ???? │ ???? │ ???? │ ???? │\n"
+               "│ Ranged │ Low! │ Low! │ Low! │ Low! │ Low! │\n"
                "└────────┴──────┴──────┴──────┴──────┴──────┘\n",
         "hms": "┌────────┬──────┬──────┬──────┬──────┬──────┐\n"
                "│ Def    │ +0%  │ +7%  │ +9%  │ +11% │ +15% │\n"
@@ -73,13 +73,39 @@ async def threshold(message, args):
                "└────────┴──────┴──────┴──────┴──────┴──────┘\n"
     }
 
-    # (proper name, adventurer element, wyrmprint name, dragon element)
+    # (proper name, adventurer element, wyrmprint name, dragon element, extra text)
     encounter_details = {
-        "hbh": ("High Brunhilda", data.Element.FIRE, data.Element.WATER, "MUB Volcanic Queen"),
-        "hmc": ("High Mercury", data.Element.WATER, data.Element.WIND, "the appropriate wyrmprint"),
-        "hms": ("High Midgardsormr", data.Element.WIND, data.Element.FIRE, "MUB Glorious Tempest"),
-        "hjp": ("High Jupiter", data.Element.LIGHT, data.Element.DARK, "the appropriate wyrmprint"),
-        "hzd": ("High Zodiark", data.Element.DARK, data.Element.LIGHT, "the appropriate wyrmprint")
+        "hbh": (
+            "High Brunhilda",
+            data.Element.FIRE,
+            data.Element.WATER,
+            "Assumes a {0} adventurer with MUB Volcanic Queen equipped."
+        ),
+        "hmc": (
+            "High Mercury",
+            data.Element.WATER,
+            data.Element.WIND,
+            "The High Mercury fight is based on meeting a soft strength requirement, rather than meeting the HP check. "
+            "It is recommended that you bring a {0} adventurer with as much offensive power as possible to avoid timing out."
+        ),
+        "hms": (
+            "High Midgardsormr",
+            data.Element.WIND,
+            data.Element.FIRE,
+            "Assumes a {0} adventurer with MUB Glorious Tempest equipped."
+        ),
+        "hjp": (
+            "High Jupiter",
+            data.Element.LIGHT,
+            data.Element.DARK,
+            "Assumes a {0} adventurer with the appropriate wyrmprint equipped."
+        ),
+        "hzd": (
+            "High Zodiark",
+            data.Element.DARK,
+            data.Element.LIGHT,
+            "Assumes a {0} adventurer with the appropriate wyrmprint equipped."
+        )
     }
 
     replacements = config.get_global_config()["high_dragon_shortcuts"]
@@ -98,7 +124,7 @@ async def threshold(message, args):
             description="```\n" + tables[dragon] + "\n```",
             color=details[1].get_colour()
         )
-        embed.set_footer(text="Assumes a {0} adventurer with {1} equipped.".format(str(details[2]).lower(), details[3]))
+        embed.set_footer(text=details[3].format(str(details[2]).lower()))
         await message.channel.send(embed=embed)
     else:
         await message.channel.send("I haven't seen that dragon before, they must be scary!")

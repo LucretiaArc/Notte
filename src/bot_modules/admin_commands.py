@@ -9,29 +9,29 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    Hook.get("admin!token").attach(set_token)
+    Hook.get("admin!prefix").attach(set_prefix)
     Hook.get("admin!channel").attach(set_active_channel)
-    Hook.get("on_mention").attach(reset_token)
+    Hook.get("on_mention").attach(reset_prefix)
 
 
-async def set_token(message, args):
+async def set_prefix(message, args):
     """
-    Sets the bot's token for this server. The token is the character (or characters) that come before every command.
-    e.g. running `token $` means that to use the `help` command, you now have to type `$help`.
-    The default token is `!!`, and you can always reset the token by mentioning the bot along with the words `reset token`
+    Sets the bot's prefix for this server. The prefix is the character (or characters) that come before every command.
+    e.g. running `prefix $` means that to use the `help` command, you now have to type `$help`.
+    The default prefix is `!!`, and you can always reset the prefix by mentioning the bot along with the words `reset prefix`
     """
-    new_token = args.strip()
-    if len(new_token) > 250:
+    new_prefix = args.strip()
+    if len(new_prefix) > 250:
         await message.channel.send("That's too long! Try something shorter.")
         return
 
-    if new_token == client.user.mention:
-        new_token += " "
+    if new_prefix == client.user.mention:
+        new_prefix += " "
 
     new_config = config.get_guild_config_editable(message.guild)
-    new_config["token"] = new_token
+    new_config["token"] = new_prefix
     config.set_guild_config(message.guild, new_config)
-    await message.channel.send("Token has been set to `{0}`".format(new_token))
+    await message.channel.send("Prefix has been set to `{0}`".format(new_prefix))
 
 
 async def set_active_channel(message, args):
@@ -50,10 +50,10 @@ async def set_active_channel(message, args):
         await message.channel.send("Active channel has been updated, I'll post reset messages in here from now on!".format(message.channel.mention))
 
 
-async def reset_token(message):
-    if "reset token" in message.content.lower():
+async def reset_prefix(message):
+    if "reset prefix" in message.content.lower():
         if util.check_command_permissions(message, "admin"):
-            await set_token(message, "!!")
+            await set_prefix(message, "!!")
         else:
             await message.channel.send("You're not allowed to do that!")
 

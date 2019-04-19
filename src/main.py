@@ -49,13 +49,13 @@ async def on_ready():
 @client.event
 async def on_message(message: discord.Message):
     if not message.author.bot and (isinstance(message.channel, discord.abc.PrivateChannel) or message.channel.permissions_for(message.guild.me).send_messages):
-        token = config.get_response_token(message.guild)
-        if message.content.startswith(token):
+        prefix = config.get_prefix(message.guild)
+        if message.content.startswith(prefix):
             if not initialised:
                 await message.channel.send("I've only just woken up, give me a second please!")
                 return
-            command = message.content[len(token):].split(" ")[0].lower()  # just command text
-            args = message.content[len(token) + len(command) + 1:]
+            command = message.content[len(prefix):].split(" ")[0].lower()  # just command text
+            args = message.content[len(prefix) + len(command) + 1:]
             if Hook.exists("public!"+command) and util.check_command_permissions(message, "public"):
                 await Hook.get("public!"+command)(message, args)
             elif Hook.exists("admin!"+command) and util.check_command_permissions(message, "admin"):

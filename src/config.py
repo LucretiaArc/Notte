@@ -105,5 +105,5 @@ get_guild_config_editable = Config.get_guild_config_editable
 set_guild_config = Config.set_guild_config
 
 
-def get_response_token(guild: discord.Guild):
+def get_prefix(guild: discord.Guild):
     return get_guild_config(guild)["token"] if guild else "!!"
