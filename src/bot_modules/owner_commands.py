@@ -37,8 +37,9 @@ async def get_config(message, args):
 
 
 async def inspect_configs(message, args):
-    config_json = json.dumps(dict(config.Config.inspect_guild_configs()), indent=2, sort_keys=True)
-    await message.channel.send("```json\n{0}\n```".format(config_json))
+    guild_config_json = json.dumps(dict(config.Config.inspect_guild_configs()), indent=2, sort_keys=True)
+    writable_config_json = json.dumps(dict(config.get_wglobal_config()), indent=2, sort_keys=True)
+    await message.channel.send("```json\ngc = {0}\n\nwc = {1}\n```".format(guild_config_json, writable_config_json))
 
 
 async def void_schedule_format(message, args):

@@ -7,6 +7,7 @@ import re
 import discord
 import calendar
 import collections
+import urllib.parse
 from enum import Enum
 from aenum import MultiValueEnum
 from hook import Hook
@@ -80,6 +81,10 @@ def get_rarity_colour(rarity):
     if 1 <= rarity <= 5:
         return [0xA39884, 0xA3E47A, 0xE29452, 0xCEE7FF, 0xFFCD26][rarity-1]
     return 0
+
+
+def get_link(page_name):
+    return "https://dragalialost.gamepedia.com/" + urllib.parse.quote(page_name.replace(" ", "_"))
 
 
 class Element(MultiValueEnum):
@@ -323,12 +328,14 @@ class Adventurer:
             embed = discord.Embed(
                 title=header_str,
                 description=desc,
+                url=get_link(self.full_name),
                 colour=self.element.get_colour()
             )
         else:
             embed = discord.Embed(
                 title=header_str,
-                description=desc
+                description=desc,
+                url=get_link(self.full_name)
             )
 
         return embed
@@ -463,12 +470,14 @@ class Dragon:
             embed = discord.Embed(
                 title=header_str,
                 description=desc,
+                url=get_link(self.full_name),
                 colour=self.element.get_colour()
             )
         else:
             embed = discord.Embed(
                 title=header_str,
-                description=desc
+                description=desc,
+                url=get_link(self.full_name)
             )
 
         return embed
@@ -582,12 +591,14 @@ class Wyrmprint:
             embed = discord.Embed(
                 title=header_str,
                 description=desc,
+                url=get_link(self.name),
                 colour=get_rarity_colour(self.rarity)
             )
         else:
             embed = discord.Embed(
                 title=header_str,
-                description=desc
+                description=desc,
+                url=get_link(self.name)
             )
 
         return embed
@@ -760,18 +771,21 @@ class Weapon:
             embed = discord.Embed(
                 title=header_str,
                 description=desc,
+                url=get_link(self.name),
                 colour=self.element.get_colour()
             )
         elif self.rarity is not None:
             embed = discord.Embed(
                 title=header_str,
                 description=desc,
+                url=get_link(self.name),
                 colour=get_rarity_colour(self.rarity)
             )
         else:
             embed = discord.Embed(
                 title=header_str,
-                description=desc
+                description=desc,
+                url=get_link(self.name),
             )
 
         return embed
@@ -845,6 +859,7 @@ class Skill:
         embed = discord.Embed(
             title=title_str,
             description=desc_str,
+            url=get_link(self.name),
             color=get_rarity_colour(len(self.levels)+2)
         )
 

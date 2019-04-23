@@ -69,7 +69,7 @@
   },
   "query_shortcuts": {
     "adventurer": {
-      "hilde":    "hildegarde",
+      "hilde": "hildegarde",
       "xain": "xainfried",
       "eli": "elisanne",
       "hein": "heinwald",
@@ -98,8 +98,8 @@
       "vhilde": "valentine's hildegarde",
       "vildegarde": "valentine's hildegarde",
       "vhildegarde": "valentine's hildegarde",
-      "vezelith": "valentine's hildegarde",
-      "veze": "valentine's hildegarde",
+      "vezelith": "valentine's ezelith",
+      "veze": "valentine's ezelith",
       "vorion": "valentine's orion",
 
       "sarisse": "gala sarisse",

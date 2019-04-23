@@ -11,6 +11,7 @@ async def on_init(discord_client):
     client = discord_client
 
     Hook.get("public!xmus").attach(xmus)
+    Hook.get("public!bubbles").attach(bubbles)
     Hook.get("public!threshold").attach(threshold)
 
 
@@ -30,6 +31,19 @@ async def xmus(message, args):
                                    "D is left")
 
 
+async def bubbles(message, args):
+    """
+    Posts a labelled Spheres of Salvation pattern, so that groups playing High Mercury can negotiate where they're going to move to during that attack.
+    """
+    if message.channel.permissions_for(message.guild.me).attach_files:
+        await message.channel.send("Pick an bubble for Spheres of Salvation!", file=discord.File("../assets/images/bubbles.png"))
+    elif message.channel.permissions_for(message.guild.me).embed_links:
+        await message.channel.send("Pick an bubble for Spheres of Salvation! https://cdn.discordapp.com/attachments/560454966154756107/568706931515064330/bubbles.png")
+    else:
+        await message.channel.send("Pick an bubble for Spheres of Salvation! https://cdn.discordapp.com/attachments/560454966154756107/568706931515064330/bubbles.png\n"
+                                   "A to D from left to right.")
+
+
 async def threshold(message, args):
     """
     Shows tables for high dragon HP requirements.
@@ -46,9 +60,9 @@ async def threshold(message, args):
         "hmc": "┌────────┬──────┬──────┬──────┬──────┬──────┐\n"
                "│ Def    │ +0%  │ +7%  │ +9%  │ +11% │ +15% │\n"
                "├────────┼──────┼──────┼──────┼──────┼──────┤\n"
-               "│ Melee  │ Low! │ Low! │ Low! │ Low! │ Low! │\n"
+               "│ Melee  │ 1218 │ 1138 │ 1118 │ 1097 │ 1059 │\n"
                "├────────┼──────┼──────┼──────┼──────┼──────┤\n"
-               "│ Ranged │ Low! │ Low! │ Low! │ Low! │ Low! │\n"
+               "│ Ranged │ 1522 │ 1423 │ 1397 │ 1372 │ 1324 │\n"
                "└────────┴──────┴──────┴──────┴──────┴──────┘\n",
         "hms": "┌────────┬──────┬──────┬──────┬──────┬──────┐\n"
                "│ Def    │ +0%  │ +7%  │ +9%  │ +11% │ +15% │\n"
@@ -86,7 +100,8 @@ async def threshold(message, args):
             data.Element.WATER,
             data.Element.WIND,
             "The High Mercury fight is based on meeting a soft strength requirement, rather than meeting the HP check. "
-            "It is recommended that you bring a {0} adventurer with as much offensive power as possible to avoid timing out."
+            "It is recommended that you bring a {0} adventurer with as much offensive power as possible to avoid timing out. "
+            "In general, try to have at least 2.6k strength before attempting the fight."
         ),
         "hms": (
             "High Midgardsormr",
