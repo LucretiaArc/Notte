@@ -28,7 +28,6 @@ async def check_news():
     time_delta = (now + datetime.timedelta(5 / 1440)).replace(second=15, microsecond=0) - now
     asyncio.get_event_loop().call_later(time_delta.total_seconds(), lambda: asyncio.ensure_future(check_news()))
 
-    logger.info("Collecting news info")
     async with aiohttp.ClientSession() as session:
         list_base_url = "https://dragalialost.com/api/index.php?" \
                         "format=json&type=information&action=information_list&lang=en_us&priority_lower_than="
@@ -70,6 +69,7 @@ async def check_news():
             category = item["category_name"]
             content = ""
 
+            logger.info("Retrieving news content for article " + str(item["article_id"]))
             async with session.get(content_base_url + str(item["article_id"])) as response:
                 result_json = await response.json(content_type=None)
 
