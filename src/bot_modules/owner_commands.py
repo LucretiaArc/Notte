@@ -18,6 +18,8 @@ async def on_init(discord_client):
     Hook.get("owner!inspectconfigs").attach(inspect_configs)
     Hook.get("owner!voidschedule").attach(void_schedule_format)
     Hook.get("owner!updatedata").attach(update_data)
+    Hook.get("owner!wconfigset").attach(wconfig_set)
+    Hook.get("owner!wconfigdel").attach(wconfig_del)
 
 
 async def say(message, args):
@@ -72,5 +74,39 @@ async def update_data(message, args):
         raise
     else:
         await message.channel.send("Updated data successfully.")
+
+
+async def wconfig_set(message, args):
+    key = args.split(" ")[0]
+    try:
+        value = json.loads(args[len(key) + 1:])
+    except json.decoder.JSONDecodeError:
+        await message.channel.send("Bad config value, must be valid JSON")
+        return
+
+    wconfig = config.get_wglobal_config()
+    wconfig[key] = value
+    config.set_wglobal_config(wconfig)
+    await message.channel.send('Updated config["{0}"] = {1}'.format(key, json.dumps(value)))
+
+
+async def wconfig_del(message, args):
+    key = args.strip()
+    wconfig = config.get_wglobal_config()
+    if key in wconfig:
+        wconfig.pop(key)
+    else:
+        await message.channel.send("No such configuration key: " + key)
+        return
+
+    if key in config.Config.wc_default:
+        wconfig[key] = config.Config.wc_default[key]
+        msg = 'Updated config["{0}"] = {1}'.format(key, json.dumps(config.Config.wc_default[key]))
+    else:
+        msg = 'Deleted config["{0}"]'.format(key)
+
+    config.set_wglobal_config(wconfig)
+    await message.channel.send(msg)
+
 
 Hook.get("on_init").attach(on_init)

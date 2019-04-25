@@ -24,12 +24,12 @@ class Config:
     __config_modified = threading.Event()
     __sync_thread = None
 
-    __sc_default = {
+    sc_default = {
         "token": "!!",
         "active_channel": 0
     }
 
-    __wc_default = {
+    wc_default = {
         "news_last_priority": 411
     }
 
@@ -62,10 +62,10 @@ class Config:
         # get guild configs from S3 bucket
         guild_configs = json.load(cls.__sc_object.get()["Body"])
         cls.__sc = {}
-        sc_key_list = cls.__sc_default.keys()
+        sc_key_list = cls.sc_default.keys()
         for gid, gconfig in guild_configs.items():
             if gconfig.keys() != sc_key_list:
-                cls.__sc[gid] = cls.__sc_default.copy()
+                cls.__sc[gid] = cls.sc_default.copy()
                 cls.__sc[gid].update(gconfig)
                 cls.__config_modified.set()
             else:
@@ -75,8 +75,8 @@ class Config:
         # get writeable config from S3 bucket
         wconfig = json.load(cls.__wc_object.get()["Body"])
         cls.__wc = {}
-        if wconfig.keys() != cls.__wc_default.keys():
-            cls.__wc = cls.__wc_default.copy()
+        if wconfig.keys() != cls.wc_default.keys():
+            cls.__wc = cls.wc_default.copy()
             cls.__wc.update(wconfig)
             cls.__config_modified.set()
         else:
@@ -107,14 +107,14 @@ class Config:
     @classmethod
     def get_guild_config(cls, guild: discord.Guild):
         if str(guild.id) not in cls.__sc:
-            cls.set_guild_config(guild, cls.__sc_default)
+            cls.set_guild_config(guild, cls.sc_default)
 
         return types.MappingProxyType(cls.__sc[str(guild.id)])
 
     @classmethod
     def get_guild_config_editable(cls, guild: discord.Guild):
         if str(guild.id) not in cls.__sc:
-            cls.set_guild_config(guild, cls.__sc_default)
+            cls.set_guild_config(guild, cls.sc_default)
 
         return copy.deepcopy(cls.__sc[str(guild.id)])
 

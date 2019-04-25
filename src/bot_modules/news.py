@@ -8,6 +8,7 @@ import util
 import discord
 import html.parser
 import re
+import math
 from hook import Hook
 
 logger = logging.getLogger(__name__)
@@ -19,14 +20,21 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    await check_news()
-
-
-async def check_news():
-    # trigger next 5 minute interval (15 secs delayed)
     now = datetime.datetime.utcnow()
-    time_delta = (now + datetime.timedelta(5 / 1440)).replace(second=15, microsecond=0) - now
-    asyncio.get_event_loop().call_later(time_delta.total_seconds(), lambda: asyncio.ensure_future(check_news()))
+    mins_past_hour = (now - now.replace(minute=0, second=0, microsecond=0)).total_seconds() / 60
+    seconds_wait = 60*(5 - (mins_past_hour - 5*math.floor(mins_past_hour/5))) + 15
+    asyncio.get_event_loop().call_later(seconds_wait, lambda: asyncio.ensure_future(check_news(True)))
+
+    if seconds_wait > 30:
+        await check_news(False)
+
+
+async def check_news(reschedule):
+    if reschedule:
+        # trigger next 5 minute interval (15 secs delayed)
+        now = datetime.datetime.utcnow()
+        time_delta = (now + datetime.timedelta(5 / 1440)).replace(second=15, microsecond=0) - now
+        asyncio.get_event_loop().call_later(time_delta.total_seconds(), lambda: asyncio.ensure_future(check_news(True)))
 
     async with aiohttp.ClientSession() as session:
         list_base_url = "https://dragalialost.com/api/index.php?" \
@@ -37,7 +45,6 @@ async def check_news():
         wconfig = config.get_wglobal_config()
         last_priority = wconfig.get("news_last_priority")
         next_priority = 1e9
-        max_priority = None
         news_items = []
         while True:
             async with session.get(list_base_url + str(next_priority)) as response:
@@ -57,12 +64,10 @@ async def check_news():
 
         embeds = []
 
+        # sort and filter news items for correct order
+        news_items = sorted(filter(lambda d: d["priority"] > last_priority, news_items), key=lambda d: d["priority"])
+
         for item in news_items:
-            if util.safe_int(item["priority"], 0) <= last_priority:
-                break
-
-            max_priority = max_priority or int(item["priority"])
-
             title = item["title_name"]
             date = datetime.datetime.utcfromtimestamp(item["date"])
             article_url = "https://dragalialost.com/en/news/detail/" + str(item["article_id"])
@@ -117,6 +122,7 @@ async def check_news():
             )
             e.set_footer(text="Posted " + date.strftime("%B %d, %I:%M %p (UTC)"))
             embeds.append(e)
+            logger.info("Posting article with priority {0} and id {1}".format(item["priority"], item["article_id"]))
 
         for guild in client.guilds:
             active_channel = config.get_guild_config(guild)["active_channel"]
@@ -125,8 +131,8 @@ async def check_news():
                 for e in embeds:
                     await channel.send(embed=e)
 
-        if max_priority:
-            wconfig["news_last_priority"] = max_priority
+        if len(news_items):
+            wconfig["news_last_priority"] = news_items[-1]["priority"]
             config.set_wglobal_config(wconfig)
 
 
