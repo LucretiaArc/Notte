@@ -212,13 +212,13 @@
       "Void Agni"
     ],
     "availability": {
-      "Blazing Ghost": [false, true, false, true, false, false, true],
-      "Frost Hermit": [true, false, true, false, true, true, true],
-      "Steel Golem": [true, false, false, true, false, false, false],
-      "Obsidian Golem": [false, true, true, false, true, true, true],
+      "Blazing Ghost": [true, false, false, true, false, true, false],
+      "Frost Hermit": [false, true, true, false, true, false, true],
+      "Steel Golem": [true, true, false, false, true, false, false],
+      "Obsidian Golem": [false, false, true, true, false, true, true],
       "Void Zephyr": [true, false, true, false, false, true, false],
-      "Raging Manticore": [false, false, true, false, false, false, false],
-      "Void Agni": [false, true, false, true, true, true, true]
+      "Raging Manticore": [false, false, false, true, false, true, true],
+      "Void Agni": [false, true, false, false, true, false, true]
     }
   }
 }
