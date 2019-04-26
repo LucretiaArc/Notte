@@ -43,29 +43,45 @@ async def check_news(reschedule):
                            "format=json&type=information&action=information_detail&lang=en_us&article_id="
 
         wconfig = config.get_wglobal_config()
-        last_priority = wconfig.get("news_last_priority")
+        last_article_id = wconfig.get("news_last_article_id")
+        last_article_date = wconfig.get("news_last_article_date")
+
         next_priority = 1e9
         news_items = []
-        while True:
+        found_all_items = False
+        while not found_all_items:
             async with session.get(list_base_url + str(next_priority)) as response:
                 result_json = await response.json(content_type=None)
 
                 if result_json["data_headers"]["result_code"] != 1:
+                    # invalid query
                     logger.error("Error retrieving news list: data_headers = " + json.dumps(result_json["data_headers"]))
                     return
 
                 query_result = result_json["data"]["category"]
 
-                news_items += query_result["contents"]
-                next_priority = util.safe_int(query_result["priority_lower_than"], 0)
+                if last_article_id == 0 or last_article_date == 0:
+                    # default config
+                    logger.warning("Setting last news article id and date to match recent article")
+                    recent_article = query_result["contents"][0]
+                    wconfig["news_last_article_id"] = recent_article["article_id"]
+                    wconfig["news_last_article_date"] = recent_article["date"]
+                    config.set_wglobal_config(wconfig)
+                    return
 
-                if not query_result["more_posts"] or next_priority-1 <= last_priority:
-                    break
+                for item in query_result["contents"]:
+                    if item["article_id"] == last_article_id or item["date"] < last_article_date:
+                        found_all_items = True
+                        break
+                    else:
+                        news_items.append(item)
+
+                next_priority = util.safe_int(query_result["priority_lower_than"], 0)
 
         embeds = []
 
         # sort and filter news items for correct order
-        news_items = sorted(filter(lambda d: d["priority"] > last_priority, news_items), key=lambda d: d["priority"])
+        news_items = sorted(news_items, key=lambda d: d["priority"])
 
         for item in news_items:
             title = item["title_name"]
@@ -122,7 +138,12 @@ async def check_news(reschedule):
             )
             e.set_footer(text="Posted " + date.strftime("%B %d, %I:%M %p (UTC)"))
             embeds.append(e)
-            logger.info("Posting article with priority {0} and id {1}".format(item["priority"], item["article_id"]))
+            logger.info("Posting article with timestamp {0} and id {1}".format(item["date"], item["article_id"]))
+
+        if len(news_items):
+            wconfig["news_last_article_id"] = news_items[-1]["article_id"]
+            wconfig["news_last_article_date"] = news_items[-1]["date"]
+            config.set_wglobal_config(wconfig)
 
         for guild in client.guilds:
             active_channel = config.get_guild_config(guild)["active_channel"]
@@ -130,10 +151,6 @@ async def check_news(reschedule):
             if channel is not None and channel.permissions_for(guild.me).send_messages:
                 for e in embeds:
                     await channel.send(embed=e)
-
-        if len(news_items):
-            wconfig["news_last_priority"] = news_items[-1]["priority"]
-            config.set_wglobal_config(wconfig)
 
 
 class TagStripper(html.parser.HTMLParser):

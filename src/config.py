@@ -30,7 +30,8 @@ class Config:
     }
 
     wc_default = {
-        "news_last_priority": 411
+        "news_last_article_id": 0,
+        "news_last_article_date": 0
     }
 
     @classmethod
