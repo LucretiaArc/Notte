@@ -183,7 +183,7 @@ class Adventurer:
             wt_id = safe_int(a["WeaponTypeId"], None)
             adv.weapon_type = None if wt_id is None else WeaponType(wt_id)
             el_id = safe_int(a["ElementalTypeId"], None)
-            adv.element = None if el_id is None else Element(el_id)
+            adv.element = None if el_id not in range(1, 6) else Element(el_id)
             adv.rarity = safe_int(a["Rarity"], None)
 
             # max hp calculation
@@ -377,7 +377,7 @@ class Dragon:
             dragon.max_hp = safe_int(d["MaxHp"], None)
             dragon.max_str = safe_int(d["MaxAtk"], None)
             el_id = safe_int(d["ElementalTypeId"], None)
-            dragon.element = None if el_id is None else Element(el_id)
+            dragon.element = None if el_id not in range(1, 6) else Element(el_id)
             gift_id = safe_int(d["FavoriteType"], None)
             dragon.favourite_gift = None if gift_id is None else DragonGift(gift_id)
 
@@ -638,7 +638,7 @@ class Weapon:
             wt_id = safe_int(w["TypeId"], None)
             weapon.weapon_type = None if wt_id is None else WeaponType(wt_id)
             el_id = safe_int(w["ElementalTypeId"], None)
-            weapon.element = None if (el_id is None or el_id == 99) else Element(el_id)
+            weapon.element = None if el_id not in range(1, 6) else Element(el_id)
 
             weapon.obtained = clean_wikitext(w["Obtain"]) or None
             weapon.max_hp = safe_int(w["MaxHp"], None)
