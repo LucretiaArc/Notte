@@ -179,7 +179,7 @@ async def index_adventurer_resists():
 
         resist_percent = int(value_matches[0])
         for res in data.Resistance:
-            if any(i in ability.description.casefold() for i in (res.name.casefold(), res.value.casefold())):
+            if any(i in ability.description.casefold() for i in map(str.casefold, res.values)):
                 ability_resistances.append((res, resist_percent))
 
         return ability_resistances
