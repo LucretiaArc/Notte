@@ -493,9 +493,9 @@ class Wyrmprint:
     async def update_repository(cls, session: aiohttp.ClientSession):
         base_url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Wyrmprints&format=json&limit=500&fields=" \
                    "Name,Rarity,MaxHp,MaxAtk,Obtain,DATE(ReleaseDate)%3DReleaseDate," \
-                   "Abilities11,Abilities12," \
-                   "Abilities21,Abilities22," \
-                   "Abilities31,Abilities32" \
+                   "Abilities11,Abilities12,Abilities13," \
+                   "Abilities21,Abilities22,Abilities23," \
+                   "Abilities31,Abilities32,Abilities33" \
                    "&order_by=Name&offset="
 
         wyrmprint_info_list = await process_cargo_query(session, base_url)
@@ -520,7 +520,7 @@ class Wyrmprint:
             # add all abilities that exist
             ability_slots = [wyrmprint.ability_1, wyrmprint.ability_2, wyrmprint.ability_3]
             for slot in range(len(ability_slots)):
-                for pos in range(2):
+                for pos in range(3):
                     ability = Ability.abilities.get(clean_wikitext(wp["Abilities{0}{1}".format(slot+1, pos+1)]))
                     ability_slots[slot] += filter(None, [ability])
 
