@@ -514,7 +514,7 @@ class Wyrmprint:
             wyrmprint.rarity = safe_int(wp["Rarity"], None)
             wyrmprint.max_hp = safe_int(wp["MaxHp"], None)
             wyrmprint.max_str = safe_int(wp["MaxAtk"], None)
-            wyrmprint.obtained = clean_wikitext(wp["Obtain"]) or None
+            wyrmprint.obtained = clean_wikitext(wp["Obtain"]).split("\n") or None
             wyrmprint.release_date = wp["ReleaseDate"] if wp["ReleaseDate"] and not wp["ReleaseDate"].startswith("1970") else None
 
             # add all abilities that exist
@@ -576,8 +576,8 @@ class Wyrmprint:
             ability_str += "\n" + self.ability_3[-1].name
         ability_str += "\n\n"
 
-        footer_str = "*Obtained from:  {0}* \n*Release Date:  {1}* ".format(
-            self.obtained or "???",
+        footer_str = "**Obtained from**\n{0}\n\n*Release Date:  {1}* ".format(
+            "\n".join(self.obtained) if self.obtained else "???",
             self.release_date or "???"
         )
 

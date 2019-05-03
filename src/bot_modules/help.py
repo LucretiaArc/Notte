@@ -77,8 +77,8 @@ async def report(message, args):
         channel = message.channel
 
         author_name = "{0}#{1}".format(author.name, author.discriminator) + \
-                      ("" if (isinstance(message.channel, discord.abc.PrivateChannel) or author.nick is None) else " ({0})".format(author.nick))
-        location = "a direct message" if isinstance(message.channel, discord.abc.PrivateChannel) else ("#{0} ({1})".format(channel.name, message.guild.name))
+                      ("" if (isinstance(channel, discord.abc.PrivateChannel) or author.nick is None) else " ({0})".format(author.nick))
+        location = "a direct message" if isinstance(channel, discord.abc.PrivateChannel) else ("#{0} ({1}), {2}".format(channel.name, channel.id, message.guild.name))
 
         await client.get_channel(config.get_global_config()["report_channel"]).send(
                                   "{0} in {1} reports:\n{2}".format(author_name, location, args))

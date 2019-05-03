@@ -80,7 +80,7 @@ async def check_news(reschedule):
 
         embeds = []
 
-        # sort and filter news items for correct order
+        # sort news items for correct order
         news_items = sorted(news_items, key=lambda d: d["priority"])
 
         for item in news_items:
