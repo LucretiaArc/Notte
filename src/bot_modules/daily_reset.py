@@ -1,7 +1,7 @@
 import datetime
 import config
 import util
-from hook import Hook
+import hook
 
 client = None
 
@@ -10,8 +10,8 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    Hook.get("on_reset").attach(on_reset)
-    Hook.get("before_reset").attach(before_reset)
+    hook.Hook.get("on_reset").attach(on_reset)
+    hook.Hook.get("before_reset").attach(before_reset)
 
 
 async def before_reset():
@@ -54,4 +54,4 @@ def get_reset_message(day):
     return message_string
 
 
-Hook.get("on_init").attach(on_init)
+hook.Hook.get("on_init").attach(on_init)

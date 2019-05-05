@@ -2,7 +2,7 @@ import discord
 import asyncio
 import random
 import config
-from hook import Hook
+import hook
 
 client = None
 
@@ -20,4 +20,4 @@ def change_status():
     asyncio.get_event_loop().call_later(600, change_status)
 
 
-Hook.get("on_init").attach(on_init)
+hook.Hook.get("on_init").attach(on_init)

@@ -4,9 +4,10 @@ import config
 import logging
 import util
 import discord
+import io
 import jellyfish
 import jellyfish._jellyfish as py_jellyfish
-from hook import Hook
+import hook
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +30,10 @@ async def on_init(discord_client):
 
     shortcut_config = config.get_global_config()["query_shortcuts"]
     entity_maps = {
-        "adventurer": data.Adventurer.adventurers,
-        "dragon": data.Dragon.dragons,
-        "wyrmprint": data.Wyrmprint.wyrmprints,
-        "skill": data.Skill.skills
+        "adventurer": data.Adventurer.get_all(),
+        "dragon": data.Dragon.get_all(),
+        "wyrmprint": data.Wyrmprint.get_all(),
+        "skill": data.Skill.get_all()
     }
 
     for etype in entity_maps:
@@ -55,7 +56,32 @@ async def on_init(discord_client):
 
     logger.info("Query shortcuts resolved.")
 
-    Hook.get("on_message").attach(get_info)
+    hook.Hook.get("on_message").attach(get_info)
+    hook.Hook.get("owner!rawquery").attach(raw_query)
+
+
+async def raw_query(message, args):
+    match_type, match_item, match_distance, match_string = match_entity(args)
+    content = repr(match_item)
+    if len(content) <= 2048:
+        await message.channel.send(
+            "Matched {0} (match rating {1})".format(
+                str(match_item),
+                match_distance
+            ),
+            embed=discord.Embed(
+                title=str(match_item),
+                description=repr(match_item)
+            )
+        )
+    else:
+        await message.channel.send(
+            "Matched {0} (match rating {1})".format(
+                str(match_item),
+                match_distance
+            ),
+            file=discord.File(fp=io.BytesIO(bytes(content, "UTF-8")), filename=str(match_item)+".txt")
+        )
 
 
 async def get_info(message):
@@ -64,14 +90,6 @@ async def get_info(message):
         if len(matches) > 0:
             query_messages = config.get_global_config()["query_messages"]
             special_query_messages = config.get_global_config()["special_query_messages"]
-            search_locations = [
-                shortcuts,
-                data.Adventurer.adventurers,
-                data.Dragon.dragons,
-                data.Wyrmprint.wyrmprints,
-                data.Skill.skills,
-                data.Weapon.weapons
-            ]
 
             if len(matches) > 3:
                 await message.channel.send("Too many queries, only the first three will be shown.")
@@ -96,33 +114,55 @@ async def get_info(message):
                     ))
                     continue
 
-                best_match = (None, 100, "")  # (matching item, match distance, match string)
-                for loc in search_locations:
-                    for key in sorted(loc.keys()):
-                        d = edit_distance(search_term, key)
-                        if d < best_match[1]:
-                            best_match = (loc[key], d, key)
+                match_type, match_item, match_distance, match_string = match_entity(search_term)
 
-                match_len = max(len(best_match[2]), len(search_term))
-                match_threshold = 0.4 + 0.2*match_len
-
-                if best_match[1] <= match_threshold:
-                    await message.channel.send(embed=best_match[0].get_embed())
-                else:
-                    if best_match[1] < match_threshold*2:
-                        if best_match[2] in shortcuts:
-                            await message.channel.send(
-                                "I'm not sure what \"{0}\" is, did you mean \"{1}\"? "
-                                "If so, you can use the shortcut \"{2}\".".format(
-                                    search_term,
-                                    str(best_match[0]).lower(),
-                                    best_match[2]
-                                )
+                if match_type == 2:
+                    await message.channel.send(embed=match_item.get_embed())
+                elif match_type == 1:
+                    if match_string in shortcuts:
+                        await message.channel.send(
+                            "I'm not sure what \"{0}\" is, did you mean \"{1}\"? "
+                            "If so, you can use the shortcut \"{2}\".".format(
+                                search_term,
+                                str(match_item).lower(),
+                                match_string
                             )
-                        else:
-                            await message.channel.send("I'm not sure what \"{0}\" is, did you mean \"{1}\"?".format(search_term, best_match[2]))
+                        )
                     else:
-                        await message.channel.send("I'm not sure what \"{0}\" is.".format(search_term))
+                        await message.channel.send("I'm not sure what \"{0}\" is, did you mean \"{1}\"?".format(search_term, match_string))
+                else:
+                    await message.channel.send("I'm not sure what \"{0}\" is.".format(search_term))
 
 
-Hook.get("on_init").attach(on_init)
+def match_entity(search_string):
+    search_locations = [
+        shortcuts,
+        data.Adventurer.get_all(),
+        data.Dragon.get_all(),
+        data.Wyrmprint.get_all(),
+        data.Skill.get_all(),
+        data.Weapon.get_all()
+    ]
+
+    match_item = None
+    match_distance = 100
+    match_string = ""
+    for loc in search_locations:
+        for key in sorted(loc.keys()):
+            d = edit_distance(search_string, key)
+            if d < match_distance:
+                match_item = loc[key]
+                match_distance = d
+                match_string = key
+
+    match_threshold = 0.4 + 0.2 * max(len(match_string), len(search_string))
+
+    if match_distance <= match_threshold:
+        return 2, match_item, match_distance, match_string
+    elif match_distance < match_threshold * 2:
+        return 1, match_item, match_distance, match_string
+    else:
+        return 0, match_item, match_distance, match_string
+
+
+hook.Hook.get("on_init").attach(on_init)

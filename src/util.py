@@ -1,9 +1,10 @@
 import datetime
 import asyncio
 import logging
+import urllib.parse
 import config
 import discord
-from hook import Hook
+import hook
 
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ def create_daily_hook(name, hour, minute=0, second=0):
     :param second: second at which to call the hook
     """
 
-    scheduled_hook = Hook.get(name)
+    scheduled_hook = hook.Hook.get(name)
 
     def scheduled_call():
         logger.info("Running scheduled hook " + name)
@@ -118,3 +119,12 @@ def is_special_guild(guild: discord.Guild):
     :return: true if guild is special
     """
     return guild and guild.id in config.get_global_config()["special_guilds"]
+
+
+def get_link(page_name):
+    """
+    Return a link to the wiki for the given page name
+    :param page_name: name of the page to link to
+    :return: link to page
+    """
+    return "https://dragalialost.gamepedia.com/" + urllib.parse.quote(page_name.replace(" ", "_"))

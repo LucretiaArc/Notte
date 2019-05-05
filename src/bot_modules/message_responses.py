@@ -1,5 +1,5 @@
 import util
-from hook import Hook
+import hook
 
 client = None
 
@@ -8,7 +8,7 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    Hook.get("on_message").attach(handle_message)
+    hook.Hook.get("on_message").attach(handle_message)
 
 
 async def handle_message(message):
@@ -22,4 +22,4 @@ async def handle_message(message):
             await message.channel.send(responses[response])
 
 
-Hook.get("on_init").attach(on_init)
+hook.Hook.get("on_init").attach(on_init)

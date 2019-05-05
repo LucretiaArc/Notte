@@ -9,7 +9,7 @@ import discord
 import html.parser
 import re
 import math
-from hook import Hook
+import hook
 
 logger = logging.getLogger(__name__)
 
@@ -168,4 +168,4 @@ class TagStripper(html.parser.HTMLParser):
         return ''.join(self.fed)
 
 
-Hook.get("on_init").attach(on_init)
+hook.Hook.get("on_init").attach(on_init)

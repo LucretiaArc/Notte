@@ -4,7 +4,7 @@ import re
 import util
 import data
 import config
-from hook import Hook
+import hook
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,8 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    Hook.get("on_reset").attach(update_data_store)
-    Hook.get("public!resist").attach(resist_search)
+    hook.Hook.get("on_reset").attach(update_data_store)
+    hook.Hook.get("public!resist").attach(resist_search)
 
     await update_data_store()
 
@@ -105,11 +105,12 @@ async def resist_search(message, args):
         return
 
     result_sections = []
+    adventurers = data.Adventurer.get_all()
     for res in resist_list:
         match_list = []
         for el in element_list:
             match_list.extend(list(filter(None, (
-                data.Adventurer.adventurers.get(adv_name.lower()) for adv_name in resist_data[res][el]
+                adventurers.get(adv_name.lower()) for adv_name in resist_data[res][el]
             ))))
 
         if len(match_list) > 0 or res in specified_resists:  # include resists specifically searched for
@@ -184,7 +185,7 @@ async def index_adventurer_resists():
 
         return ability_resistances
 
-    for adv in data.Adventurer.adventurers.values():
+    for adv in data.Adventurer.get_all().values():
         adv_resistances = []
         abilities = [adv.ability_1, adv.ability_2, adv.ability_3]
         for ab in abilities:
@@ -205,4 +206,4 @@ async def update_data_store():
     logger.info("Finished indexing adventurer resistances.")
 
 
-Hook.get("on_init").attach(on_init)
+hook.Hook.get("on_init").attach(on_init)

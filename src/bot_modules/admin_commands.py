@@ -1,6 +1,6 @@
 import config
 import util
-from hook import Hook
+import hook
 
 client = None
 
@@ -9,9 +9,9 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    Hook.get("admin!prefix").attach(set_prefix)
-    Hook.get("admin!channel").attach(set_active_channel)
-    Hook.get("on_mention").attach(reset_prefix)
+    hook.Hook.get("admin!prefix").attach(set_prefix)
+    hook.Hook.get("admin!channel").attach(set_active_channel)
+    hook.Hook.get("on_mention").attach(reset_prefix)
 
 
 async def set_prefix(message, args):
@@ -57,4 +57,4 @@ async def reset_prefix(message):
         else:
             await message.channel.send("You're not allowed to do that!")
 
-Hook.get("on_init").attach(on_init)
+hook.Hook.get("on_init").attach(on_init)

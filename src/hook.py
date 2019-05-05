@@ -101,4 +101,3 @@ class Hook:
                 if self.__name is not None:
                     logger.exception("Exception in hook {0} from async method:".format(self.__name))
                 logger.exception(e)
-

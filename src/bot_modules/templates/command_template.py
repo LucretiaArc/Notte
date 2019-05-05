@@ -1,4 +1,4 @@
-from hook import Hook
+import hook
 
 client = None
 
@@ -17,4 +17,4 @@ async def command(message, args):
     pass
 
 
-Hook.get("on_init").attach(on_init)
+hook.Hook.get("on_init").attach(on_init)

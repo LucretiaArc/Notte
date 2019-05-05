@@ -1,7 +1,7 @@
 import discord
 import config
 import data
-from hook import Hook
+import hook
 
 client = None
 
@@ -10,9 +10,9 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    Hook.get("public!xmus").attach(xmus)
-    Hook.get("public!bubbles").attach(bubbles)
-    Hook.get("public!threshold").attach(threshold)
+    hook.Hook.get("public!xmus").attach(xmus)
+    hook.Hook.get("public!bubbles").attach(bubbles)
+    hook.Hook.get("public!threshold").attach(threshold)
 
 
 async def xmus(message, args):
@@ -144,4 +144,4 @@ async def threshold(message, args):
     else:
         await message.channel.send("I haven't seen that dragon before, they must be scary!")
 
-Hook.get("on_init").attach(on_init)
+hook.Hook.get("on_init").attach(on_init)

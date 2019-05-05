@@ -2,7 +2,7 @@ import util
 import calendar
 import logging
 import data
-from hook import Hook
+import hook
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +14,8 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    Hook.get("on_reset").attach(update_gift_string)
-    Hook.get("public!gift").attach(gift_message)
+    hook.Hook.get("on_reset").attach(update_gift_string)
+    hook.Hook.get("public!gift").attach(gift_message)
 
     await update_gift_string()
 
@@ -37,7 +37,8 @@ async def update_gift_string():
     else:
         gift = data.DragonGift(reset_day + 1)
 
-        dragons = [d for d in data.Dragon.dragons.values() if d.favourite_gift == gift and d.rarity and d.element]
+        all_dragons = data.Dragon.get_all().values()
+        dragons = [d for d in all_dragons if d.favourite_gift == gift and d.rarity and d.element]
 
         # sorting
         dragons.sort(key=lambda d: d.full_name)  # by name
@@ -57,4 +58,4 @@ async def update_gift_string():
     gift_string = "It's " + calendar.day_name[reset_day] + ", so give your best gift to " + gift_target
 
 
-Hook.get("on_init").attach(on_init)
+hook.Hook.get("on_init").attach(on_init)

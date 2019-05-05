@@ -3,7 +3,7 @@ import logging
 import config
 import util
 import discord
-from hook import Hook
+import hook
 
 logger = logging.getLogger(__name__)
 
@@ -14,9 +14,9 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    Hook.get("public!help").attach(help_message)
-    Hook.get("public!about").attach(about_message)
-    Hook.get("public!report").attach(report)
+    hook.Hook.get("public!help").attach(help_message)
+    hook.Hook.get("public!about").attach(about_message)
+    hook.Hook.get("public!report").attach(report)
 
 
 async def help_message(message, args):
@@ -25,7 +25,7 @@ async def help_message(message, args):
     `help` gives a list of all the commands you can use.
     `help <command>` gives information about how to use a command, if you can use it.
     """
-    command_list = [c[c.find("!")+1:] for c in Hook.list() if (
+    command_list = [c[c.find("!")+1:] for c in hook.Hook.list() if (
                         (c.startswith("public!") and util.check_command_permissions(message, "public")) or
                         (c.startswith("admin!") and util.check_command_permissions(message, "admin")) or
                         (c.startswith("owner!") and util.check_command_permissions(message, "owner"))
@@ -38,8 +38,8 @@ async def help_message(message, args):
         # help for a specific command, command_list already filters commands the user can use
         cmd = args.strip().lower()
         command_methods = []
-        command_methods.extend(Hook.get("public!" + cmd).methods())
-        command_methods.extend(Hook.get("admin!" + cmd).methods())
+        command_methods.extend(hook.Hook.get("public!" + cmd).methods())
+        command_methods.extend(hook.Hook.get("admin!" + cmd).methods())
         help_msg = "**" + config.get_prefix(message.guild) + cmd + "**" + "\n"
         help_msg += ("\n"+"\u2E3B"*16+"\n").join(inspect.getdoc(method) for method in command_methods if inspect.getdoc(method) != "")
     else:
@@ -89,4 +89,4 @@ async def report(message, args):
         await message.channel.send("Thanks for the report! I've let " + config.get_global_config()["owner_name"] + " know.")
 
 
-Hook.get("on_init").attach(on_init)
+hook.Hook.get("on_init").attach(on_init)
