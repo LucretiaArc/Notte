@@ -8,8 +8,10 @@ import discord
 import calendar
 import collections
 import urllib.parse
-from enum import Enum
-from aenum import MultiValueEnum
+import data.abc
+import data.parsing
+
+from data._static import *
 from hook import Hook
 
 logger = logging.getLogger(__name__)
@@ -18,19 +20,19 @@ logger = logging.getLogger(__name__)
 async def update_repositories():
     async with aiohttp.ClientSession() as session:
         logger.info("Updating skill repository")
-        await Skill.update_repository(session)
+        await Skill.update_data(session)
         logger.info("Updating ability repository")
         await Ability.update_repository(session)
         logger.info("Updating coability repository")
         await CoAbility.update_repository(session)
         logger.info("Updating adventurer repository")
-        await Adventurer.update_repository(session)
+        await Adventurer.repository.update_data(session)
         logger.info("Updating dragon repository")
-        await Dragon.update_repository(session)
+        await Dragon.update_data(session)
         logger.info("Updating wyrmprint repository")
-        await Wyrmprint.update_repository(session)
+        await Wyrmprint.update_data(session)
         logger.info("Updating weapon repository")
-        await Weapon.update_repository(session)
+        await Weapon.update_data(session)
         logger.info("Updated all repositories.")
 
 
@@ -87,164 +89,64 @@ def get_link(page_name):
     return "https://dragalialost.gamepedia.com/" + urllib.parse.quote(page_name.replace(" ", "_"))
 
 
-class Element(MultiValueEnum):
-    FIRE = 1, "Fire", "Flame"
-    WATER = 2, "Water"
-    WIND = 3, "Wind"
-    LIGHT = 4, "Light"
-    DARK = 5, "Dark", "Shadow"
-
-    def __str__(self):
-        return self.name.capitalize()
-
-    def get_colour(self):
-        return [0xE73031, 0x1790E0, 0x00D770, 0xFFBA10, 0xA738DE][self.value-1]
-
-
-class WeaponType(Enum):
-    SWORD = 1
-    BLADE = 2
-    DAGGER = 3
-    AXE = 4
-    LANCE = 5
-    BOW = 6
-    WAND = 7
-    STAFF = 8
-
-    def __str__(self):
-        return self.name.capitalize()
-
-
-class Resistance(MultiValueEnum):
-    POISON = "Poison"
-    BURN = "Burn", "Burning"
-    FREEZE = "Freeze", "Freezing"
-    PARALYSIS = "Paralysis"
-    BLIND = "Blind", "Blindness"
-    STUN = "Stun"
-    CURSE = "Curse", "Curses"
-    BOG = "Bog"
-    SLEEP = "Sleep"
-
-    def __str__(self):
-        return self.name.capitalize()
-
-
-class DragonGift(MultiValueEnum):
-    JUICY_MEAT = 1
-    KALEIDOSCOPE = 2
-    FLORAL_CIRCLET = 3
-    COMPELLING_BOOK = 4
-    MANA_ESSENCE = 5
-    GOLDEN_CHALICE = 6, 7
-
-    def __str__(self):
-        return self.name.replace("_", " ").title()
-
-
-class Adventurer:
+class Adventurer(data.abc.Entity):
     """
     Represents an adventurer and some of their associated data
     """
+
     adventurers = {}
+    repository = None
 
     @classmethod
-    async def update_repository(cls, session: aiohttp.ClientSession):
-        base_url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Adventurers&format=json&limit=500&fields=" \
-                   "Id,FullName,Name,Title,Description,Obtain,DATE(ReleaseDate)%3DReleaseDate," \
-                   "WeaponTypeId,ElementalTypeId,Rarity," \
-                   "MaxHp,PlusHp0,PlusHp1,PlusHp2,PlusHp3,PlusHp4,McFullBonusHp5," \
-                   "MaxAtk,PlusAtk0,PlusAtk1,PlusAtk2,PlusAtk3,PlusAtk4,McFullBonusAtk5," \
-                   "Skill1Name,Skill2Name," \
-                   "Abilities11,Abilities12,Abilities13,Abilities14," \
-                   "Abilities21,Abilities22,Abilities23,Abilities24," \
-                   "Abilities31,Abilities32,Abilities33,Abilities34," \
-                   "ExAbilityData1,ExAbilityData2,ExAbilityData3,ExAbilityData4,ExAbilityData5" \
-                   "&order_by=Id&offset="
+    def init(cls):
+        mapper = data.parsing.EntityMapper(Adventurer)
+        cls.repository = data.parsing.EntityRepository(mapper, "Adventurers")
 
-        adventurer_info_list = await process_cargo_query(session, base_url)
+        def get_ability(s):
+            return Ability.abilities.get(clean_wikitext(s))
 
-        adventurers_new = {}
+        def get_coability(s):
+            return CoAbility.coabilities.get(clean_wikitext(s))
 
-        safe_int = util.safe_int
-        for a in adventurer_info_list:
-            adv = cls()
-            adv.full_name = clean_wikitext(a["FullName"]) or None
+        def get_skill(s):
+            return Skill.skills.get(clean_wikitext(s).lower())
 
+        mp = mapper.add_property  # mapper property
+        mf = data.parsing.EntityMapper  # mapper functions
+
+        mp("full_name", mf.text, "FullName")
+        mp("name", mf.text, "Name")
+        mp("title", mf.text, "Title")
+        mp("description", mf.text, "Description")
+        mp("obtained", mf.text, "Obtain")
+        mp("release_date", mf.date, "DATE(ReleaseDate)")
+        mp("weapon_type", mf.weapon_type, "WeaponTypeId")
+        mp("element", mf.element, "ElementalTypeId")
+        mp("rarity", mf.int, "Rarity")
+        mp("max_hp", mf.sum, "MaxHp", "PlusHp0", "PlusHp1", "PlusHp2", "PlusHp3", "PlusHp4", "McFullBonusHp5")
+        mp("max_str", mf.sum, "MaxAtk", "PlusAtk0", "PlusAtk1", "PlusAtk2", "PlusAtk3", "PlusAtk4", "McFullBonusAtk5")
+        mp("ability_1", mf.filtered_list_of(get_ability), *("Abilities1{0}".format(i + 1) for i in range(4)))
+        mp("ability_2", mf.filtered_list_of(get_ability), *("Abilities2{0}".format(i + 1) for i in range(4)))
+        mp("ability_3", mf.filtered_list_of(get_ability), *("Abilities3{0}".format(i + 1) for i in range(4)))
+        mp("coability", mf.filtered_list_of(get_coability), *("ExAbilityData{0}".format(i + 1) for i in range(5)))
+        mp("skill_1", get_skill, "Skill1Name")
+        mp("skill_2", get_skill, "Skill2Name")
+
+        def post_processor(adv: Adventurer):
             if adv.full_name is None:
-                continue
+                return False
 
-            # basic info
-            adv.name = clean_wikitext(a["Name"]) or None
-            adv.title = clean_wikitext(a["Title"]) or None
-            adv.description = clean_wikitext(a["Description"]) or None
-            adv.obtained = clean_wikitext(a["Obtain"]) or None
-            adv.release_date = a["ReleaseDate"] if a["ReleaseDate"] and not a["ReleaseDate"].startswith("1970") else None
-            wt_id = safe_int(a["WeaponTypeId"], None)
-            adv.weapon_type = None if wt_id is None else WeaponType(wt_id)
-            el_id = safe_int(a["ElementalTypeId"], None)
-            adv.element = None if el_id not in range(1, 6) else Element(el_id)
-            adv.rarity = safe_int(a["Rarity"], None)
-
-            # max hp calculation
-            max_hp_vals = [
-                safe_int(a["MaxHp"], None),
-                safe_int(a["PlusHp0"], None),
-                safe_int(a["PlusHp1"], None),
-                safe_int(a["PlusHp2"], None),
-                safe_int(a["PlusHp3"], None),
-                safe_int(a["PlusHp4"], None),
-                safe_int(a["McFullBonusHp5"], None),
-            ]
             try:
-                adv.max_hp = sum(max_hp_vals)
-            except TypeError:
-                adv.max_hp = None
-
-            # max strength calculation
-            max_str_vals = [
-                safe_int(a["MaxAtk"], None),
-                safe_int(a["PlusAtk0"], None),
-                safe_int(a["PlusAtk1"], None),
-                safe_int(a["PlusAtk2"], None),
-                safe_int(a["PlusAtk3"], None),
-                safe_int(a["PlusAtk4"], None),
-                safe_int(a["McFullBonusAtk5"], None),
-            ]
-            try:
-                adv.max_str = sum(max_str_vals)
-            except TypeError:
-                adv.max_str = None
-
-            # add all abilities that exist
-            ability_slots = [adv.ability_1, adv.ability_2, adv.ability_3]
-            for slot in range(len(ability_slots)):
-                for pos in range(4):
-                    ability = Ability.abilities.get(clean_wikitext(a["Abilities{0}{1}".format(slot+1, pos+1)]))
-                    ability_slots[slot] += filter(None, [ability])
-
-            # add all coabilities that exist
-            for pos in range(5):
-                coability = CoAbility.coabilities.get(clean_wikitext(a["ExAbilityData{0}".format(pos + 1)]))
-                adv.coability += filter(None, [coability])
-
-            # add skills
-            adv.skill_1 = Skill.skills.get(clean_wikitext(a["Skill1Name"]).lower())
-            adv.skill_2 = Skill.skills.get(clean_wikitext(a["Skill2Name"]).lower())
-
-            # max might adds 500 for all max level skills, 120 for force strike level 2
-            try:
+                # max might adds 500 for all max level skills, 120 for force strike level 2
                 adv.max_might = adv.max_hp + adv.max_str + 500 + 120 + \
-                    adv.ability_1[-1].might + \
-                    adv.ability_2[-1].might + \
-                    adv.ability_3[-1].might + \
-                    adv.coability[-1].might
+                                adv.ability_1[-1].might + adv.ability_2[-1].might + adv.ability_3[-1].might + \
+                                adv.coability[-1].might
             except (IndexError, TypeError):
                 adv.max_might = None
 
-            adventurers_new[adv.full_name.lower()] = adv
+            return True
 
-        cls.adventurers = adventurers_new
+        mapper.post_processor = post_processor
 
     def __init__(self):
         self.full_name = ""
@@ -267,8 +169,11 @@ class Adventurer:
         self.ability_3 = []
         self.coability = []
 
-    def __str__(self):
+    def get_simple_name(self):
         return self.full_name
+
+    def get_key(self):
+        return self.full_name.lower()
 
     def get_embed(self) -> discord.Embed:
         """
@@ -341,14 +246,64 @@ class Adventurer:
         return embed
 
 
-class Dragon:
+class Dragon(data.abc.Entity):
     """
     Represents a dragon and some of their associated data
     """
     dragons = {}
+    parser = None
 
     @classmethod
-    async def update_repository(cls, session: aiohttp.ClientSession):
+    def init(cls):
+        def get_ability(s):
+            return Ability.abilities.get(clean_wikitext(s))
+
+        def get_coability(s):
+            return CoAbility.coabilities.get(clean_wikitext(s))
+
+        def get_skill(s):
+            return Skill.skills.get(clean_wikitext(s).lower())
+
+        parser = EntityMapper("Dragons")
+        ap = parser.add_property
+        ap("full_name", Mapper.text, "FullName")
+        ap("name", Mapper.text, "Name")
+        ap("title", Mapper.text, "Title")
+        ap("description", Mapper.text, "ProfileText")
+        ap("obtained", Mapper.text, "Obtain")
+        ap("release_date", Mapper.date, "DATE(ReleaseDate)")
+        ap("rarity", Mapper.int, "Rarity")
+        ap("element", Mapper.element, "ElementalTypeId")
+        ap("max_hp", Mapper.int, "MaxHp")
+        ap("max_str", Mapper.int, "MaxAtk")
+        ap("favourite_gift", Mapper.dragon_gift, "FavoriteType")
+
+        ap("ability_1", Mapper.filtered_list_of(get_ability), *("Abilities1{0}".format(i + 1) for i in range(2)))
+        ap("ability_2", Mapper.filtered_list_of(get_ability), *("Abilities2{0}".format(i + 1) for i in range(2)))
+        ap("skill", get_skill, "SkillName")
+
+        cls.parser = parser
+
+    def __init__(self):
+        self.full_name = ""
+        self.name = ""
+        self.title = ""
+        self.description = ""
+        self.obtained = ""
+        self.release_date = ""
+        self.rarity = 0
+        self.element = None
+        self.max_hp = 0
+        self.max_str = 0
+        self.max_might = 0
+        self.favourite_gift = None
+
+        self.skill = None
+        self.ability_1 = []
+        self.ability_2 = []
+
+    @classmethod
+    async def update_data(cls, session: aiohttp.ClientSession):
         base_url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Dragons&format=json&limit=500&fields=" \
                    "FullName,Name,Title,ProfileText,MaxHp,MaxAtk,Rarity,ElementalTypeId," \
                    "FavoriteType,Obtain,DATE(ReleaseDate)%3DReleaseDate," \
@@ -403,25 +358,11 @@ class Dragon:
 
         cls.dragons = dragons_new
 
-    def __init__(self):
-        self.full_name = ""
-        self.name = ""
-        self.title = ""
-        self.description = ""
-        self.obtained = ""
-        self.release_date = ""
-        self.rarity = 0
-        self.element = None
-        self.max_hp = 0
-        self.max_str = 0
-        self.max_might = 0
-        self.favourite_gift = None
+    @classmethod
+    def get_data(cls):
+        return cls.dragons
 
-        self.skill = None
-        self.ability_1 = []
-        self.ability_2 = []
-
-    def __str__(self):
+    def get_simple_name(self):
         return self.full_name
 
     def get_embed(self) -> discord.Embed:
@@ -483,14 +424,27 @@ class Dragon:
         return embed
 
 
-class Wyrmprint:
+class Wyrmprint(data.abc.Entity):
     """
     Represents a wyrmprint and some of its associated data
     """
     wyrmprints = {}
 
+    def __init__(self):
+        self.name = ""
+        self.rarity = 0
+        self.obtained = ""
+        self.release_date = ""
+        self.max_hp = 0
+        self.max_str = 0
+        self.max_might = 0
+
+        self.ability_1 = []
+        self.ability_2 = []
+        self.ability_3 = []
+
     @classmethod
-    async def update_repository(cls, session: aiohttp.ClientSession):
+    async def update_data(cls, session: aiohttp.ClientSession):
         base_url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Wyrmprints&format=json&limit=500&fields=" \
                    "Name,Rarity,MaxHp,MaxAtk,Obtain,DATE(ReleaseDate)%3DReleaseDate," \
                    "Abilities11,Abilities12,Abilities13," \
@@ -536,20 +490,11 @@ class Wyrmprint:
 
         cls.wyrmprints = wyrmprints_new
 
-    def __init__(self):
-        self.name = ""
-        self.rarity = 0
-        self.obtained = ""
-        self.release_date = ""
-        self.max_hp = 0
-        self.max_str = 0
-        self.max_might = 0
+    @classmethod
+    def get_data(cls):
+        return cls.wyrmprints
 
-        self.ability_1 = []
-        self.ability_2 = []
-        self.ability_3 = []
-
-    def __str__(self):
+    def get_simple_name(self):
         return self.name
 
     def get_embed(self) -> discord.Embed:
@@ -604,14 +549,32 @@ class Wyrmprint:
         return embed
 
 
-class Weapon:
+class Weapon(data.abc.Entity):
     """
     Represents a weapon and some of its associated data
     """
     weapons = {}
 
+    def __init__(self):
+        self.name = ""
+        self.rarity = 0
+        self.element = None
+        self.weapon_type = None
+        self.obtained = ""
+
+        self.max_hp = 0
+        self.max_str = 0
+        self.max_might = 0
+
+        self.skill = None
+        self.ability_1 = None
+        self.ability_2 = None
+
+        self.crafted_from = None
+        self.crafted_to = []
+
     @classmethod
-    async def update_repository(cls, session: aiohttp.ClientSession):
+    async def update_data(cls, session: aiohttp.ClientSession):
         base_url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Weapons&format=json&limit=500&fields=" \
                    "WeaponName,Rarity,TypeId,ElementalTypeId,Obtain,MaxHp,MaxAtk," \
                    "SkillName,Abilities11,Abilities21," \
@@ -683,41 +646,12 @@ class Weapon:
 
         cls.weapons = weapons_new
 
-    def __init__(self):
-        self.name = ""
-        self.rarity = 0
-        self.element = None
-        self.weapon_type = None
-        self.obtained = ""
+    @classmethod
+    def get_data(cls):
+        return cls.weapons
 
-        self.max_hp = 0
-        self.max_str = 0
-        self.max_might = 0
-
-        self.skill = None
-        self.ability_1 = None
-        self.ability_2 = None
-
-        self.crafted_from = None
-        self.crafted_to = []
-
-    def __str__(self):
+    def get_simple_name(self):
         return self.name
-
-    def get_title_string(self):
-        w_tier = 0
-        w_node = self
-        while w_node is not None:
-            w_node = w_node.crafted_from
-            w_tier += 1
-
-        return "{0}{1} {2} {3}{4}".format(
-            util.get_emote("rarity" + str(self.rarity)),
-            util.get_emote(("wtier" + str(w_tier)) if self.obtained == "Crafting" else ""),
-            self.name or "???",
-            util.get_emote(self.element or "none"),
-            util.get_emote(self.weapon_type or "")
-        )
 
     def get_embed(self) -> discord.Embed:
         """
@@ -790,15 +724,39 @@ class Weapon:
 
         return embed
 
+    def get_title_string(self):
+        w_tier = 0
+        w_node = self
+        while w_node is not None:
+            w_node = w_node.crafted_from
+            w_tier += 1
 
-class Skill:
+        return "{0}{1} {2} {3}{4}".format(
+            util.get_emote("rarity" + str(self.rarity)),
+            util.get_emote(("wtier" + str(w_tier)) if self.obtained == "Crafting" else ""),
+            self.name or "???",
+            util.get_emote(self.element or "none"),
+            util.get_emote(self.weapon_type or "")
+        )
+
+
+class Skill(data.abc.Entity):
     """
     Represents a skill and some of its associated data
     """
     skills = {}
 
+    class SkillLevel:
+        def __init__(self, desc: str, sp: int):
+            self.description = desc
+            self.sp = sp
+
+    def __init__(self, name: str):
+        self.name = name
+        self.levels = []
+
     @classmethod
-    async def update_repository(cls, session: aiohttp.ClientSession):
+    async def update_data(cls, session: aiohttp.ClientSession):
         base_url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Skills&format=json&limit=500&fields=" \
                    "SkillId,Name,Description1,Description2,Description3,HideLevel3,Sp,SPLv2" \
                    "&order_by=SkillId&offset="
@@ -815,17 +773,17 @@ class Skill:
 
             sk = cls(sk_name)
 
-            s1 = SkillLevel(
+            s1 = Skill.SkillLevel(
                 clean_wikitext(s["Description1"]) or None,
                 safe_int(s["Sp"], None)
             )
 
-            s2 = SkillLevel(
+            s2 = Skill.SkillLevel(
                 clean_wikitext(s["Description2"]) or None,
                 safe_int(s["SPLv2"], None)
             )
 
-            s3 = SkillLevel(
+            s3 = Skill.SkillLevel(
                 clean_wikitext(s["Description3"]) or None,
                 safe_int(s["SPLv2"], None)
             )
@@ -838,9 +796,12 @@ class Skill:
 
         cls.skills = skills_new
 
-    def __init__(self, name: str):
-        self.name = name
-        self.levels = []
+    @classmethod
+    def get_data(cls):
+        return cls.skills
+
+    def get_simple_name(self):
+        return self.name
 
     def get_embed(self) -> discord.Embed:
         """
@@ -866,12 +827,6 @@ class Skill:
         return embed
 
 
-class SkillLevel:
-    def __init__(self, desc: str, sp: int):
-        self.description = desc
-        self.sp = sp
-
-
 class Ability:
     """
     Represents an ability and some of its associated data
@@ -881,7 +836,7 @@ class Ability:
     @classmethod
     async def update_repository(cls, session: aiohttp.ClientSession):
         base_url = "https://dragalialost.gamepedia.com/api.php?action=cargoquery&tables=Abilities&format=json&limit=500&fields=" \
-                   "Id,Name,Details,PartyPowerWeight" \
+                   "Id,Name,GenericName,Details,PartyPowerWeight" \
                    "&order_by=Id&offset="
 
         ability_info_list = await process_cargo_query(session, base_url)
@@ -896,6 +851,7 @@ class Ability:
 
             ab = cls(ab_id)
             ab.name = clean_wikitext(a["Name"]) or None
+            ab.generic_name = re.sub(r"\([^)]+\)", "", clean_wikitext(a["GenericName"])).strip() or None
             ab.description = clean_wikitext(a["Details"]) or None
             ab.might = safe_int(a["PartyPowerWeight"], None)
 
@@ -906,6 +862,7 @@ class Ability:
     def __init__(self, id_str: str):
         self.id_str = id_str
         self.name = ""
+        self.generic_name = ""
         self.description = ""
         self.might = 0
 
