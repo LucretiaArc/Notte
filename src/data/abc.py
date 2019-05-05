@@ -15,9 +15,7 @@ class Entity(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def init(cls):
-        if cls.__initialised:
-            raise RuntimeError("Already initialised")
-        cls.__initialised = True
+        pass
 
     @abc.abstractmethod
     def get_key(self) -> str:

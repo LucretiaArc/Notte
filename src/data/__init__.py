@@ -2,7 +2,7 @@ import aiohttp
 import logging
 import hook
 
-from data import _abc as abc
+from data import abc
 from ._static import Element, WeaponType, Resistance, DragonGift, get_rarity_colour
 from ._entities import Adventurer, Dragon, Wyrmprint, Weapon, Skill, Ability, CoAbility
 

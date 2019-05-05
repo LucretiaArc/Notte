@@ -4,7 +4,7 @@ import discord
 import re
 import util
 
-from data import _abc as abc
+from data import abc
 from ._static import Element, WeaponType, DragonGift, get_rarity_colour
 
 
@@ -21,7 +21,6 @@ class Adventurer(abc.Entity):
 
     @classmethod
     def init(cls):
-        super()
         mapper = abc.EntityMapper(Adventurer)
         cls.repository = abc.EntityRepository(mapper, "Adventurers")
 
@@ -177,7 +176,6 @@ class Dragon(abc.Entity):
 
     @classmethod
     def init(cls):
-        super()
         mapper = abc.EntityMapper(Dragon)
         cls.repository = abc.EntityRepository(mapper, "Dragons")
 
@@ -315,7 +313,6 @@ class Wyrmprint(abc.Entity):
 
     @classmethod
     def init(cls):
-        super()
         mapper = abc.EntityMapper(Wyrmprint)
         cls.repository = abc.EntityRepository(mapper, "Wyrmprints")
 
@@ -436,7 +433,6 @@ class Weapon(abc.Entity):
 
     @classmethod
     def init(cls):
-        super()
         mapper = abc.EntityMapper(Weapon)
         cls.repository = abc.EntityRepository(mapper, "Weapons")
 
@@ -635,7 +631,6 @@ class Skill(abc.Entity):
 
     @classmethod
     def init(cls):
-        super()
         mapper = abc.EntityMapper(Skill)
         cls.repository = abc.EntityRepository(mapper, "Skills")
 
@@ -709,7 +704,6 @@ class Ability(abc.Entity):
 
     @classmethod
     def init(cls):
-        super()
         mapper = abc.EntityMapper(Ability)
         cls.repository = abc.EntityRepository(mapper, "Abilities")
 
@@ -759,7 +753,6 @@ class CoAbility(abc.Entity):
 
     @classmethod
     def init(cls):
-        super()
         mapper = abc.EntityMapper(CoAbility)
         cls.repository = abc.EntityRepository(mapper, "CoAbilities")
 
