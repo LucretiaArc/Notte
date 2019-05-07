@@ -323,7 +323,7 @@ class Wyrmprint(abc.Entity):
         mp("rarity", mf.int, "Rarity")
         mp("max_hp", mf.int, "MaxHp")
         mp("max_str", mf.int, "MaxAtk")
-        mp("obtained", lambda s: mf.text(s).split("\n") if mf.text(s) else None, "Obtain")
+        mp("obtained", lambda s: re.split("\n+", mf.text(s)) if mf.text(s) else None, "Obtain")
         mp("release_date", mf.date, "DATE(ReleaseDate)")
 
         mp("ability_1", mf.filtered_list_of(Ability.find), *("Abilities1{0}".format(i + 1) for i in range(3)))
