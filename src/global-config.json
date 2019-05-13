@@ -218,7 +218,7 @@
       "Obsidian Golem": [false, false, true, true, false, true, true],
       "Void Zephyr": [true, false, true, false, false, true, false],
       "Raging Manticore": [false, false, false, true, false, true, true],
-      "Void Agni": [false, true, false, false, true, false, true]
+      "Void Agni": [false, true, false, false, true, false, false]
     }
   }
 }
