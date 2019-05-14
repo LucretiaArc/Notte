@@ -92,7 +92,8 @@ class Hook:
             except Exception as e:
                 if self.__name is not None:
                     logger.exception("Exception in hook {0} from module {1}:".format(self.__name, method.__module__))
-                logger.exception(e)
+                else:
+                    logger.exception(e)
 
         for task in tasks:
             try:
@@ -100,4 +101,5 @@ class Hook:
             except Exception as e:
                 if self.__name is not None:
                     logger.exception("Exception in hook {0} from async method:".format(self.__name))
-                logger.exception(e)
+                else:
+                    logger.exception(e)

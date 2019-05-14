@@ -704,6 +704,13 @@ class Ability(abc.Entity):
 
     @classmethod
     def init(cls):
+        def generic_name(s: str):
+            text = mf.text(s)
+            if not text:
+                return None
+
+            return re.sub(r"\([^)]+\)", "", text).strip() or None
+
         mapper = abc.EntityMapper(Ability)
         cls.repository = abc.EntityRepository(mapper, "Abilities")
 
@@ -712,7 +719,7 @@ class Ability(abc.Entity):
 
         mp("id_str", mf.text, "Id")
         mp("name", mf.text, "Name")
-        mp("generic_name", lambda s: re.sub(r"\([^)]+\)", "", mf.text(s)).strip() or None, "GenericName")
+        mp("generic_name", generic_name, "GenericName")
         mp("description", mf.text, "Details")
         mp("might", mf.int, "PartyPowerWeight")
 

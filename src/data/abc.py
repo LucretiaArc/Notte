@@ -7,6 +7,9 @@ import re
 import util
 import abc
 import discord
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Entity(abc.ABC):
@@ -79,7 +82,15 @@ class EntityMapper:
                     invalid_key = self.inst_map_arg_keys[attr_name][args.index(None)]
                     raise KeyError("Invalid data key: {0}".format(invalid_key))
 
-                value = map_func(*args)
+                try:
+                    value = map_func(*args)
+                except Exception as e:
+                    logger.exception("Exception encountered while processing attribute \"{0}\" with args {1}:".format(
+                        attr_name,
+                        args
+                    ))
+                    value = None
+
                 setattr(inst, attr_name, value)
             else:
                 post_process = {}
