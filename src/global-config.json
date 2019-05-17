@@ -2,6 +2,7 @@
   "owner_id": 126587545336283136,
   "owner_name": "Struct",
   "report_channel": 559212035401842718,
+  "logging_channel": 578890034686459914,
   "random_statuses": [
     ["Dragalia Lost", 3],
     ["Void Battles", 2],
@@ -195,9 +196,9 @@
   "special_query_messages": {
     "bog": ["Bog", "<:affliction_bog:558978733462126594> Bog is an affliction which reduces movement speed by 50% and increases damage received by 50% for a limited amount of time."],
     "gogomic": ["GoGoMic", "Have you seen my Julietta?"],
-    "mtn64": ["Mtn64", "stupid whale\n\nhacker cheater\n\nsalty snipperclipper"],
-    "mike's julietta": ["Mike's Julietta", "and here's where I'd put an image of mike's julietta\n\nif I had one"],
-    "gogomic's julietta": ["GoGoMic's Julietta", "and here's where I'd put an image of GoGoMic's julietta\n\nif I had one"],
+    "mtn64": ["Mtn64", "stupid whale\n\nhacker cheater\n\nsalty snipperclipper\n\nunga lily"],
+    "mike's julietta": ["Mike's Julietta", "https://cdn.discordapp.com/attachments/560454966154756107/578961195915149333/image0.png"],
+    "gogomic's julietta": ["GoGoMic's Julietta", "https://cdn.discordapp.com/attachments/560454966154756107/578961195915149333/image0.png"],
     "cygames": ["Cygames", "how in the hell removing Event prints a good thing , they basically flip off Casual and f2p players. Cause now they are forcing those players to summon for one time use WP. Greedy CYgames"],
     "jeri": ["The heck, man?!", "JERI, it took me SEVENTEEN PULLS to get HALLOWEEN ELISANNE. It took me FOURTEEN PULLS TO GET JEANNE D'ARC IN THE LAUNCH BANNER. IT TOOK ME NINE PULLS TO GET CERBERUS in the Naveed banner. I don't want to hear SHIT, ABOUT YOUR SEVEN PULLS TO GET CUPID, WOE IS ME."]
   },

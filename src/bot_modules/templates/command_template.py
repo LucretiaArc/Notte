@@ -1,4 +1,7 @@
 import hook
+import logging
+
+logger = logging.getLogger(__name__)
 
 client = None
 
@@ -7,7 +10,7 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    Hook.get("public!command").attach(command)
+    hook.Hook.get("public!command").attach(command)
 
 
 async def command(message, args):

@@ -1,6 +1,9 @@
 import config
 import util
+import logging
 import hook
+
+logger = logging.getLogger(__name__)
 
 client = None
 
@@ -28,9 +31,12 @@ async def set_prefix(message, args):
     if new_prefix == client.user.mention:
         new_prefix += " "
 
-    new_config = config.get_guild_config_editable(message.guild)
+    guild = message.guild
+    new_config = config.get_guild_config_editable(guild)
     new_config["token"] = new_prefix
-    config.set_guild_config(message.guild, new_config)
+    config.set_guild_config(guild, new_config)
+
+    logger.info("Prefix for guild {0} set to \"{1}\"".format(guild.id, new_prefix))
     await message.channel.send("Prefix has been set to `{0}`".format(new_prefix))
 
 
@@ -43,18 +49,19 @@ async def set_active_channel(message, args):
     if args.strip().lower() == "none":
         new_config["active_channel"] = 0
         config.set_guild_config(message.guild, new_config)
+        logger.info("Active channel for guild {0} disabled".format(message.guild.id))
         await message.channel.send("Active channel has been disabled, I won't post reset messages anymore!".format(message.channel.mention))
     else:
         new_config["active_channel"] = message.channel.id
         config.set_guild_config(message.guild, new_config)
+        logger.info("Active channel for guild {0} set to {1}".format(message.guild.id, message.channel.id))
         await message.channel.send("Active channel has been updated, I'll post reset messages in here from now on!".format(message.channel.mention))
 
 
 async def reset_prefix(message):
-    if "reset prefix" in message.content.lower():
-        if util.check_command_permissions(message, "admin"):
-            await set_prefix(message, "!!")
-        else:
-            await message.channel.send("You're not allowed to do that!")
+    if "reset prefix" in message.content.lower() and util.check_command_permissions(message, "admin"):
+        await set_prefix(message, "!!")
+        logger.info("Prefix for guild {0} reset".format(message.guild.id))
+        await message.channel.send("The prefix has been reset to `!!`.")
 
 hook.Hook.get("on_init").attach(on_init)

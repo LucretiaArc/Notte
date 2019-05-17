@@ -5,17 +5,19 @@ import bot_modules
 import util
 import config
 import data
-
+import log_config
 from hook import Hook
 
-logging.basicConfig(level=logging.INFO)
+# set up console logging, defer logging channel setup until client is initialised
+logging.getLogger().setLevel(logging.INFO)
+log_config.configure_console()
 logger = logging.getLogger(__name__)
 
 client = discord.Client()
-bot_modules.import_modules()
 initialised = False
 
 config.Config.init_configuration()
+bot_modules.import_modules()
 
 # Standard events:
 # on_init(client:discord.Client)
@@ -38,8 +40,11 @@ config.Config.init_configuration()
 async def on_ready():
     global initialised
     if not initialised:
+        log_config.configure_discord(client)
+
         await data.update_repositories()
         await Hook.get("on_init")(client)
+
         initialised = True
         logger.info(client.user.name + "'s ready to go!")
 

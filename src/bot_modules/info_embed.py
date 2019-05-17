@@ -7,6 +7,7 @@ import discord
 import io
 import jellyfish
 import jellyfish._jellyfish as py_jellyfish
+import urllib.parse
 import hook
 
 logger = logging.getLogger(__name__)
@@ -108,10 +109,16 @@ async def get_info(message):
                     continue
 
                 if search_term in special_query_messages and util.is_special_guild(message.guild):
-                    await message.channel.send(embed=discord.Embed(
-                        title=special_query_messages[search_term][0],
-                        description=special_query_messages[search_term][1]
-                    ))
+                    title = special_query_messages[search_term][0]
+                    content = special_query_messages[search_term][1]
+
+                    if urllib.parse.urlparse(content).scheme:
+                        embed = discord.Embed(title=title)
+                        embed.set_image(url=content)
+                    else:
+                        embed = discord.Embed(title=title, description=content)
+
+                    await message.channel.send(embed=embed)
                     continue
 
                 match_type, match_item, match_distance, match_string = match_entity(search_term)

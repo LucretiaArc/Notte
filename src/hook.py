@@ -53,10 +53,23 @@ class Hook:
         :param method: the method to attach to this hook.
         :return: True if the method was attached, False otherwise.
         """
+        if self.__name is not None:
+            hook_desc = '"{0}"'.format(self.__name)
+        else:
+            hook_desc = "with id {0}".format(id(self))
+
+        if hasattr(method, "__module__"):
+            method_desc = "{0}.{1}".format(method.__module__, method.__qualname__)
+        else:
+            method_desc = method.__qualname__
+
         if method not in self.__methods:
             self.__methods.append(method)
+            logger.info("Attached method {0} to hook {1}".format(method_desc, hook_desc))
             return True
-        return False
+        else:
+            logger.warning("Method {0} already attached to hook {1}".format(method_desc, hook_desc))
+            return False
 
     def detach(self, method):
         """
@@ -64,9 +77,23 @@ class Hook:
         :param method: the method to detach from this hook.
         :return: True if the method was detached, False otherwise.
         """
+
+        if self.__name is not None:
+            hook_desc = '"{0}"'.format(self.__name)
+        else:
+            hook_desc = "with id {0}".format(id(self))
+
+        if hasattr(method, "__module__"):
+            method_desc = "{0}.{1}".format(method.__module__, method.__qualname__)
+        else:
+            method_desc = method.__qualname__
+
         if method in self.__methods:
             self.__methods.remove(method)
+            logger.info("Detached method {0} from hook {1}".format(method_desc, hook_desc))
             return True
+        else:
+            logger.warning("Method {0} not attached to hook {1}".format(method_desc, hook_desc))
         return False
 
     def methods(self):
