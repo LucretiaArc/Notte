@@ -3,6 +3,7 @@ import calendar
 import logging
 import data
 import hook
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,13 @@ async def update_gift_string():
         gift = data.DragonGift(reset_day + 1)
 
         all_dragons = data.Dragon.get_all().values()
-        dragons = [d for d in all_dragons if d.favourite_gift == gift and d.rarity and d.element]
+        dragons = [
+            d for d in all_dragons if
+            d.favourite_gift == gift
+            and d.rarity
+            and d.release_date
+            and d.release_date <= datetime.datetime.now(datetime.timezone.utc)
+        ]
 
         # sorting
         dragons.sort(key=lambda d: d.full_name)  # by name

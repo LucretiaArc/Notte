@@ -32,7 +32,7 @@ class Adventurer(abc.Entity):
         mp("title", mf.text, "Title")
         mp("description", mf.text, "Description")
         mp("obtained", mf.text, "Obtain")
-        mp("release_date", mf.date, "DATE(ReleaseDate)")
+        mp("release_date", mf.date, "ReleaseDate")
         mp("weapon_type", WeaponType.get, "WeaponTypeId")
         mp("element", Element.get, "ElementalTypeId")
         mp("rarity", mf.int, "Rarity")
@@ -64,7 +64,7 @@ class Adventurer(abc.Entity):
         self.title = ""
         self.description = ""
         self.obtained = ""
-        self.release_date = ""
+        self.release_date = None
         self.weapon_type = None
         self.rarity = 0
         self.element = None
@@ -135,7 +135,7 @@ class Adventurer(abc.Entity):
 
         footer_str = "*Obtained from:  {0}* \n*Release Date:  {1}* ".format(
             self.obtained or "???",
-            self.release_date or "???"
+            self.release_date.date().isoformat() if self.release_date else "???"
         )
 
         desc = "".join((
@@ -186,7 +186,7 @@ class Dragon(abc.Entity):
         mp("title", mf.text, "Title")
         mp("description", mf.text, "ProfileText")
         mp("obtained", mf.text, "Obtain")
-        mp("release_date", mf.date, "DATE(ReleaseDate)")
+        mp("release_date", mf.date, "ReleaseDate")
         mp("rarity", mf.int, "Rarity")
         mp("element", Element.get, "ElementalTypeId")
         mp("max_hp", mf.int, "MaxHp")
@@ -216,7 +216,7 @@ class Dragon(abc.Entity):
         self.title = ""
         self.description = ""
         self.obtained = ""
-        self.release_date = ""
+        self.release_date = None
         self.rarity = 0
         self.element = None
         self.max_hp = 0
@@ -273,7 +273,7 @@ class Dragon(abc.Entity):
             "???" if not self.favourite_gift else "{0} ({1})".format(str(self.favourite_gift), calendar.day_name[
                 self.favourite_gift.value - 1]),
             self.obtained or "???",
-            self.release_date or "???"
+            self.release_date.date().isoformat() if self.release_date else "???"
         )
 
         desc = "".join((
@@ -324,7 +324,7 @@ class Wyrmprint(abc.Entity):
         mp("max_hp", mf.int, "MaxHp")
         mp("max_str", mf.int, "MaxAtk")
         mp("obtained", lambda s: re.split("\n+", mf.text(s)) if mf.text(s) else None, "Obtain")
-        mp("release_date", mf.date, "DATE(ReleaseDate)")
+        mp("release_date", mf.date, "ReleaseDate")
 
         mp("ability_1", mf.filtered_list_of(Ability.find), *("Abilities1{0}".format(i + 1) for i in range(3)))
         mp("ability_2", mf.filtered_list_of(Ability.find), *("Abilities2{0}".format(i + 1) for i in range(3)))
@@ -347,7 +347,7 @@ class Wyrmprint(abc.Entity):
         self.name = ""
         self.rarity = 0
         self.obtained = []
-        self.release_date = ""
+        self.release_date = None
         self.max_hp = 0
         self.max_str = 0
         self.max_might = 0
@@ -395,7 +395,7 @@ class Wyrmprint(abc.Entity):
 
         footer_str = "**Obtained from**\n{0}\n\n*Release Date:  {1}* ".format(
             "\n".join(self.obtained) if self.obtained else "???",
-            self.release_date or "???"
+            self.release_date.date().isoformat() if self.release_date else "???"
         )
 
         desc = "".join((

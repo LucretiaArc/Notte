@@ -6,6 +6,7 @@ import html
 import re
 import util
 import abc
+import datetime
 import discord
 import logging
 
@@ -123,7 +124,11 @@ class EntityMapper:
 
     @staticmethod
     def date(s: str):
-        return s if s and not s.startswith("1970") else None
+        if not s:
+            return None
+
+        dt = datetime.datetime.strptime(s + " +0000", "%Y-%m-%d %H:%M:%S %z")
+        return dt if 1970 < dt.year < 2100 else None
 
     @staticmethod
     def sum(*args: str):
