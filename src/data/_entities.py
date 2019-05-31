@@ -90,7 +90,10 @@ class Adventurer(abc.Entity):
         return cls.repository.get_from_key(key.lower())
 
     def get_key(self):
-        return self.full_name.lower()
+        if self.full_name:
+            return self.full_name.lower()
+        else:
+            return None
 
     def get_embed(self) -> discord.Embed:
         """
@@ -239,7 +242,10 @@ class Dragon(abc.Entity):
         return cls.repository.get_from_key(key.lower())
 
     def get_key(self):
-        return self.full_name.lower()
+        if self.full_name:
+            return self.full_name.lower()
+        else:
+            return None
 
     def get_embed(self) -> discord.Embed:
         """
@@ -367,7 +373,10 @@ class Wyrmprint(abc.Entity):
         return cls.repository.get_from_key(key.lower())
 
     def get_key(self):
-        return self.name.lower()
+        if self.name:
+            return self.name.lower()
+        else:
+            return None
 
     def get_embed(self) -> discord.Embed:
         """
@@ -522,7 +531,10 @@ class Weapon(abc.Entity):
         return cls.repository.get_from_key(key.lower())
 
     def get_key(self):
-        return self.name.lower()
+        if self.name:
+            return self.name.lower()
+        else:
+            return None
 
     def get_embed(self) -> discord.Embed:
         """
@@ -665,7 +677,10 @@ class Skill(abc.Entity):
         return cls.repository.get_from_key(key.lower())
 
     def get_key(self):
-        return self.name.lower()
+        if self.name:
+            return self.name.lower()
+        else:
+            return None
 
     def get_embed(self) -> discord.Embed:
         """

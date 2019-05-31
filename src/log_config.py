@@ -2,6 +2,7 @@ import logging
 import asyncio
 import discord
 import config
+import io
 
 
 class DiscordHandler(logging.Handler):
@@ -10,9 +11,26 @@ class DiscordHandler(logging.Handler):
         self.channel = channel
 
     def emit(self, record):
+        async def send_log(future):
+            # noinspection PyBroadException
+            try:
+                await future
+            except Exception:
+                # This may occur if the cause of the exception was a disconnection from Discord.
+                # Therefore, attempting to log the exception to discord might cause further unknown exceptions.
+                # We don't need to do anything if this happens, because we should be using a real handler as well.
+                pass
+
         msg = "```\n{0}\n```".format(self.format(record))
-        fut = self.channel.send(msg)
-        asyncio.ensure_future(fut)
+        if len(msg) <= 2000:
+            fut = self.channel.send(msg)
+        else:
+            fut = self.channel.send(
+                "An exception occurred!",
+                file=discord.File(fp=io.BytesIO(bytes(msg, "UTF-8")), filename="log.txt")
+            )
+
+        asyncio.ensure_future(send_log(fut))
 
 
 def configure_console():
