@@ -208,30 +208,30 @@
   },
   "void_battle_schedule": {
     "order": [
-      "Wandering Shroom",
-      "Gust Shroom",
-      "Blazing Ghost",
-      "Violet Ghost",
-      "Frost Hermit",
-      "Steel Golem",
-      "Obsidian Golem",
-      "Amber Golem",
-      "Void Zephyr",
-      "Raging Manticore",
-      "Void Agni"
-    ],
-    "availability": {
-      "Wandering Shroom": [false, false, false, true, false, true, false],
-      "Gust Shroom": [true, true, true, false, true, false, true],
-      "Blazing Ghost": [true, true, false, false, true, true, false],
-      "Violet Ghost": [true, false, true, true, false, true, true],
-      "Frost Hermit": [false, true, false, true, false, false, false],
-      "Steel Golem": [false, false, true, false, true, false, false],
-      "Obsidian Golem": [true, false, false, true, false, true, false],
-      "Amber Golem": [false, true, true, false, true, true, true],
-      "Void Zephyr": [true, false, true, false, false, true, true],
-      "Raging Manticore": [false, false, false, false, false, false, true],
-      "Void Agni": [false, true, false, true, true, false, true]
-    }
+	  "Wandering Shroom",
+	  "Gust Shroom",
+	  "Blazing Ghost",
+	  "Violet Ghost",
+	  "Frost Hermit",
+	  "Steel Golem",
+	  "Obsidian Golem",
+	  "Amber Golem",
+	  "Void Zephyr",
+	  "Raging Manticore",
+	  "Void Agni"
+	],
+	"availability": {
+	  "Wandering Shroom": [true, false, true, false, true, false, true],
+	  "Gust Shroom": [false, true, false, true, false, true, false],
+	  "Blazing Ghost": [false, false, false, true, false, true, false],
+	  "Violet Ghost": [false, false, true, false, true, false, true],
+	  "Frost Hermit": [true, true, false, false, false, false, true],
+	  "Steel Golem": [true, false, true, false, false, false, true],
+	  "Obsidian Golem": [false, false, false, true, true, false, false],
+	  "Amber Golem": [false, true, false, false, false, true, false],
+	  "Void Zephyr": [true, false, true, false, false, false, true],
+	  "Raging Manticore": [false, false, false, true, false, true, false],
+	  "Void Agni": [false, true, false, false, true, true, false]
+	}
   }
 }
