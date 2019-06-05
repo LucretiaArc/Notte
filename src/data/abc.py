@@ -7,8 +7,10 @@ import re
 import util
 import abc
 import datetime
+import string
 import discord
 import logging
+import _string
 
 logger = logging.getLogger(__name__)
 
@@ -23,20 +25,35 @@ class Entity(abc.ABC):
 
     @abc.abstractmethod
     def get_key(self) -> str:
+        """
+        :return: the key representing this entity in a repository.
+        """
         return ""
 
     @abc.abstractmethod
     def get_embed(self) -> discord.Embed:
+        """
+        :return: A discord.Embed representing the entity.
+        """
         return discord.Embed()
 
     @classmethod
     @abc.abstractmethod
     def get_all(cls) -> dict:
+        """
+        Returns a dict representing the repository for this entity type.
+        :return:
+        """
         return {}
 
     @classmethod
     @abc.abstractmethod
     def find(cls, key: str):
+        """
+        Finds the entity for a given key.
+        :param key: key of the entity to find (as returned by get_key)
+        :return: entity for the given key, or None  if it was not found.
+        """
         return None
 
     def __repr__(self):
@@ -205,6 +222,80 @@ class EntityRepository:
 
     def get_from_key(self, key):
         return self.data.get(key)
+
+
+class EmbedFormatter(string.Formatter):
+    """
+    Custom string.Formatter which handles navigation exceptions, supports negative list indices, and supports
+    a different set of conversions. The originally provided r, s, and a conversions are not available.
+    """
+
+    def __init__(self, default="?"):
+        self.conversions = {}
+        self.default = default
+
+    def add_conversion(self, conversion, function):
+        if conversion not in self.conversions:
+            self.conversions[conversion] = function
+        else:
+            raise ValueError("Conversion already exists for key \"{}\"".format(conversion))
+
+    def get_field(self, field_name, args, kwargs):
+        # This is a modified version of the existing implementation of get_field, as defined in string.Formatter.
+        # It supports negative list indices, and ignores navigation exceptions in favour of returning None.
+        # Only the former requires modification of this method.
+        first, rest = _string.formatter_field_name_split(field_name)
+
+        obj = self.get_value(first, args, kwargs)
+
+        try:
+            for is_attr, i in rest:
+                if is_attr:
+                    obj = getattr(obj, i)
+                else:
+                    v = i
+                    if isinstance(i, str):
+                        v = util.safe_int(i, None) or v
+
+                    obj = obj[v]
+        except (AttributeError, TypeError, IndexError):
+            return None, field_name
+
+        return obj, first
+
+    def format_field(self, value, spec):
+        if value is None:
+            return self.default
+
+        return super().format_field(value, spec)
+
+    def convert_field(self, value, conversion):
+        if conversion is None:  # no conversion
+            if value:
+                return value
+            else:
+                return self.default
+        elif conversion == "r":  # rarity emote
+            return str("rarity"+str(value))
+        elif conversion == "e":  # generic emote
+            return str(value)
+        elif conversion == "d":  # date string from datetime
+            if value:
+                return value.date().isoformat()
+            else:
+                return self.default
+        elif conversion == "o":  # optional value, with newline if present
+            if value:
+                return "\n" + str(value)
+            else:
+                return ""
+        elif conversion == "l":  # length of value
+            if value:
+                return len(value)
+            else:
+                return self.default
+        else:
+            raise ValueError("Unknown conversion specifier {0!s}".format(conversion))
 
 
 def clean_wikitext(wikitext):

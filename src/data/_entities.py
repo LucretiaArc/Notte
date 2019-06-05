@@ -3,6 +3,7 @@ import collections
 import discord
 import re
 import util
+import textwrap
 
 from data import abc
 from ._static import Element, WeaponType, DragonGift, get_rarity_colour
@@ -96,74 +97,48 @@ class Adventurer(abc.Entity):
             return None
 
     def get_embed(self) -> discord.Embed:
-        """
-        Gets a discord embed representing this adventurer.
-        :return: discord.Embed with information about the adventurer.
-        """
-        header_str = "{0}{1}{2} {3}: {4}".format(
-            util.get_emote("rarity" + str(self.rarity)),
-            util.get_emote(self.element or ""),
-            util.get_emote(self.weapon_type or ""),
-            self.name or "???",
-            self.title or "???"
-        )
-
-        stats_str = "{0} HP  /  {1} Str  /  {2} Might\n\n".format(
-            self.max_hp or "???",
-            self.max_str or "???",
-            self.max_might or "???"
-        )
-
-        skill_str = "**Skills**\n{0}\n{1}\n\n".format(
-            "???" if (not self.skill_1 or not self.skill_1.name) else self.skill_1.name,
-            "???" if (not self.skill_2 or not self.skill_2.name) else self.skill_2.name,
-        )
-
-        ability_str = "**Abilities**\n{0}\n{1}\n{2}\n\n".format(
-            "???" if (not self.ability_1 or not self.ability_1[-1].name) else self.ability_1[-1].name,
-            "???" if (not self.ability_2 or not self.ability_2[-1].name) else self.ability_2[-1].name,
-            "???" if (not self.ability_3 or not self.ability_3[-1].name) else self.ability_3[-1].name
-        )
+        fmt = abc.EmbedFormatter()
 
         try:
             cab_min = self.coability[0].name or "???"
             cab_max = self.coability[-1].name or "???"
-            coability_str = "**Co-ability:** {0}({1}-{2})%\n\n".format(
+            coability_str = "{0}({1}-{2})%".format(
                 cab_min[:cab_min.index("+") + 1],
                 re.findall(r"(\d+)%", cab_min)[0],
                 re.findall(r"(\d+)%", cab_max)[0]
             )
         except (IndexError, ValueError, TypeError):
-            coability_str = "**Co-ability:** ???\n\n"
+            coability_str = "?"
 
-        footer_str = "*Obtained from:  {0}* \n*Release Date:  {1}* ".format(
-            self.obtained or "???",
-            self.release_date.date().isoformat() if self.release_date else "???"
+        title = fmt.format("{e.rarity!r}{e.element!e}{e.weapon_type!e} {e.name}: {e.title}", e=self)
+        description = fmt.format(
+            textwrap.dedent("""
+                {e.max_hp} HP / {e.max_str} Str / {e.max_might} Might
+                
+                **Skills**
+                {e.skill_1.name}
+                {e.skill_2.name}
+                
+                **Abilities**
+                {e.ability_1[-1].name}
+                {e.ability_2[-1].name}
+                {e.ability_3[-1].name}
+                
+                **Co-ability:** {coability}
+                
+                *Obtained from: {e.obtained}*
+                *Release Date: {e.release_date!d}* 
+                """),
+            e=self,
+            coability=coability_str
         )
 
-        desc = "".join((
-            stats_str,
-            skill_str,
-            ability_str,
-            coability_str,
-            footer_str
-        ))
-
-        if self.element is not None:
-            embed = discord.Embed(
-                title=header_str,
-                description=desc,
-                url=util.get_link(self.full_name),
-                colour=self.element.get_colour()
-            )
-        else:
-            embed = discord.Embed(
-                title=header_str,
-                description=desc,
-                url=util.get_link(self.full_name)
-            )
-
-        return embed
+        return discord.Embed(
+            title=title,
+            description=description,
+            url=util.get_link(self.full_name),
+            colour=discord.Embed.Empty if not self.element else self.element.get_colour()
+        )
 
 
 class Dragon(abc.Entity):
@@ -248,62 +223,40 @@ class Dragon(abc.Entity):
             return None
 
     def get_embed(self) -> discord.Embed:
-        """
-        Gets a discord embed representing this dragon.
-        :return: discord.Embed with information about the dragon.
-        """
-        header_str = "{0}{1} {2}{3}".format(
-            util.get_emote("rarity" + str(self.rarity)),
-            util.get_emote(self.element or ""),
-            self.name or "???",
-            "" if not self.title else ": " + self.title
+        fmt = abc.EmbedFormatter()
+
+        title = fmt.format(
+            "{e.rarity!r}{e.element!e} {e.name}{title}",
+            e=self,
+            title=(": " + self.title) if self.title else " "
         )
 
-        stats_str = "{0} HP  /  {1} Str  /  {2} Might\n\n".format(
-            self.max_hp or "???",
-            self.max_str or "???",
-            self.max_might or "???"
-        )
+        description = fmt.format(
+            textwrap.dedent("""
+                {e.max_hp} HP / {e.max_str} Str / {e.max_might} Might 
 
-        skill_str = "**Skill:** {0}\n\n".format(
-            "???" if (not self.skill or not self.skill.name) else self.skill.name,
-        )
+                **Skill:** {e.skill.name} 
 
-        ability_str = "**Abilities**\n" + (
-            "???" if (not self.ability_1 or not self.ability_1[-1].name) else self.ability_1[-1].name)
-        if self.ability_2 and self.ability_2[-1].name:
-            ability_str += "\n" + self.ability_2[-1].name
-        ability_str += "\n\n"
-
-        footer_str = "*Favourite gift:  {0}* \n*Obtained from:  {1}* \n*Release Date:  {2}* ".format(
-            "???" if not self.favourite_gift else "{0} ({1})".format(str(self.favourite_gift), calendar.day_name[
-                self.favourite_gift.value - 1]),
-            self.obtained or "???",
-            self.release_date.date().isoformat() if self.release_date else "???"
-        )
-
-        desc = "".join((
-            stats_str,
-            skill_str,
-            ability_str,
-            footer_str
-        ))
-
-        if self.element is not None:
-            embed = discord.Embed(
-                title=header_str,
-                description=desc,
-                url=util.get_link(self.full_name),
-                colour=self.element.get_colour()
+                **Abilities** 
+                {e.ability_1[-1].name}{e.ability_2[-1].name!o} 
+                
+                *Favourite gift: {gift}* 
+                *Obtained from: {e.obtained}* 
+                *Release Date: {e.release_date!d}* 
+                """),
+            e=self,
+            gift="" if not self.favourite_gift else "{} ({})".format(
+                str(self.favourite_gift),
+                calendar.day_name[self.favourite_gift.value - 1]
             )
-        else:
-            embed = discord.Embed(
-                title=header_str,
-                description=desc,
-                url=util.get_link(self.full_name)
-            )
+        )
 
-        return embed
+        return discord.Embed(
+            title=title,
+            description=description,
+            url=util.get_link(self.full_name),
+            colour=discord.Embed.Empty if not self.element else self.element.get_colour()
+        )
 
 
 class Wyrmprint(abc.Entity):
@@ -329,7 +282,7 @@ class Wyrmprint(abc.Entity):
         mp("rarity", mf.int, "Rarity")
         mp("max_hp", mf.int, "MaxHp")
         mp("max_str", mf.int, "MaxAtk")
-        mp("obtained", lambda s: re.split("\n+", mf.text(s)) if mf.text(s) else None, "Obtain")
+        mp("obtained", lambda s: re.split("[,\n]+", mf.text(s)) if mf.text(s) else None, "Obtain")
         mp("release_date", mf.date, "ReleaseDate")
 
         mp("ability_1", mf.filtered_list_of(Ability.find), *("Abilities1{0}".format(i + 1) for i in range(3)))
@@ -379,55 +332,32 @@ class Wyrmprint(abc.Entity):
             return None
 
     def get_embed(self) -> discord.Embed:
-        """
-        Gets a discord embed representing this wyrmprint.
-        :return: discord.Embed with information about the wyrmprint.
-        """
-        header_str = "{0} {1}".format(
-            util.get_emote("rarity" + str(self.rarity)),
-            self.name or "???",
+        fmt = abc.EmbedFormatter()
+
+        title = fmt.format("{e.rarity!r} {e.name}", e=self)
+
+        description = fmt.format(
+            textwrap.dedent("""
+                {e.max_hp} HP / {e.max_str} Str / {e.max_might} Might 
+
+                **Abilities** 
+                {e.ability_1[-1].name}{e.ability_2[-1].name!o} {e.ability_3[-1].name!o} 
+                
+                **Obtained from**
+                {obtain} 
+                  
+                *Release Date: {e.release_date!d}* 
+                """),
+            e=self,
+            obtain="\n".join(self.obtained) if self.obtained else ""
         )
 
-        stats_str = "{0} HP  /  {1} Str  /  {2} Might\n\n".format(
-            self.max_hp or "???",
-            self.max_str or "???",
-            self.max_might or "???"
+        return discord.Embed(
+            title=title,
+            description=description,
+            url=util.get_link(self.name),
+            colour=get_rarity_colour(self.rarity)
         )
-
-        ability_str = "**Abilities**\n" + (
-            "???" if (not self.ability_1 or not self.ability_1[-1].name) else self.ability_1[-1].name)
-        if self.ability_2 and self.ability_2[-1].name:
-            ability_str += "\n" + self.ability_2[-1].name
-        if self.ability_3 and self.ability_3[-1].name:
-            ability_str += "\n" + self.ability_3[-1].name
-        ability_str += "\n\n"
-
-        footer_str = "**Obtained from**\n{0}\n\n*Release Date:  {1}* ".format(
-            "\n".join(self.obtained) if self.obtained else "???",
-            self.release_date.date().isoformat() if self.release_date else "???"
-        )
-
-        desc = "".join((
-            stats_str,
-            ability_str,
-            footer_str
-        ))
-
-        if self.rarity is not None:
-            embed = discord.Embed(
-                title=header_str,
-                description=desc,
-                url=util.get_link(self.name),
-                colour=get_rarity_colour(self.rarity)
-            )
-        else:
-            embed = discord.Embed(
-                title=header_str,
-                description=desc,
-                url=util.get_link(self.name)
-            )
-
-        return embed
 
 
 class Weapon(abc.Entity):
@@ -537,75 +467,59 @@ class Weapon(abc.Entity):
             return None
 
     def get_embed(self) -> discord.Embed:
-        """
-        Gets a discord embed representing this weapon.
-        :return: discord.Embed with information about the weapon.
-        """
+        fmt = abc.EmbedFormatter()
 
-        header_str = self.get_title_string()
+        sections = []
 
-        stats_str = "{0} HP  /  {1} Str  /  {2} Might\n\n".format(
-            self.max_hp or "???",
-            self.max_str or "???",
-            self.max_might or "???"
+        # skill
+        if self.skill:
+            sections.append(fmt.format("**Skill:** {e.skill.name} ", e=self))
+
+        # abilities
+        if self.ability_1 or self.ability_2:
+            sections.append(fmt.format("**Abilities**\n{e.ability_1.name}{e.ability_2.name!o} ", e=self))
+
+        # obtained from
+        if self.obtained == "Crafting":
+            if self.crafted_from:
+                sections.append(fmt.format(
+                    "{0!e}{0!e} **Crafted from**\n{1} ",
+                    "blank",
+                    self.crafted_from.get_title_string()
+                ))
+
+            if self.crafted_to:
+                sections.append(fmt.format(
+                    "{0!e}{0!e} **Used to craft**\n{1} ",
+                    "blank",
+                    "\n".join(child.get_title_string() for child in self.crafted_to)
+                ))
+        else:
+            sections.append(fmt.format("*Obtained from: {e.obtained}* ", e=self))
+
+        description = fmt.format(
+            textwrap.dedent("""
+                {e.max_hp} HP / {e.max_str} Str / {e.max_might} Might 
+
+                {sections}
+                """),
+            e=self,
+            sections="\n\n".join(sections)
         )
 
-        extra_str = ""
-        if self.skill:
-            extra_str += "**Skill:** {0}\n\n".format(
-                "???" if (not self.skill or not self.skill.name) else self.skill.name,
-            )
-
-        if self.ability_1 or self.ability_2:
-            extra_str += "**Abilities**\n" + (
-                "???" if (not self.ability_1 or not self.ability_1.name) else self.ability_1.name)
-            if self.ability_2 and self.ability_2.name:
-                extra_str += "\n" + self.ability_2.name
-            extra_str += "\n\n"
-
-        if self.obtained == "Crafting":
-            footer_str = ""
-            if self.crafted_from is not None:
-                footer_str += "{0}{0} **Crafted from**\n{1}\n\n".format(
-                    util.get_emote("blank"),
-                    self.crafted_from.get_title_string()
-                )
-            if len(self.crafted_to) > 0:
-                footer_str += "{0}{0} **Used to craft**".format(util.get_emote("blank"))
-                for child in self.crafted_to:
-                    footer_str += "\n" + child.get_title_string()
-            footer_str = footer_str.strip()
-        else:
-            footer_str = "*Obtained from:  {0}*".format(self.obtained or "???")
-
-        desc = "".join((
-            stats_str,
-            extra_str,
-            footer_str
-        ))
-
         if self.element is not None:
-            embed = discord.Embed(
-                title=header_str,
-                description=desc,
-                url=util.get_link(self.name),
-                colour=self.element.get_colour()
-            )
+            colour = self.element.get_colour()
         elif self.rarity is not None:
-            embed = discord.Embed(
-                title=header_str,
-                description=desc,
-                url=util.get_link(self.name),
-                colour=get_rarity_colour(self.rarity)
-            )
+            colour = get_rarity_colour(self.rarity)
         else:
-            embed = discord.Embed(
-                title=header_str,
-                description=desc,
-                url=util.get_link(self.name),
-            )
+            colour = discord.Embed.Empty
 
-        return embed
+        return discord.Embed(
+            title=self.get_title_string(),
+            description=description,
+            url=util.get_link(self.name),
+            colour=colour
+        )
 
     def get_title_string(self):
         w_tier = 0
@@ -614,12 +528,10 @@ class Weapon(abc.Entity):
             w_node = w_node.crafted_from
             w_tier += 1
 
-        return "{0}{1} {2} {3}{4}".format(
-            util.get_emote("rarity" + str(self.rarity)),
-            util.get_emote(("wtier" + str(w_tier)) if self.obtained == "Crafting" else ""),
-            self.name or "???",
-            util.get_emote(self.element or "none"),
-            util.get_emote(self.weapon_type or "")
+        return abc.EmbedFormatter().format(
+            "{e.rarity!r}{tier!e} {e.name} {e.element!e}{e.weapon_type!e}",
+            e=self,
+            tier=("wtier" + str(w_tier)) if self.obtained == "Crafting" else ""
         )
 
 
@@ -683,34 +595,30 @@ class Skill(abc.Entity):
             return None
 
     def get_embed(self) -> discord.Embed:
-        """
-        Gets a discord embed representing the highest level of this skill.
-        :return: discord.Embed with information about the skill.
-        """
-        skill_level = self.levels[-1]
+        fmt = abc.EmbedFormatter()
 
-        title_str = "{0} (Lv. {1} Skill)".format(self.name, len(self.levels))
+        title = fmt.format("{e.name} (Lv. {e.levels!l} Skill)", e=self)
+        description = fmt.format(
+            textwrap.dedent("""
+                {max_level.description}
 
-        desc_str = "{0}\n\n**Cost: **{1} SP".format(
-            skill_level.description or "???",
-            str(skill_level.sp) or "???"
+                **Cost:** {max_level.sp} SP
+                """),
+            max_level=self.levels[-1] if self.levels else Skill.SkillLevel("", 0)
         )
 
-        embed = discord.Embed(
-            title=title_str,
-            description=desc_str,
+        return discord.Embed(
+            title=title,
+            description=description,
             url=util.get_link(self.name),
             color=get_rarity_colour(len(self.levels) + 2)
         )
-
-        return embed
 
 
 class Ability(abc.Entity):
     """
     Represents an ability and some of its associated data
     """
-
     repository: abc.EntityRepository = None
 
     @classmethod
@@ -766,7 +674,6 @@ class CoAbility(abc.Entity):
     """
     Represents a co-ability and some of its associated data
     """
-
     repository: abc.EntityRepository = None
 
     @classmethod
