@@ -276,9 +276,9 @@ class EmbedFormatter(string.Formatter):
             else:
                 return self.default
         elif conversion == "r":  # rarity emote
-            return str("rarity"+str(value))
+            return util.get_emote("rarity"+str(value))
         elif conversion == "e":  # generic emote
-            return str(value)
+            return util.get_emote(value)
         elif conversion == "d":  # date string from datetime
             if value:
                 return value.date().isoformat()
