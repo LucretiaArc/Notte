@@ -49,9 +49,9 @@ async def void_schedule_format(message, args):
     battle_order = []
     battle_availability = {}
     for line in content.split("\n"):
-        cells = list(map(str.strip, re.split(r"\s{2,}", line)))
+        cells = list(map(str.strip, re.split(r"\s{2,}", line[line.index(".png")+5:])))
         name = cells[0]
-        days = [c != "X" for c in cells[1:]]
+        days = [c == "Y" for c in cells[1:]]
         if days != [True]*7:
             battle_order.append(name)
             battle_availability[name] = days

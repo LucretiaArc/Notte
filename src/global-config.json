@@ -208,30 +208,32 @@
   },
   "void_battle_schedule": {
     "order": [
-	  "Wandering Shroom",
-	  "Gust Shroom",
-	  "Blazing Ghost",
-	  "Violet Ghost",
-	  "Frost Hermit",
-	  "Steel Golem",
-	  "Obsidian Golem",
-	  "Amber Golem",
-	  "Void Zephyr",
-	  "Raging Manticore",
-	  "Void Agni"
-	],
-	"availability": {
-	  "Wandering Shroom": [true, false, true, false, true, false, true],
-	  "Gust Shroom": [false, true, false, true, false, true, false],
-	  "Blazing Ghost": [false, false, false, true, false, true, false],
-	  "Violet Ghost": [false, false, true, false, true, false, true],
-	  "Frost Hermit": [true, true, false, false, false, false, true],
-	  "Steel Golem": [true, false, true, false, false, false, true],
-	  "Obsidian Golem": [false, false, false, true, true, false, false],
-	  "Amber Golem": [false, true, false, false, false, true, false],
-	  "Void Zephyr": [true, false, true, false, false, false, true],
-	  "Raging Manticore": [false, false, false, true, false, true, false],
-	  "Void Agni": [false, true, false, false, true, true, false]
-	}
+      "Wandering Shroom",
+      "Gust Shroom",
+      "Blazing Ghost",
+      "Violet Ghost",
+      "Frost Hermit",
+      "Steel Golem",
+      "Obsidian Golem",
+      "Amber Golem",
+      "Void Zephyr",
+      "Void Poseidon",
+      "Raging Manticore",
+      "Void Agni"
+    ],
+    "availability": {
+      "Wandering Shroom": [true, false, true, false, true, false, true],
+      "Gust Shroom": [false, true, false, true, false, true, false],
+      "Blazing Ghost": [false, false, false, false, false, true, false],
+      "Violet Ghost": [true, true, true, true, true, false, true],
+      "Frost Hermit": [true, false, true, true, true, true, true],
+      "Steel Golem": [true, false, false, false, false, false, true],
+      "Obsidian Golem": [false, false, false, true, false, false, false],
+      "Amber Golem": [false, true, false, false, false, true, false],
+      "Void Zephyr": [true, false, true, false, false, false, true],
+      "Void Poseidon": [false, true, true, true, true, true, true],
+      "Raging Manticore": [false, false, false, true, false, false, false],
+      "Void Agni": [false, true, false, false, true, true, false]
+    }
   }
 }
