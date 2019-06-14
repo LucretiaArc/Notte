@@ -36,11 +36,11 @@ async def bubbles(message, args):
     Posts a labelled Spheres of Salvation pattern, so that groups playing High Mercury can negotiate where they're going to move to during that attack.
     """
     if message.channel.permissions_for(message.guild.me).attach_files:
-        await message.channel.send("Pick an bubble for Spheres of Salvation!", file=discord.File("../assets/images/bubbles.png"))
+        await message.channel.send("Pick a bubble for Spheres of Salvation!", file=discord.File("../assets/images/bubbles.png"))
     elif message.channel.permissions_for(message.guild.me).embed_links:
-        await message.channel.send("Pick an bubble for Spheres of Salvation! https://cdn.discordapp.com/attachments/560454966154756107/568706931515064330/bubbles.png")
+        await message.channel.send("Pick a bubble for Spheres of Salvation! https://cdn.discordapp.com/attachments/560454966154756107/568706931515064330/bubbles.png")
     else:
-        await message.channel.send("Pick an bubble for Spheres of Salvation! https://cdn.discordapp.com/attachments/560454966154756107/568706931515064330/bubbles.png\n"
+        await message.channel.send("Pick a bubble for Spheres of Salvation! https://cdn.discordapp.com/attachments/560454966154756107/568706931515064330/bubbles.png\n"
                                    "A to D from left to right.")
 
 

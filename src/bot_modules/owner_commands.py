@@ -14,12 +14,12 @@ async def on_init(discord_client):
     client = discord_client
 
     hook.Hook.get("owner!say").attach(say)
-    hook.Hook.get("owner!getconfig").attach(get_config)
-    hook.Hook.get("owner!inspectconfigs").attach(inspect_configs)
-    hook.Hook.get("owner!voidschedule").attach(void_schedule_format)
-    hook.Hook.get("owner!updatedata").attach(update_data)
-    hook.Hook.get("owner!wconfigset").attach(wconfig_set)
-    hook.Hook.get("owner!wconfigdel").attach(wconfig_del)
+    hook.Hook.get("owner!get_config").attach(get_config)
+    hook.Hook.get("owner!inspect_configs").attach(inspect_configs)
+    hook.Hook.get("owner!void_schedule").attach(void_schedule_format)
+    hook.Hook.get("owner!update_data").attach(update_data)
+    hook.Hook.get("owner!wconfig_set").attach(wconfig_set)
+    hook.Hook.get("owner!wconfig_del").attach(wconfig_del)
 
 
 async def say(message, args):

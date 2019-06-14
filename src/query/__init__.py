@@ -1,76 +1,23 @@
 import data
-import enum
 import hook
 import logging
 import acora
 import itertools
 import operator
+import inspect
+import asyncio
+import discord
+import query.types as qt
+import query.handlers as handlers
 
 logger = logging.getLogger(__name__)
 
 client = None
-keyword_finder = None
+keyword_resolver: "KeywordResolver" = None
+query_resolver: "QueryResolver" = None
 
 
-# New keyword types
-class Rarity(enum.Enum):
-    ONE = 1
-    TWO = 2
-    THREE = 3
-    FOUR = 4
-    FIVE = 5
-
-
-class SkillSlot(enum.Enum):
-    SKILL_1 = 1
-    SKILL_2 = 2
-
-
-class AbilitySlot(enum.Enum):
-    ABILITY_1 = 1
-    ABILITY_2 = 2
-    ABILITY_3 = 3
-
-
-class Tier(enum.Enum):
-    TIER_1 = 1
-    TIER_2 = 2
-    TIER_3 = 3
-    TIER_4 = 4
-    TIER_5 = 5
-
-
-class AbilityGeneric:
-    def __init__(self, name):
-        self.name = name
-        self.values = []
-
-
-class Type(enum.Enum):
-    """
-    Represents a keyword type.
-    """
-    # entities
-    ADVENTURER = data.Adventurer
-    DRAGON = data.Dragon
-    WYRMPRINT = data.Wyrmprint
-    SKILL = data.Skill
-
-    # properties
-    RARITY = Rarity
-    ELEMENT = data.Element
-    WEAPON_TYPE = data.WeaponType
-    TIER = Tier
-
-    # slots
-    SKILL_SLOT = SkillSlot
-    ABILITY_SLOT = AbilitySlot
-
-    # other
-    ABILITY_GENERIC = AbilityGeneric
-
-
-class KeywordFinder:
+class KeywordResolver:
     def __init__(self):
         self.keywords = {}
         self.builder = acora.AcoraBuilder()
@@ -82,7 +29,7 @@ class KeywordFinder:
 
         for v in values:
             try:
-                Type(type(v))
+                qt.Type(type(v))
             except ValueError:
                 logger.exception("Value's type must be one of Type")
 
@@ -90,68 +37,104 @@ class KeywordFinder:
         self.builder.add(key.lower())
 
     def rebuild(self):
-        # initialise builder
         self.finder = self.builder.build()
 
     def match(self, input_string):
-        # gets longest matches for keywords (non-overlapping)
         matches = []
-        last_pos = 0
+        last_keyword_end_pos = 0
         for pos, match_set in itertools.groupby(self.finder.finditer(input_string), operator.itemgetter(1)):
-            filtered_matches = list(filter(lambda m: m[1] >= last_pos, match_set))
-            if filtered_matches:
-                next_match = max(filtered_matches)
-                matches.append(next_match[0])
-                last_pos = next_match[1] + len(next_match[0])
+            if pos < last_keyword_end_pos:
+                continue
 
+            keyword = max(match_set)[0]
+            matches.append(keyword)
+            last_keyword_end_pos = pos + len(keyword)
+
+        # sorts and resolves keywords to their values
         return sorted(
             itertools.chain(*(self.keywords[key] for key in matches)),
             key=lambda x: type(x).__name__
         )
 
 
-def add_keywords(finder: KeywordFinder):
+class QueryResolver:
+    def __init__(self):
+        self.functions = {}  # stores a tuple (function, sorted argument position)
+
+    @staticmethod
+    def get_arg_signature(*args):
+        return tuple(sorted(args, key=lambda t: t.__name__))
+
+    def register(self, function, *args: qt.Type):
+        """
+        Registers a function to respond to a set of arguments.
+        :param function: Function to register. Returns a discord.Embed or string to send as a response, or None if an
+        error occurred.
+        :param args: arguments to be provided to the function, in the order they are to be provided.
+        """
+        arg_types = [arg.value for arg in args]
+        arg_signature = QueryResolver.get_arg_signature(*arg_types)
+
+        if arg_signature in self.functions:
+            raise ValueError(f"Argument signature already exists: {arg_signature}")
+
+        order = [x[0] for x in sorted(zip(range(len(arg_types)), arg_types), key=lambda x: x[1].__name__)]
+        self.functions[arg_signature] = (function, order)
+
+    async def resolve(self, *args):
+        """
+        Resolves and executes a function for the provided arguments.
+        :param args: arguments to be operated on.
+        :return: the return value of the executed function, or None if the arguments did not resolve to a function.
+        The return value of the executed function should be a discord.Embed or string as a response to the query.
+        """
+        arg_types = [type(arg) for arg in args]
+        arg_signature = QueryResolver.get_arg_signature(*arg_types)
+        function_details = self.functions.get(arg_signature)
+
+        if function_details:
+            # successfully resolved
+            function, order = function_details
+            ordered_args = [x[0] for x in sorted(zip(args, order), key=operator.itemgetter(1))]
+            if inspect.iscoroutinefunction(function):
+                return await asyncio.ensure_future(function(*ordered_args))
+            else:
+                return function(*ordered_args)
+        else:
+            # did not resolve
+            return None
+
+
+def add_keywords(resolver: KeywordResolver):
         # rarity
         for i in range(1, 6):
-            finder.add(f"{i}*", Rarity(i))
+            resolver.add(f"{i}*", qt.Rarity(i))
 
         # element
         for e in data.Element:
             for v in e.values[1:]:
-                finder.add(v, e)
+                resolver.add(v, e)
 
         # weapon type
         for w in data.WeaponType:
-            finder.add(w.name, w)
+            resolver.add(w.name, w)
 
         # tier
         for i in range(1, 6):
-            finder.add(f"t{i}", Tier(i))
+            resolver.add(f"t{i}", qt.Tier(i))
 
         # skill slots
         for i in range(1, 3):
-            finder.add(f"s{i}", SkillSlot(i))
+            resolver.add(f"s{i}", qt.SkillSlot(i))
 
         # ability slots
         for i in range(1, 4):
-            finder.add(f"a{i}", AbilitySlot(i))
+            resolver.add(f"a{i}", qt.AbilitySlot(i))
 
         # weapon crafting classes
         for rarity in range(3, 6):
             for tier in range(1, 4):
-                finder.add(f"{rarity}t{tier}", Rarity(rarity), Tier(tier))
-
-        # ability generics
-        generics = {}
-        abilities = data.Ability.get_all().values()
-        for a in abilities:
-            if a.generic_name not in generics:
-                generics[a.generic_name] = AbilityGeneric(a.generic_name)
-
-            generics[a.generic_name].values.append(a.get_key())
-
-        for k, v in generics.items():
-            finder.add(k, v)
+                resolver.add(f"{rarity}t{tier}", qt.Rarity(rarity), qt.Tier(tier))
 
         # repositories
         entity_repositories = [
@@ -162,25 +145,48 @@ def add_keywords(finder: KeywordFinder):
         ]
         for r in entity_repositories:
             for k, v in r.items():
-                finder.add(k, v)
+                resolver.add(k, v)
+
+        # flags
+        resolver.add("skill", qt.FlagSkill())
+        resolver.add("ability", qt.FlagAbility())
 
         # rebuild to ensure the keywords match properly
-        finder.rebuild()
+        resolver.rebuild()
 
 
 async def on_init(discord_client):
-    global client, keyword_finder
+    global client, keyword_resolver, query_resolver
     client = discord_client
+    keyword_resolver = KeywordResolver()
+    query_resolver = QueryResolver()
 
-    keyword_finder = KeywordFinder()
-    add_keywords(keyword_finder)
+    add_keywords(keyword_resolver)
+    query_resolver.register(handlers.get_adventurer_skill, qt.Type.ADVENTURER, qt.Type.SKILL_SLOT)
+    query_resolver.register(handlers.get_tierless_weapon, qt.Type.RARITY, qt.Type.WEAPON_TYPE)
+    query_resolver.register(handlers.get_t1_weapon, qt.Type.RARITY, qt.Type.TIER, qt.Type.WEAPON_TYPE)
+    query_resolver.register(handlers.get_t2_t3_weapon, qt.Type.RARITY, qt.Type.TIER, qt.Type.WEAPON_TYPE, qt.Type.ELEMENT)
+
+    hook.Hook.get("public!query").attach(query)
+    hook.Hook.get("owner!query_keywords").attach(resolve_keywords)
+
+
+async def resolve_keywords(message, args):
+    await message.channel.send(str([type(arg_type).__name__ for arg_type in keyword_resolver.match(args)]))
 
 
 async def query(message, args):
     """
     Performs a query on the provided terms.
     """
-    pass
+    func_args = keyword_resolver.match(args)
+    response = await query_resolver.resolve(*func_args)
+    if isinstance(response, str):
+        await message.channel.send(response)
+    elif isinstance(response, discord.Embed):
+        await message.channel.send(embed=response)
+    else:
+        await message.channel.send("I'm not sure what you want exactly, sorry!")
 
 
 hook.Hook.get("on_init").attach(on_init)

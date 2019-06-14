@@ -51,7 +51,11 @@ async def check_news(reschedule):
         found_all_items = False
         while not found_all_items:
             async with session.get(list_base_url + str(next_priority)) as response:
-                result_json = await response.json(content_type=None)
+                try:
+                    result_json = await response.json(content_type=None)
+                except json.decoder.JSONDecodeError:
+                    logger.warning("Could not decode news: malformed response")
+                    return
 
                 if result_json["data_headers"]["result_code"] != 1:
                     # invalid query

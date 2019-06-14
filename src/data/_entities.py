@@ -389,6 +389,7 @@ class Weapon(abc.Entity):
         mp("ability_1", Ability.find, "Abilities11")
         mp("ability_2", Ability.find, "Abilities21")
         mp("skill", Skill.find, "SkillName")
+        mp("availability", mf.text, "Availability")
 
         mp(None, mf.none, "CraftGroupId", "CraftNodeId", "ParentCraftNodeId")
 
@@ -429,6 +430,15 @@ class Weapon(abc.Entity):
                         for child in children:
                             child.crafted_from = parent
 
+            # set weapon tiers
+            for w in weapons.values():
+                if w.obtained == "Crafting":
+                    w.tier = 0
+                    w_node = w
+                    while w_node is not None:
+                        w_node = w_node.crafted_from
+                        w.tier += 1
+
         mapper.post_processor = mapper_post_processor
         cls.repository.post_processor = repo_post_processor
 
@@ -438,6 +448,7 @@ class Weapon(abc.Entity):
         self.element = None
         self.weapon_type = None
         self.obtained = ""
+        self.availability = ""
 
         self.max_hp = 0
         self.max_str = 0
@@ -449,6 +460,7 @@ class Weapon(abc.Entity):
 
         self.crafted_from = None
         self.crafted_to = []
+        self.tier = None
 
     def __str__(self):
         return self.name
