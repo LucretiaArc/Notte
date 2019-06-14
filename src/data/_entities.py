@@ -4,6 +4,11 @@ import discord
 import re
 import util
 import textwrap
+import datetime
+import typing
+import logging
+
+logger = logging.getLogger(__name__)
 
 from data import abc
 from ._static import Element, WeaponType, DragonGift, get_rarity_colour
@@ -55,6 +60,13 @@ class Adventurer(abc.Entity):
             except (IndexError, TypeError):
                 adv.max_might = None
 
+            for sk in [adv.skill_1, adv.skill_2]:
+                if sk:
+                    if sk.owner:
+                        logger.warning(f"Skill {sk.name} already has owner")
+                    else:
+                        sk.owner = adv
+
             return True
 
         mapper.post_processor = post_processor
@@ -65,20 +77,20 @@ class Adventurer(abc.Entity):
         self.title = ""
         self.description = ""
         self.obtained = ""
-        self.release_date = None
-        self.weapon_type = None
+        self.release_date: datetime.datetime = None
+        self.weapon_type: WeaponType = None
         self.rarity = 0
-        self.element = None
+        self.element: Element = None
         self.max_hp = 0
         self.max_str = 0
         self.max_might = 0
 
-        self.skill_1 = None
-        self.skill_2 = None
-        self.ability_1 = []
-        self.ability_2 = []
-        self.ability_3 = []
-        self.coability = []
+        self.skill_1: Skill = None
+        self.skill_2: Skill = None
+        self.ability_1: typing.List[Ability] = []
+        self.ability_2: typing.List[Ability] = []
+        self.ability_3: typing.List[Ability] = []
+        self.coability: typing.List[CoAbility] = []
 
     def __str__(self):
         return self.full_name
@@ -184,6 +196,12 @@ class Dragon(abc.Entity):
             except (IndexError, TypeError):
                 dragon.max_might = None
 
+            if dragon.skill:
+                if dragon.skill.owner:
+                    logger.warning(f"Skill {dragon.skill.name} already has owner")
+                else:
+                    dragon.skill.owner = dragon
+
             return True
 
         mapper.post_processor = post_processor
@@ -194,17 +212,17 @@ class Dragon(abc.Entity):
         self.title = ""
         self.description = ""
         self.obtained = ""
-        self.release_date = None
+        self.release_date: datetime.datetime = None
         self.rarity = 0
-        self.element = None
+        self.element: Element = None
         self.max_hp = 0
         self.max_str = 0
         self.max_might = 0
-        self.favourite_gift = None
+        self.favourite_gift: DragonGift = None
 
-        self.skill = None
-        self.ability_1 = []
-        self.ability_2 = []
+        self.skill: Skill = None
+        self.ability_1: typing.List[Ability] = []
+        self.ability_2: typing.List[Ability] = []
 
     def __str__(self):
         return self.full_name
@@ -306,14 +324,14 @@ class Wyrmprint(abc.Entity):
         self.name = ""
         self.rarity = 0
         self.obtained = []
-        self.release_date = None
+        self.release_date: datetime.datetime = None
         self.max_hp = 0
         self.max_str = 0
         self.max_might = 0
 
-        self.ability_1 = []
-        self.ability_2 = []
-        self.ability_3 = []
+        self.ability_1: typing.List[Ability] = []
+        self.ability_2: typing.List[Ability] = []
+        self.ability_3: typing.List[Ability] = []
 
     def __str__(self):
         return self.name
@@ -403,6 +421,12 @@ class Weapon(abc.Entity):
             except (IndexError, TypeError):
                 weapon.max_might = None
 
+            if weapon.skill:
+                if weapon.skill.owner:
+                    logger.warning(f"Skill {weapon.skill.name} already has owner")
+                else:
+                    weapon.skill.owner = weapon
+
             return True
 
         def repo_post_processor(weapons: dict):
@@ -445,8 +469,8 @@ class Weapon(abc.Entity):
     def __init__(self):
         self.name = ""
         self.rarity = 0
-        self.element = None
-        self.weapon_type = None
+        self.element: Element = None
+        self.weapon_type: WeaponType = None
         self.obtained = ""
         self.availability = ""
 
@@ -454,13 +478,13 @@ class Weapon(abc.Entity):
         self.max_str = 0
         self.max_might = 0
 
-        self.skill = None
-        self.ability_1 = None
-        self.ability_2 = None
+        self.skill: Skill = None
+        self.ability_1: Ability = None
+        self.ability_2: Ability = None
 
-        self.crafted_from = None
-        self.crafted_to = []
-        self.tier = None
+        self.crafted_from: Weapon = None
+        self.crafted_to: typing.List[Weapon] = []
+        self.tier: int = None
 
     def __str__(self):
         return self.name
@@ -588,7 +612,8 @@ class Skill(abc.Entity):
 
     def __init__(self):
         self.name = ""
-        self.levels = []
+        self.levels: typing.List[Skill.SkillLevel] = []
+        self.owner: abc.Entity = None  # needs to be updated manually
 
     def __str__(self):
         return self.name
@@ -615,7 +640,9 @@ class Skill(abc.Entity):
                 {max_level.description}
 
                 **Cost:** {max_level.sp} SP
+                **Used by:** {e.owner}
                 """),
+            e=self,
             max_level=self.levels[-1] if self.levels else Skill.SkillLevel("", 0)
         )
 
