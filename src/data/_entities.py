@@ -706,7 +706,23 @@ class Ability(abc.Entity):
         return self.id_str
 
     def get_embed(self) -> discord.Embed:
-        return discord.Embed()
+        fmt = abc.EmbedFormatter()
+
+        title = fmt.format("{e.name} (Ability)", e=self)
+        description = fmt.format(
+            textwrap.dedent("""
+                {e.description}
+
+                **Might:** {e.might}
+                """),
+            e=self
+        )
+
+        return discord.Embed(
+            title=title,
+            description=description,
+            url=util.get_link(self.name)
+        )
 
 
 class CoAbility(abc.Entity):
@@ -754,7 +770,23 @@ class CoAbility(abc.Entity):
         return self.id_str
 
     def get_embed(self) -> discord.Embed:
-        return discord.Embed()
+        fmt = abc.EmbedFormatter()
+
+        title = fmt.format("{e.name} (Co-Ability)", e=self)
+        description = fmt.format(
+            textwrap.dedent("""
+                {e.description}
+
+                **Might:** {e.might}
+                """),
+            e=self
+        )
+
+        return discord.Embed(
+            title=title,
+            description=description,
+            url=util.get_link(self.generic_name)
+        )
 
 
 Adventurer.init()

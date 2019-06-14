@@ -164,14 +164,33 @@ def initialise_keywords(query_resolver: QueryResolver):
             add_query(f"{name} s1", a.skill_1.get_embed())
         if a.skill_2:
             add_query(f"{name} s2", a.skill_2.get_embed())
+        if a.ability_1:
+            add_query(f"{name} a1", a.ability_1[-1].get_embed())
+        if a.ability_2:
+            add_query(f"{name} a2", a.ability_2[-1].get_embed())
+        if a.ability_3:
+            add_query(f"{name} a3", a.ability_3[-1].get_embed())
+        if a.coability:
+            add_query(f"{name} coability", a.coability[-1].get_embed())
+            add_query(f"{name} coab", a.coability[-1].get_embed())
 
     for name, d in dragons.items():
         add_query(name, d.get_embed())
         if d.skill:
             add_query(f"{name} skill", d.skill.get_embed())
+        if d.ability_1:
+            add_query(f"{name} a1", d.ability_1[-1].get_embed())
+        if d.ability_2:
+            add_query(f"{name} a2", d.ability_2[-1].get_embed())
 
     for name, w in wyrmprints.items():
         add_query(name, w.get_embed())
+        if w.ability_1:
+            add_query(f"{name} a1", w.ability_1[-1].get_embed())
+        if w.ability_2:
+            add_query(f"{name} a2", w.ability_2[-1].get_embed())
+        if w.ability_3:
+            add_query(f"{name} a3", w.ability_3[-1].get_embed())
 
     for name, s in skills.items():
         add_query(name, s.get_embed())
@@ -186,6 +205,10 @@ def initialise_keywords(query_resolver: QueryResolver):
             add_query(desc, w.get_embed())
             if w.skill:
                 add_query(f"{desc} skill", w.skill.get_embed())
+            if w.ability_1:
+                add_query(f"{name} a1", w.ability_1.get_embed())
+            if w.ability_2:
+                add_query(f"{name} a2", w.ability_2.get_embed())
 
     logger.info(f"{len(query_resolver.query_map) - original_capacity} queries generated and added to resolver.")
 
