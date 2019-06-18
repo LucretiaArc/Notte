@@ -7,11 +7,10 @@ import textwrap
 import datetime
 import typing
 import logging
-
-logger = logging.getLogger(__name__)
-
 from data import abc
 from ._static import Element, WeaponType, DragonGift, get_rarity_colour
+
+logger = logging.getLogger(__name__)
 
 
 class Adventurer(abc.Entity):
@@ -721,7 +720,8 @@ class Ability(abc.Entity):
         return discord.Embed(
             title=title,
             description=description,
-            url=util.get_link(self.name)
+            url=util.get_link(self.name),
+            color=0xFF7000
         )
 
 
@@ -785,7 +785,8 @@ class CoAbility(abc.Entity):
         return discord.Embed(
             title=title,
             description=description,
-            url=util.get_link(self.generic_name)
+            url=util.get_link(self.generic_name),
+            color=0x006080
         )
 
 

@@ -183,14 +183,14 @@ def initialise_keywords(query_resolver: QueryResolver):
         if d.ability_2:
             add_query(f"{name} a2", d.ability_2[-1].get_embed())
 
-    for name, w in wyrmprints.items():
-        add_query(name, w.get_embed())
-        if w.ability_1:
-            add_query(f"{name} a1", w.ability_1[-1].get_embed())
-        if w.ability_2:
-            add_query(f"{name} a2", w.ability_2[-1].get_embed())
-        if w.ability_3:
-            add_query(f"{name} a3", w.ability_3[-1].get_embed())
+    for name, wp in wyrmprints.items():
+        add_query(name, wp.get_embed())
+        if wp.ability_1:
+            add_query(f"{name} a1", wp.ability_1[-1].get_embed())
+        if wp.ability_2:
+            add_query(f"{name} a2", wp.ability_2[-1].get_embed())
+        if wp.ability_3:
+            add_query(f"{name} a3", wp.ability_3[-1].get_embed())
 
     for name, s in skills.items():
         add_query(name, s.get_embed())
