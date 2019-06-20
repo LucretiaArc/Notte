@@ -31,7 +31,7 @@ class QueryResolver:
 
     @staticmethod
     def get_match_threshold(input_string: str):
-        return 0.8 + 0.4 * len(input_string)
+        return 1 + 0.3 * len(input_string)
 
     def add(self, target: str, result):
         """
@@ -62,7 +62,8 @@ class QueryResolver:
         """
         Resolves and returns the closest match to a query
         :param query_string: query string to resolve
-        :return a tuple of (result object, match distance as a fraction of threshold) if a match is found, else None
+        :return a tuple of (result object, match key, match distance as a fraction of threshold) if a match is found,
+        else None
         """
         results = self.match(query_string)
         if not results:
@@ -70,7 +71,7 @@ class QueryResolver:
         else:
             match_distance, match_key = results[0]
             match_threshold = QueryResolver.get_match_threshold(query_string)
-            return self.query_map[match_key], match_distance / match_threshold
+            return self.query_map[match_key], match_key, 1 - match_distance / match_threshold
 
 
 async def on_init(discord_client):
@@ -88,8 +89,6 @@ async def scan_for_query(message):
     if "[[" in message.content:
         matches = re.findall(r"\[\[(.+?)\]\]", message.content.lower())
         if len(matches) > 0:
-            special_query_messages = config.get_global_config()["special_query_messages"]
-
             if len(matches) > 3:
                 await message.channel.send("Too many queries, only the first three will be shown.")
 
@@ -98,25 +97,43 @@ async def scan_for_query(message):
                     await message.channel.send("That's way too long, I'm not looking for that! " + util.get_emote("notte_stop"))
                     continue
 
-                search_term = raw_match.lower()
-                if search_term in special_query_messages and util.is_special_guild(message.guild):
-                    title = special_query_messages[search_term][0]
-                    content = special_query_messages[search_term][1]
+                response = resolve_query(raw_match, util.is_special_guild(message.guild))
+                if isinstance(response, str):
+                    await message.channel.send(response)
+                elif isinstance(response, discord.Embed):
+                    await message.channel.send(embed=response)
 
-                    if urllib.parse.urlparse(content).scheme:
-                        embed = discord.Embed(title=title)
-                        embed.set_image(url=content)
-                    else:
-                        embed = discord.Embed(title=title, description=content)
 
-                    await message.channel.send(embed=embed)
-                    continue
+def resolve_query(query: str, include_special_responses=False):
+    special_query_messages = config.get_global_config()["special_query_messages"]
+    regular_query_messages = config.get_global_config()["query_messages"]
+    search_term = query.lower()
+    embed = None
 
-                match_content = resolver.resolve(search_term)
-                if match_content:
-                    await message.channel.send(embed=match_content[0])
-                else:
-                    await message.channel.send(f"I'm not sure what \"{raw_match}\" is.")
+    # resolve custom query messages
+    title, content = None, None
+    if search_term in special_query_messages and include_special_responses:
+        title = special_query_messages[search_term][0]
+        content = special_query_messages[search_term][1]
+    elif search_term in regular_query_messages:
+        title = regular_query_messages[search_term][0]
+        content = regular_query_messages[search_term][1]
+
+    if title and content:
+        # construct embed for custom message
+        if urllib.parse.urlparse(content).scheme:
+            embed = discord.Embed(title=title).set_image(url=content)
+        else:
+            embed = discord.Embed(title=title, description=content)
+    else:
+        # query the resolver
+        match_content = resolver.resolve(search_term)
+        if match_content:
+            embed = match_content[0].copy()
+            if match_content[2] < 0.7:
+                embed.set_footer(text=f'Displaying result for "{match_content[1]}"')
+
+    return embed or f"I'm not sure what \"{query}\" is."
 
 
 def initialise_keywords(query_resolver: QueryResolver):
