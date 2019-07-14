@@ -138,8 +138,9 @@ async def threshold(message, args):
             title="{0} HP Requirement".format(details[0]),
             description="```\n" + tables[dragon] + "\n```",
             color=details[1].get_colour()
+        ).set_footer(
+            text=details[3].format(str(details[2]).lower())
         )
-        embed.set_footer(text=details[3].format(str(details[2]).lower()))
         await message.channel.send(embed=embed)
     else:
         await message.channel.send("I haven't seen that dragon before, they must be scary!")

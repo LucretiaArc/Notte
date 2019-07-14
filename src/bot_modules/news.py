@@ -14,6 +14,8 @@ import hook
 logger = logging.getLogger(__name__)
 
 client = None
+news_icon = "https://cdn.discordapp.com/attachments/560454966154756107/599274542732410890/news.png"
+news_colour = 0x00A0FF
 
 
 async def on_init(discord_client):
@@ -134,11 +136,10 @@ async def check_news(reschedule):
                 title=title,
                 url=article_url,
                 description=content,
-                color=0x00A0FF
-            )
-            e.set_author(
+                color=news_colour
+            ).set_author(
                 name=category+" | Dragalia Lost News",
-                icon_url="https://dragalialost.com/assets/en/images/pc/top/kv_logo.png"
+                icon_url=news_icon
             )
             e.set_footer(text="Posted " + date.strftime("%B %d, %I:%M %p (UTC)"))
             embeds.append(e)
@@ -148,6 +149,17 @@ async def check_news(reschedule):
             wconfig["news_last_article_id"] = news_items[-1]["article_id"]
             wconfig["news_last_article_date"] = news_items[-1]["date"]
             config.set_wglobal_config(wconfig)
+
+        if len(embeds) > 10:
+            embeds = [discord.Embed(
+                title="New news posts are available",
+                url="https://dragalialost.com/en/news/",
+                description=f"{len(embeds)} new news posts are available! Click the link above to read them.",
+                color=news_colour
+            ).set_author(
+                name="Dragalia Lost News",
+                icon_url=news_icon
+            )]
 
         for guild in client.guilds:
             active_channel = config.get_guild_config(guild)["active_channel"]

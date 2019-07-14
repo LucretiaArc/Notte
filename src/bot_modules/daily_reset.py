@@ -23,7 +23,7 @@ async def before_reset():
 
 
 async def on_reset():
-    message_string = get_reset_message(datetime.datetime.utcnow().weekday())
+    message_string = get_reset_message(datetime.datetime.utcnow())
     for guild in client.guilds:
         active_channel = config.get_guild_config(guild)["active_channel"]
         channel = guild.get_channel(active_channel)
@@ -31,7 +31,7 @@ async def on_reset():
             await channel.send(message_string)
 
 
-def get_reset_message(day):
+def get_reset_message(date: datetime.datetime):
     ruins_available = [
         "all Elemental Ruins",
         "Flamehowl Ruins",
@@ -42,16 +42,31 @@ def get_reset_message(day):
         "all Elemental Ruins"
     ]
 
+    if date.tzinfo:
+        date = date.astimezone(datetime.timezone.utc)
+
+    message_lines = [
+        "It's time for the daily reset!",
+        f"Expert difficulty is available in {ruins_available[date.weekday()]}!"
+    ]
+
+    # today's void battles
     void_sched = config.get_global_config()["void_battle_schedule"]
     void_order = void_sched["order"]
     void_available = void_sched["availability"]
-    daily_battles = [battle for battle in void_order if void_available[battle][day]]
+    daily_battles = [battle for battle in void_order if void_available[battle][date.weekday()]]
+    message_lines.append(f"Today's Void Battles are {util.readable_list(daily_battles)}!")
 
-    message_string = "It's time for the daily reset!\n" +\
-        "Expert difficulty is available in " + ruins_available[day] + "!\n" +\
-        "Today's Void Battles are " + util.readable_list(daily_battles) + "!"
+    # separate occasional lines from constant lines
+    message_lines.append("")
 
-    return message_string
+    # mercurial gauntlet reset
+    if date.day == 1:
+        message_lines.append("The Void Battle Treasure Trade has been reset!")
+    elif date.day == 15:
+        message_lines.append("The Mercurial Gauntlet Victor's Trove has been reset!")
+
+    return "\n".join(message_lines).strip()
 
 
 hook.Hook.get("on_init").attach(on_init)
