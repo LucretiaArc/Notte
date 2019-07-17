@@ -16,7 +16,7 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    hook.Hook.get("on_reset").attach(update_data_store)
+    hook.Hook.get("data_downloaded").attach(update_data_store)
     hook.Hook.get("public!resist").attach(resist_search)
 
     await update_data_store()

@@ -83,6 +83,7 @@ async def on_init(discord_client):
 
     hook.Hook.get("on_message").attach(scan_for_query)
     hook.Hook.get("owner!query_results").attach(resolve_keywords)
+    hook.Hook.get("data_downloaded").attach(rebuild_resolver)
 
 
 async def scan_for_query(message):
@@ -195,6 +196,7 @@ def initialise_keywords(query_resolver: QueryResolver):
         add_query(name, d.get_embed())
         if d.skill:
             add_query(f"{name} skill", d.skill.get_embed())
+            add_query(f"{name} s1", d.skill.get_embed())
         if d.ability_1:
             add_query(f"{name} a1", d.ability_1[-1].get_embed())
         if d.ability_2:
@@ -228,6 +230,15 @@ def initialise_keywords(query_resolver: QueryResolver):
                 add_query(f"{name} a2", w.ability_2.get_embed())
 
     logger.info(f"{len(query_resolver.query_map) - original_capacity} queries generated and added to resolver.")
+
+
+def rebuild_resolver():
+    global resolver
+    logger.info("Rebuilding query resolver...")
+    new_resolver = QueryResolver()
+    initialise_keywords(new_resolver)
+    resolver = new_resolver
+    logger.info("Query resolver rebuilt.")
 
 
 async def resolve_keywords(message, args):

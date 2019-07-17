@@ -29,6 +29,7 @@ bot_modules.import_modules()
 # on_reset()
 # before_reset()
 # download_data()
+# data_downloaded()
 #
 # Command events:
 # public!COMMAND(message:discord.Message, args:string)
