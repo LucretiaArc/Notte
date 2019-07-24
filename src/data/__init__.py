@@ -27,7 +27,7 @@ async def update_repositories():
         await Weapon.repository.update_data(session)
         logger.info("Updated all repositories.")
 
-    hook.Hook.get("data_downloaded")()
+    await hook.Hook.get("data_downloaded")()
 
 
 hook.Hook.get("download_data").attach(update_repositories)

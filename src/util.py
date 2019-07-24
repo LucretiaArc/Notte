@@ -93,7 +93,7 @@ def safe_int(value, default):
     """
     try:
         return int(value)
-    except ValueError:
+    except (ValueError, TypeError):
         return default
 
 

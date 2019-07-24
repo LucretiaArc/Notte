@@ -218,7 +218,8 @@ def initialise_keywords(query_resolver: QueryResolver):
         # determine descriptions for weapon
         descriptions = [name]
         if w.availability == "Core" and w.rarity and w.element and w.weapon_type:
-            descriptions.append(f"{w.rarity}* {w.element} {w.weapon_type.name}")
+            for element_name in w.element.get_names():
+                descriptions.append(f"{w.rarity}* {element_name} {w.weapon_type.name}")
 
         for desc in descriptions:
             add_query(desc, w.get_embed())

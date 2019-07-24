@@ -15,6 +15,9 @@ class Element(aenum.MultiValueEnum):
         element_id = util.safe_int(s, None)
         return None if element_id not in range(1, 6) else Element(element_id)
 
+    def get_names(self):
+        return tuple(filter(lambda v: isinstance(v, str), self.values))
+
     def __str__(self):
         return self.name.capitalize()
 
