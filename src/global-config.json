@@ -160,10 +160,19 @@
     },
     "wyrmprint": {
       "gmyw": "give me your wounded",
-      "resounding": "resounding rendition",
+      "rr": "resounding rendition",
       "levin's": "levin's champion",
+      "lc": "levin's champion",
       "heralds": "heralds of hinomoto",
-      "choco": "the chocolatiers"
+      "hoh": "heralds of hinomoto",
+      "choco": "the chocolatiers",
+      "jots": "jewels of the sun",
+      "vc": "valiant crown",
+      "kfm": "kung fu masters",
+      "ce": "crystalian envoy",
+      "tso": "the shining overlord",
+      "fitf": "flower in the fray",
+      "bbw": "bonds between worlds"
     },
     "skill": {
       "holy water": "holy water (skill)"
