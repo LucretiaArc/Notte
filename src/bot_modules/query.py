@@ -225,6 +225,7 @@ def initialise_keywords(query_resolver: QueryResolver):
             add_query(desc, w.get_embed())
             if w.skill:
                 add_query(f"{desc} skill", w.skill.get_embed())
+                add_query(f"{desc} s1", w.skill.get_embed())
             if w.ability_1:
                 add_query(f"{name} a1", w.ability_1.get_embed())
             if w.ability_2:

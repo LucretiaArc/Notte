@@ -251,6 +251,7 @@
       "Gust Shroom",
       "Blazing Ghost",
       "Violet Ghost",
+      "Frost Hermit",
       "Steel Golem",
       "Obsidian Golem",
       "Amber Golem",
@@ -265,16 +266,17 @@
       "Wandering Shroom": [true, false, true, false, true, false, true],
       "Gust Shroom": [false, true, false, true, false, true, false],
       "Blazing Ghost": [false, false, false, true, false, true, false],
-      "Violet Ghost": [false, false, true, false, true, false, true],
-      "Steel Golem": [true, false, false, false, false, false, false],
-      "Obsidian Golem": [false, true, true, true, true, false, true],
+      "Violet Ghost": [false, false, true, false, true, false, false],
+      "Frost Hermit": [true, true, false, false, false, false, true],
+      "Steel Golem": [false, false, true, false, false, false, true],
+      "Obsidian Golem": [true, false, false, true, true, false, false],
       "Amber Golem": [false, false, false, false, false, true, false],
-      "Raging Manticore": [false, false, false, false, false, true, false],
-      "Greedy Manticore": [true, true, true, false, true, false, true],
-      "Void Zephyr": [true, false, false, false, false, false, true],
-      "Void Poseidon": [true, false, false, true, false, false, false],
-      "Void Jeanne d'Arc": [false, true, true, true, true, true, true],
-      "Void Agni": [false, true, false, false, false, true, false]
+      "Raging Manticore": [false, false, true, false, false, false, false],
+      "Greedy Manticore": [false, false, false, false, false, true, false],
+      "Void Zephyr": [false, true, false, false, false, false, true],
+      "Void Poseidon": [false, false, true, false, false, false, true],
+      "Void Jeanne d'Arc": [false, true, false, true, false, true, false],
+      "Void Agni": [true, false, false, false, true, false, false]
     }
   }
 }

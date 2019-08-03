@@ -1,3 +1,4 @@
+import random
 import discord
 import config
 import data
@@ -13,6 +14,7 @@ async def on_init(discord_client):
     hook.Hook.get("public!xmus").attach(xmus)
     hook.Hook.get("public!bubbles").attach(bubbles)
     hook.Hook.get("public!threshold").attach(threshold)
+    hook.Hook.get("on_mention").attach(handle_mention)
 
 
 async def xmus(message, args):
@@ -144,5 +146,16 @@ async def threshold(message, args):
         await message.channel.send(embed=embed)
     else:
         await message.channel.send("I haven't seen that dragon before, they must be scary!")
+
+
+async def handle_mention(message):
+    if "which hdt" in message.content.lower():
+        dragon = random.choice([
+            "Midgardsormr",
+            "Brunhilda",
+            "Mercury",
+            "Jupiter"
+        ])
+        await message.channel.send(f"You should play High {dragon}'s Trial!")
 
 hook.Hook.get("on_init").attach(on_init)
