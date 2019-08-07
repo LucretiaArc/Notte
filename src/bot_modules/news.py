@@ -200,7 +200,6 @@ async def get_comic_embed(session: aiohttp.ClientSession, comic_number: int):
     # we don't use caching, as we're expecting to need to pull new data for almost every call.
     while attempts < 2 and not comic_data:
         async with session.post(api_base_url + str(page_id), data=request_data) as response:
-            print(comic_number, page_id)
             comic_list = await response.json(content_type=None)
             comic_data = next(filter(lambda c: int(c["episode_num"]) == comic_number, comic_list), None)
             page_id = math.ceil(int(comic_list[0]["episode_num"]) / page_size) - math.ceil(comic_number / page_size)

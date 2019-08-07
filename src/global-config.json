@@ -78,6 +78,7 @@
       "hilde": "hildegarde",
       "xain": "xainfried",
       "eli": "elisanne",
+      "elly": "elisanne",
       "hein": "heinwald",
       "eze": "ezelith",
       "nef": "nefaria",
@@ -86,6 +87,7 @@
       "juli": "julietta",
       "vero": "veronica",
       "xuan": "xuan zang",
+      "nat": "natalie",
 
       "hedward": "halloween edward",
       "helisanne": "halloween elisanne",
@@ -117,13 +119,20 @@
       "bride aoi": "wedding aoi",
       "bride xania": "wedding xania",
 
+      "scelliera": "summer celliera",
+      "sestelle": "summer estelle",
+      "sranzal": "summer ranzal",
+      "sjulietta": "summer julietta",
+      "sjuli": "summer julietta",
+
       "bzardin": "beautician zardin",
       "naeleen": "nurse aeleen",
       "smaribelle": "student maribelle",
 
       "sarisse": "gala sarisse",
       "granzal": "gala ranzal",
-      "mym": "gala mym"
+      "mym": "gala mym",
+      "gleo": "gala cleo"
     },
     "dragon": {
       "jeanne": "jeanne d'arc",
