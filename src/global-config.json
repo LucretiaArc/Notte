@@ -124,6 +124,9 @@
       "sranzal": "summer ranzal",
       "sjulietta": "summer julietta",
       "sjuli": "summer julietta",
+      "scleo": "summer cleo",
+      "sluca": "summer luca",
+      "sverica": "summer verica",
 
       "bzardin": "beautician zardin",
       "naeleen": "nurse aeleen",
@@ -132,7 +135,8 @@
       "sarisse": "gala sarisse",
       "granzal": "gala ranzal",
       "mym": "gala mym",
-      "gleo": "gala cleo"
+      "gleo": "gala cleo",
+      "gcleo": "gala cleo"
     },
     "dragon": {
       "jeanne": "jeanne d'arc",
@@ -145,6 +149,8 @@
       "nyathot": "nyarlathotep",
       "jugg": "juggernaut",
       "sakuya": "konohana sakuya",
+      "pssiren": "pop-star siren",
+      "psiren": "pop-star siren",
 
       "brun": "brunhilda",
       "hbh": "high brunhilda",
