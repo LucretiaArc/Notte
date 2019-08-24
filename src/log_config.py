@@ -3,6 +3,7 @@ import asyncio
 import discord
 import config
 import io
+import util
 
 
 class DiscordHandler(logging.Handler):
@@ -22,14 +23,7 @@ class DiscordHandler(logging.Handler):
                 pass
 
         msg = "```\n{0}\n```".format(self.format(record))
-        if len(msg) <= 2000:
-            fut = self.channel.send(msg)
-        else:
-            fut = self.channel.send(
-                "An exception occurred!",
-                file=discord.File(fp=io.BytesIO(bytes(msg, "UTF-8")), filename="log.txt")
-            )
-
+        fut = util.send_long_message_as_file(self.channel, msg, filename="exception.txt")
         asyncio.ensure_future(send_log(fut))
 
 

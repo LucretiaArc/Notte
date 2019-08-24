@@ -1,9 +1,6 @@
 import typing
 import aiohttp
 import itertools
-import mwparserfromhell
-import html
-import re
 import util
 import abc
 import datetime
@@ -133,7 +130,7 @@ class EntityMapper:
 
     @staticmethod
     def text(s: str):
-        return clean_wikitext(s) or None
+        return util.clean_wikitext(s) or None
 
     @staticmethod
     def int(s: str):
@@ -296,22 +293,3 @@ class EmbedFormatter(string.Formatter):
                 return self.default
         else:
             raise ValueError("Unknown conversion specifier {0!s}".format(conversion))
-
-
-def clean_wikitext(wikitext):
-    """
-    Applies several transformations to wikitext, so that it's suitable for display in a message. This function does NOT
-    sanitise the input, so the output of this method isn't safe for use in a HTML document. This method, in no
-    particular order:
-     - Strips spaces from the ends
-     - Strips wikicode
-     - Decodes HTML entities then strips HTML tags
-     - Reduces consecutive spaces
-    :param wikitext: wikitext to strip
-    :return: string representing the stripped wikitext
-    """
-    html_breaks_replaced = re.sub(r" *<br */?> *", "\n", html.unescape(wikitext))
-    html_removed = re.sub(r"<[^<]+?>", "", html_breaks_replaced)
-    wikicode_removed = mwparserfromhell.parse(html_removed).strip_code()
-    spaces_reduced = re.sub(r" {2,}", " ", wikicode_removed)
-    return spaces_reduced.strip()

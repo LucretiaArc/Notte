@@ -31,7 +31,9 @@ class Config:
 
     wc_default = {
         "news_recent_article_ids": [],
-        "news_recent_article_date": 0
+        "news_recent_article_date": 0,
+        "void_order": [],
+        "void_availability": {}
     }
 
     @classmethod

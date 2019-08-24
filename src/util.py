@@ -3,6 +3,10 @@ import asyncio
 import logging
 import urllib.parse
 import config
+import html
+import re
+import mwparserfromhell
+import io
 import discord
 import hook
 
@@ -128,3 +132,29 @@ def get_link(page_name):
     :return: link to page
     """
     return "https://dragalialost.gamepedia.com/" + urllib.parse.quote(page_name.replace(" ", "_"))
+
+
+def clean_wikitext(wikitext):
+    """
+    Applies several transformations to wikitext, so that it's suitable for display in a message. This function does NOT
+    sanitise the input, so the output of this method isn't safe for use in a HTML document. This method, in no
+    particular order:
+     - Strips spaces from the ends
+     - Strips wikicode
+     - Decodes HTML entities then strips HTML tags
+     - Reduces consecutive spaces
+    :param wikitext: wikitext to strip
+    :return: string representing the stripped wikitext
+    """
+    html_breaks_replaced = re.sub(r" *<br */?> *", "\n", html.unescape(wikitext))
+    html_removed = re.sub(r"<[^<]+?>", "", html_breaks_replaced)
+    wikicode_removed = mwparserfromhell.parse(html_removed).strip_code()
+    spaces_reduced = re.sub(r" {2,}", " ", wikicode_removed)
+    return spaces_reduced.strip()
+
+
+async def send_long_message_as_file(channel: discord.abc.Messageable, msg: str, filename="message.txt"):
+    if len(msg) <= 2000:
+        await channel.send(msg)
+    else:
+        await channel.send(file=discord.File(fp=io.BytesIO(bytes(msg, "UTF-8")), filename=filename))

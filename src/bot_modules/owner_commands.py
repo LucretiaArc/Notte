@@ -2,7 +2,6 @@ import discord
 import config
 import json
 import util
-import re
 import data
 import hook
 
@@ -16,10 +15,9 @@ async def on_init(discord_client):
     hook.Hook.get("owner!say").attach(say)
     hook.Hook.get("owner!get_config").attach(get_config)
     hook.Hook.get("owner!inspect_configs").attach(inspect_configs)
-    hook.Hook.get("owner!void_schedule").attach(void_schedule_format)
     hook.Hook.get("owner!update_data").attach(update_data)
-    hook.Hook.get("owner!wconfig_set").attach(wconfig_set)
-    hook.Hook.get("owner!wconfig_del").attach(wconfig_del)
+    hook.Hook.get("owner!wc_set").attach(wconfig_set)
+    hook.Hook.get("owner!wc_del").attach(wconfig_del)
 
 
 async def say(message, args):
@@ -41,28 +39,8 @@ async def get_config(message, args):
 async def inspect_configs(message, args):
     guild_config_json = json.dumps(dict(config.Config.inspect_guild_configs()), indent=2, sort_keys=True)
     writable_config_json = json.dumps(dict(config.get_wglobal_config()), indent=2, sort_keys=True)
-    await message.channel.send("```json\ngc = {0}\n\nwc = {1}\n```".format(guild_config_json, writable_config_json))
-
-
-async def void_schedule_format(message, args):
-    content = args.strip().replace("\u2714", "Y")
-    battle_order = []
-    battle_availability = {}
-    for line in content.split("\n"):
-        cells = list(map(str.strip, re.split(r"\s{2,}", line[line.index(".png")+5:])))
-        name = cells[0]
-        days = [c == "Y" for c in cells[1:]]
-        if days != [True]*7:
-            battle_order.append(name)
-            battle_availability[name] = days
-
-    output_message = '"order": ' + json.dumps(battle_order, indent=2) + ',\n"availability": {\n'
-    availability_segements = []
-    for k, v in battle_availability.items():
-        availability_segements.append('  "{0}": [{1}]'.format(k, ", ".join(str(i).lower() for i in v)))
-    output_message += ",\n".join(availability_segements)
-    output_message += "\n}"
-    await message.channel.send(output_message)
+    msg_str = "```json\ngc = {0}\n\nwc = {1}\n```".format(guild_config_json, writable_config_json)
+    await util.send_long_message_as_file(message.channel, msg_str)
 
 
 async def update_data(message, args):
