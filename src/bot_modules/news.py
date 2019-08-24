@@ -135,13 +135,9 @@ async def check_news(reschedule):
             if channel is not None and channel.permissions_for(guild.me).send_messages:
                 channels.append(channel)
 
-        tasks = []
         for e in embeds:
-            for channel in channels:
-                tasks.append(channel.send(embed=e))
-
-            for task in tasks:
-                await task
+            tasks = [channel.send(embed=e) for channel in channels]
+            await asyncio.gather(*tasks)
 
 
 async def get_embed_from_result(session: aiohttp.ClientSession, item: dict):
