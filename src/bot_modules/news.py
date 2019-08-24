@@ -128,12 +128,20 @@ async def check_news(reschedule):
             config.set_wglobal_config(wconfig)
 
         # post news items
+        channels = []
         for guild in client.guilds:
             active_channel = config.get_guild_config(guild)["active_channel"]
             channel = guild.get_channel(active_channel)
             if channel is not None and channel.permissions_for(guild.me).send_messages:
-                for e in embeds:
-                    await channel.send(embed=e)
+                channels.append(channel)
+
+        tasks = []
+        for e in embeds:
+            for channel in channels:
+                tasks.append(channel.send(embed=e))
+
+            for task in tasks:
+                await task
 
 
 async def get_embed_from_result(session: aiohttp.ClientSession, item: dict):

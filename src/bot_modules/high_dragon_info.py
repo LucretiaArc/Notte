@@ -74,11 +74,11 @@ async def threshold(message, args):
                "│ Ranged │ 2029 │ 1897 │ 1862 │ 1828 │ 1765 │\n"
                "└────────┴──────┴──────┴──────┴──────┴──────┘\n",
         "hjp": "┌────────┬──────┬──────┬──────┬──────┬──────┐\n"
-               "│ Def    │ +0%  │ +7%  │ +9%  │ +11% │ +15% │\n"
+               "│ Def    │ +0%  │ +7%  │ +9%  │ +15% │ +22% │\n"
                "├────────┼──────┼──────┼──────┼──────┼──────┤\n"
-               "│ Melee  │ ???? │ ???? │ ???? │ ???? │ ???? │\n"
+               "│ Melee  │ 2163 │ 2022 │ 1984 │ 1881 │ 1773 │\n"
                "├────────┼──────┼──────┼──────┼──────┼──────┤\n"
-               "│ Ranged │ ???? │ ???? │ ???? │ ???? │ ???? │\n"
+               "│ Ranged │ 2704 │ 2527 │ 2481 │ 2351 │ 2216 │\n"
                "└────────┴──────┴──────┴──────┴──────┴──────┘\n",
         "hzd": "┌────────┬──────┬──────┬──────┬──────┬──────┐\n"
                "│ Def    │ +0%  │ +7%  │ +9%  │ +11% │ +15% │\n"
@@ -115,7 +115,10 @@ async def threshold(message, args):
             "High Jupiter",
             data.Element.LIGHT,
             data.Element.DARK,
-            "Assumes a {0} adventurer with the appropriate wyrmprint equipped."
+            "Assumes a {0} adventurer with MUB King of the Skies wyrmprint equipped. "
+            "Note that the values listed here are those required to live the first Electron Outburst attack, "
+            "which deals more damage than the initial HP check. Note that all 5* HJP bane void weapons "
+            "(except the staff) provide a 7% defense bonus."
         ),
         "hzd": (
             "High Zodiark",
