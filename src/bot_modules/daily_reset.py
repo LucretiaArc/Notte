@@ -66,7 +66,6 @@ def get_reset_message(date: datetime.datetime):
     ]
 
     # today's void battles
-    void_sched = config.get_global_config()["void_battle_schedule"]
     daily_battles = [battle for battle in void_order if void_availability[battle][date.weekday()]]
     message_lines.append(f"Today's Void Battles are {util.readable_list(daily_battles)}!")
 
