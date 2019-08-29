@@ -116,9 +116,8 @@ async def threshold(message, args):
             data.Element.LIGHT,
             data.Element.DARK,
             "Assumes a {0} adventurer with MUB King of the Skies equipped. "
-            "Note that the values listed here are those required to live the first Electron Outburst attack, "
-            "which deals more damage than the initial HP check. Note that all 5* HJP bane void weapons "
-            "(except the staff) provide a 7% defense bonus."
+            "HP values are those required to live the first Electron Outburst attack, which deals more damage than the "
+            "initial HP check. All 5* HJP bane void weapons (except the staff) provide a 7% defense bonus."
         ),
         "hzd": (
             "High Zodiark",

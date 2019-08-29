@@ -102,7 +102,7 @@ async def check_news(reschedule):
         # sort news items for correct order
         news_items = sorted(news_items, key=lambda d: d["priority"])
 
-        if len(news_items) > 10:
+        if len(news_items) >= 10:
             # too many news items, post a generic notification
             embeds = [discord.Embed(
                 title="New news posts are available",
@@ -128,16 +128,14 @@ async def check_news(reschedule):
             config.set_wglobal_config(wconfig)
 
         # post news items
-        channels = []
+        guild_message_sequences = []
         for guild in client.guilds:
             active_channel = config.get_guild_config(guild)["active_channel"]
             channel = guild.get_channel(active_channel)
             if channel is not None and channel.permissions_for(guild.me).send_messages:
-                channels.append(channel)
+                guild_message_sequences.append(exec_in_order([channel.send(embed=e) for e in embeds]))
 
-        for e in embeds:
-            tasks = [channel.send(embed=e) for channel in channels]
-            await asyncio.gather(*tasks)
+        await asyncio.gather(*guild_message_sequences)
 
 
 async def get_embed_from_result(session: aiohttp.ClientSession, item: dict):
@@ -265,6 +263,11 @@ async def get_api_json_response(session: aiohttp.ClientSession, url: str):
             return None
 
         return response_json
+
+
+async def exec_in_order(coroutines):
+    for c in coroutines:
+        await c
 
 
 class TagStripper(html.parser.HTMLParser):

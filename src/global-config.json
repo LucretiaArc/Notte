@@ -267,39 +267,5 @@
     "gogomic's julietta": ["GoGoMic's Julietta", "https://cdn.discordapp.com/attachments/560454966154756107/578961195915149333/image0.png"],
     "cygames": ["Cygames", "how in the hell removing Event prints a good thing , they basically flip off Casual and f2p players. Cause now they are forcing those players to summon for one time use WP. Greedy CYgames"],
     "jeri": ["The heck, man?!", "JERI, it took me SEVENTEEN PULLS to get HALLOWEEN ELISANNE. It took me FOURTEEN PULLS TO GET JEANNE D'ARC IN THE LAUNCH BANNER. IT TOOK ME NINE PULLS TO GET CERBERUS in the Naveed banner. I don't want to hear SHIT, ABOUT YOUR SEVEN PULLS TO GET CUPID, WOE IS ME."]
-  },
-  "void_battle_schedule": {
-    "order": [
-      "Wandering Shroom",
-      "Gust Shroom",
-      "Blazing Ghost",
-      "Violet Ghost",
-      "Frost Hermit",
-      "Steel Golem",
-      "Obsidian Golem",
-      "Amber Golem",
-      "Raging Manticore",
-      "Greedy Manticore",
-      "Void Zephyr",
-      "Void Poseidon",
-      "Void Jeanne d'Arc",
-      "Void Agni"
-    ],
-    "availability": {
-      "Wandering Shroom": [true, false, true, false, true, false, true],
-      "Gust Shroom": [false, true, false, true, false, true, false],
-      "Blazing Ghost": [false, false, false, true, false, true, false],
-      "Violet Ghost": [false, false, true, false, true, false, false],
-      "Frost Hermit": [true, true, false, false, false, false, true],
-      "Steel Golem": [false, false, true, false, false, false, true],
-      "Obsidian Golem": [true, false, false, true, true, false, false],
-      "Amber Golem": [false, false, false, false, false, true, false],
-      "Raging Manticore": [false, false, true, false, false, false, false],
-      "Greedy Manticore": [false, false, false, false, false, true, false],
-      "Void Zephyr": [false, true, false, false, false, false, true],
-      "Void Poseidon": [false, false, true, false, false, false, true],
-      "Void Jeanne d'Arc": [false, true, false, true, false, true, false],
-      "Void Agni": [true, false, false, false, true, false, false]
-    }
   }
 }
