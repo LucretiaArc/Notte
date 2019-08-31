@@ -62,9 +62,9 @@ async def threshold(message, args):
         "hmc": "┌────────┬──────┬──────┬──────┬──────┬──────┐\n"
                "│ Def    │ +0%  │ +7%  │ +9%  │ +11% │ +15% │\n"
                "├────────┼──────┼──────┼──────┼──────┼──────┤\n"
-               "│ Melee  │ 1218 │ 1138 │ 1118 │ 1097 │ 1059 │\n"
+               "│ Melee  │ 1318 │ 1245 │ 1226 │ 1208 │ 1171 │\n"
                "├────────┼──────┼──────┼──────┼──────┼──────┤\n"
-               "│ Ranged │ 1522 │ 1423 │ 1397 │ 1372 │ 1324 │\n"
+               "│ Ranged │ 1648 │ 1557 │ 1532 │ 1510 │ 1464 │\n"
                "└────────┴──────┴──────┴──────┴──────┴──────┘\n",
         "hms": "┌────────┬──────┬──────┬──────┬──────┬──────┐\n"
                "│ Def    │ +0%  │ +7%  │ +9%  │ +11% │ +15% │\n"
@@ -102,8 +102,9 @@ async def threshold(message, args):
             data.Element.WATER,
             data.Element.WIND,
             "The High Mercury fight is based on meeting a soft strength requirement, rather than meeting the HP check. "
-            "It is recommended that you bring a {0} adventurer with as much offensive power as possible to avoid timing out. "
-            "In general, try to have at least 2.6k strength before attempting the fight."
+            "It is recommended that you bring a {0} adventurer with high offensive power as possible to avoid "
+            "timing out. In general, try to have at least 2.5k strength before attempting the fight. Values assume "
+            "Lowen's S2 will be applied, and that Queen of the Blue Seas is NOT equipped."
         ),
         "hms": (
             "High Midgardsormr",
