@@ -47,8 +47,10 @@ async def check_news(reschedule):
                         "format=json&type=information&action=information_list&lang=en_us&priority_lower_than="
 
         wconfig = config.get_wglobal_config()
+        gconfig = config.get_global_config()
         stored_recent_article_ids: list = wconfig.get(RECENT_ARTICLE_IDS)
         stored_recent_article_date: int = wconfig.get(RECENT_ARTICLE_DATE)
+        article_blacklist = gconfig.get("news_article_blacklist")
 
         if not stored_recent_article_ids or not stored_recent_article_date:
             logger.warning("Missing article history, regenerating...")
@@ -117,9 +119,10 @@ async def check_news(reschedule):
             # generate embeds from articles
             embeds = []
             for item in news_items:
-                item_embed = await get_embed_from_result(session, item)
-                if item_embed:
-                    embeds.append(item_embed)
+                if item["article_id"] not in article_blacklist:
+                    item_embed = await get_embed_from_result(session, item)
+                    if item_embed:
+                        embeds.append(item_embed)
 
         # update config
         if len(news_items):
