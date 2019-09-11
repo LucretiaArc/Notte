@@ -74,7 +74,7 @@ def get_reset_message(date: datetime.datetime):
 
     # mercurial gauntlet reset
     if date.day == 1:
-        message_lines.append("The Void Battle Treasure Trade has been reset!")
+        message_lines.append("The Void Battle and Astral Raid treasure trades have been reset!")
     elif date.day == 15:
         message_lines.append("The Mercurial Gauntlet Victor's Trove has been reset!")
 
