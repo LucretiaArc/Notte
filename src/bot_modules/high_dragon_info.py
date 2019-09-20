@@ -4,6 +4,7 @@ import config
 import data
 import hook
 import typing
+import math
 
 client = None
 
@@ -41,31 +42,11 @@ async def threshold(message, args):
     `threshold <dragon>` gives the table for a dragon.
     """
     tables = {
-        "hbh": generate_table([
-            ["Def", "+0%", "+7%", "+9%", "+15%"],
-            ["Melee", 2165, 2023, 1986, 1882],
-            ["Ranged", 2705, 2529, 2482, 2353],
-        ]),
-        "hmc": generate_table([
-            ["Def", "+0%", "+7%", "+9%", "+15%"],
-            ["Melee", 1318, 1245, 1226, 1171],
-            ["Ranged", 1648, 1557, 1532, 1464],
-        ]),
-        "hms": generate_table([
-            ["Def", "+0%", "+7%", "+9%", "+15%"],
-            ["Melee", 1624, 1518, 1490, 1412],
-            ["Ranged", 2029, 1897, 1862, 1765],
-        ]),
-        "hjp": generate_table([
-            ["Def", "+0%", "+7%", "+9%", "+15%", "+22%"],
-            ["Melee", 2163, 2022, 1984, 1881, 1773],
-            ["Ranged", 2704, 2527, 2481, 2351, 2216],
-        ]),
-        "hzd": generate_table([
-            ["Def", "+0%", "+7%", "+9%", "+15%"],
-            ["Melee", "????", "????", "????", "????"],
-            ["Ranged", "????", "????", "????", "????"],
-        ])
+        "hms": generate_threshold_table(7230, 3.6, [0, 7, 9, 15]),
+        "hbh": generate_threshold_table(7230, 4.8, [0, 7, 9, 15]),
+        "hmc": generate_threshold_table(7230, 2.75, [0, 7, 9, 15], 20, 1/1.1),
+        "hjp": generate_threshold_table(7230, 4.8, [0, 7, 9, 15, 22]),
+        "hzd": generate_threshold_table(7996, 4.4, [0, 7, 9, 15, 23])
     }
 
     # (proper name, adventurer element, wyrmprint name, dragon element, extra text)
@@ -78,10 +59,9 @@ async def threshold(message, args):
         "hmc": (
             "High Mercury",
             data.Element.WATER,
+            "Assumes a wind adventurer WITHOUT Queen of the Blue Seas equipped. "
             "The High Mercury fight is based on meeting a soft strength requirement, rather than meeting the HP check. "
-            "It is recommended that you bring a wind adventurer with high offensive power as possible to avoid "
-            "timing out. In general, try to have at least 2.5k strength before attempting the fight. Values assume "
-            "Lowen's S2 will be applied, and that Queen of the Blue Seas is NOT equipped."
+            "HP values assume that Lowen's S2 will be applied. "
         ),
         "hms": (
             "High Midgardsormr",
@@ -98,7 +78,8 @@ async def threshold(message, args):
         "hzd": (
             "High Zodiark",
             data.Element.DARK,
-            "Assumes a light adventurer with the appropriate wyrmprint equipped."
+            "Assumes a light adventurer with MUB Ruler of Darkness equipped. "
+            "All 5* HZD bane void weapons provide an 8% defense bonus."
         )
     }
 
@@ -131,12 +112,29 @@ async def handle_mention(message):
             "Midgardsormr",
             "Brunhilda",
             "Mercury",
-            "Jupiter"
+            "Jupiter",
+            "Zodiark"
         ])
         await message.channel.send(f"You should play High {dragon}'s Trial!")
 
 
-def generate_table(content: typing.List[list]):
+def calc_threshold(strength, skill_multi, base_defense, defense_add, damage_multi):
+    # see https://dragalialost.gamepedia.com/Damage_Formula
+    defense = base_defense * (1 + defense_add/100)
+    max_damage = math.floor((5/3) * (damage_multi * strength * skill_multi * 0.5 * 1.05) / defense)
+    return max_damage + 1
+
+
+def generate_threshold_table(strength, skill_multi, defense_mods, def_skill_mod=0, damage_multi=0.7125):
+    table_rows = [
+        ["Def", *map(lambda n: f"{n:+d}%", defense_mods)],
+        ["Melee", *(calc_threshold(strength, skill_multi, 10, d + def_skill_mod, damage_multi) for d in defense_mods)],
+        ["Ranged", *(calc_threshold(strength, skill_multi, 8, d + def_skill_mod, damage_multi) for d in defense_mods)]
+    ]
+    return generate_ascii_table(table_rows)
+
+
+def generate_ascii_table(content: typing.List[list]):
     """
     Generates an ascii table from a list of rows
     :param content: list of rows containing values to put in the table

@@ -89,15 +89,15 @@ async def update_void_schedule():
         async with session.get(url) as response:
             response_json = await response.json(content_type=None)
             response_text = response_json["expandtemplates"]["wikitext"]
-            battle_schedules = util.clean_wikitext(response_text).split("19px|middle|link= ")[1:]
 
-            new_order = []
-            new_availability = {}
-            for battle in battle_schedules:
-                battle_name = re.sub(r"[\u2714\u2718].*", "", battle).strip()
-                battle_schedule = re.sub(r"(?:^[^\u2714\u2718]+)|\s", "", battle).strip()
-                new_order.append(battle_name)
-                new_availability[battle_name] = [c == "\u2714" for c in battle_schedule]
+    clean_response = util.clean_wikitext(response_text)
+    clean_text = clean_response[clean_response.index("=")+2:].replace("19px|middle|link= ", "")
+    battle_schedules = re.findall(r" *([^\u2714\u2718]+)((?: *[\u2714\u2718]){7})", clean_text)
+    new_order = []
+    new_availability = {}
+    for battle_name, battle_schedule in battle_schedules:
+        new_order.append(battle_name.strip())
+        new_availability[battle_name.strip()] = [c == "\u2714" for c in battle_schedule.replace(" ", "")]
 
     existing_availability_str = json.dumps(void_availability)
     new_availability_str = json.dumps(new_availability)

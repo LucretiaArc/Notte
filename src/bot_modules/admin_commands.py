@@ -62,6 +62,5 @@ async def reset_prefix(message):
     if "reset prefix" in message.content.lower() and util.check_command_permissions(message, "admin"):
         await set_prefix(message, "!!")
         logger.info("Prefix for guild {0} reset".format(message.guild.id))
-        await message.channel.send("The prefix has been reset to `!!`.")
 
 hook.Hook.get("on_init").attach(on_init)
