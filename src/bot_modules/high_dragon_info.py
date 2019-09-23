@@ -79,7 +79,7 @@ async def threshold(message, args):
             "High Zodiark",
             data.Element.DARK,
             "Assumes a light adventurer with MUB Ruler of Darkness equipped. "
-            "All 5* HZD bane void weapons provide an 8% defense bonus."
+            "All 5* HZD bane void weapons (except the staff) provide an 8% defense bonus."
         )
     }
 
@@ -103,7 +103,7 @@ async def threshold(message, args):
         )
         await message.channel.send(embed=embed)
     else:
-        await message.channel.send("I haven't seen that dragon before, they must be scary!")
+        await message.channel.send("I haven't seen that high dragon before, they must be scary!")
 
 
 async def handle_mention(message):
