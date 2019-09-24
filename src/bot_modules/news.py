@@ -16,8 +16,6 @@ logger = logging.getLogger(__name__)
 client = None
 news_icon = "https://cdn.discordapp.com/attachments/560454966154756107/599274542732410890/news.png"
 news_colour = 0x00A0FF
-RECENT_ARTICLE_IDS = "news_recent_article_ids"
-RECENT_ARTICLE_DATE = "news_recent_article_date"
 
 
 async def on_init(discord_client):
@@ -46,11 +44,9 @@ async def check_news(reschedule):
         list_base_url = "https://dragalialost.com/api/index.php?" \
                         "format=json&type=information&action=information_list&lang=en_us&priority_lower_than="
 
-        wconfig = config.get_wglobal_config()
-        gconfig = config.get_global_config()
-        stored_recent_article_ids: list = wconfig.get(RECENT_ARTICLE_IDS)
-        stored_recent_article_date: int = wconfig.get(RECENT_ARTICLE_DATE)
-        article_blacklist = gconfig.get("news_article_blacklist")
+        wc = config.get_writeable()
+        stored_recent_article_ids = wc.news_recent_article_ids
+        stored_recent_article_date = wc.news_recent_article_date
 
         if not stored_recent_article_ids or not stored_recent_article_date:
             logger.warning("Missing article history, regenerating...")
@@ -82,6 +78,8 @@ async def check_news(reschedule):
                 if article_date > new_recent_article_date:
                     new_recent_article_date = article_date
                     new_recent_article_ids = [article_id]
+                    if regenerate_config:
+                        stored_recent_article_date = new_recent_article_date
                 elif article_date == new_recent_article_date and article_id not in new_recent_article_ids:
                     new_recent_article_ids.append(article_id)
 
@@ -94,9 +92,9 @@ async def check_news(reschedule):
             next_priority = util.safe_int(query_result["priority_lower_than"], 0)
 
         if regenerate_config:
-            wconfig[RECENT_ARTICLE_IDS] = new_recent_article_ids
-            wconfig[RECENT_ARTICLE_DATE] = new_recent_article_date
-            config.set_wglobal_config(wconfig)
+            wc.news_recent_article_ids = new_recent_article_ids
+            wc.news_recent_article_date = new_recent_article_date
+            await config.set_writeable(wc)
             logger.warning(
                 f"Regenerated, recent article date = {new_recent_article_date}, IDs = {new_recent_article_ids}")
             return
@@ -118,6 +116,7 @@ async def check_news(reschedule):
         else:
             # generate embeds from articles
             embeds = []
+            article_blacklist = config.get_global("general")["news_article_blacklist"]
             for item in news_items:
                 if item["article_id"] not in article_blacklist:
                     item_embed = await get_embed_from_result(session, item)
@@ -126,14 +125,14 @@ async def check_news(reschedule):
 
         # update config
         if len(news_items):
-            wconfig[RECENT_ARTICLE_IDS] = new_recent_article_ids
-            wconfig[RECENT_ARTICLE_DATE] = new_recent_article_date
-            config.set_wglobal_config(wconfig)
+            wc.news_recent_article_ids = new_recent_article_ids
+            wc.news_recent_article_date = new_recent_article_date
+            await config.set_writeable(wc)
 
         # post news items
         guild_message_sequences = []
         for guild in client.guilds:
-            active_channel = config.get_guild_config(guild)["active_channel"]
+            active_channel = config.get_guild(guild).active_channel
             channel = guild.get_channel(active_channel)
             if channel is not None and channel.permissions_for(guild.me).send_messages:
                 guild_message_sequences.append(exec_in_order([channel.send(embed=e) for e in embeds]))

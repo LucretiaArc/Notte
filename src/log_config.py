@@ -2,7 +2,6 @@ import logging
 import asyncio
 import discord
 import config
-import io
 import util
 
 
@@ -35,7 +34,7 @@ def configure_console():
 
 
 def configure_discord(client: discord.Client):
-    channel = client.get_channel(config.get_global_config()["logging_channel"])
+    channel = client.get_channel(config.get_global("general")["logging_channel"])
     if channel is None:
         raise ValueError("Logging channel not found")
 
@@ -46,4 +45,3 @@ def configure_discord(client: discord.Client):
         datefmt="%Y-%m-%d %H:%M:%S"
     ))
     logging.getLogger().addHandler(discord_handler)
-

@@ -68,7 +68,7 @@ def get_emote(name) -> str:
     :return: emote string for the given name
     """
     name = str(name).lower()
-    emote_map = config.get_global_config()["emotes"]
+    emote_map = config.get_global("emotes")
     return emote_map[name] if name in emote_map else ""
 
 
@@ -113,16 +113,7 @@ def check_command_permissions(message, level) -> bool:
     elif level == "admin":
         return isinstance(message.channel, discord.abc.GuildChannel) and message.author.guild_permissions.manage_guild
     elif level == "owner":
-        return message.author.id == config.get_global_config()["owner_id"]
-
-
-def is_special_guild(guild: discord.Guild):
-    """
-    Return true if this guild is considered a "special" guild (i.e. has custom content implemented)
-    :param guild: guild to check
-    :return: true if guild is special
-    """
-    return guild and guild.id in config.get_global_config()["special_guilds"]
+        return message.author.id == config.get_global("general")["owner_id"]
 
 
 def get_link(page_name):

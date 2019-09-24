@@ -14,7 +14,6 @@ async def on_init(discord_client):
 
     hook.Hook.get("owner!say").attach(say)
     hook.Hook.get("owner!get_config").attach(get_config)
-    hook.Hook.get("owner!inspect_configs").attach(inspect_configs)
     hook.Hook.get("owner!update_data").attach(update_data)
     hook.Hook.get("owner!wc_set").attach(wconfig_set)
     hook.Hook.get("owner!wc_del").attach(wconfig_del)
@@ -32,15 +31,11 @@ async def say(message, args):
 
 
 async def get_config(message, args):
-    config_json = json.dumps(dict(config.get_guild_config(client.get_guild(util.safe_int(args.strip(), 0)))), indent=2, sort_keys=True)
+    guild = client.get_guild(util.safe_int(args.strip(), 0))
+    if guild is None:
+        guild = message.guild
+    config_json = json.dumps(config.get_guild(guild).get_dict(), indent=2, sort_keys=True)
     await message.channel.send("```json\n{0}\n```".format(config_json))
-
-
-async def inspect_configs(message, args):
-    guild_config_json = json.dumps(dict(config.Config.inspect_guild_configs()), indent=2, sort_keys=True)
-    writable_config_json = json.dumps(dict(config.get_wglobal_config()), indent=2, sort_keys=True)
-    msg_str = "```json\ngc = {0}\n\nwc = {1}\n```".format(guild_config_json, writable_config_json)
-    await util.send_long_message_as_file(message.channel, msg_str)
 
 
 async def update_data(message, args):
@@ -62,29 +57,27 @@ async def wconfig_set(message, args):
         await message.channel.send("Bad config value, must be valid JSON")
         return
 
-    wconfig = config.get_wglobal_config()
-    wconfig[key] = value
-    config.set_wglobal_config(wconfig)
+    wc = config.get_writeable()
+    try:
+        setattr(wc, key, value)
+    except ValueError:
+        await message.channel.send("Invalid config key")
+        return
+    await config.set_writeable(wc)
     await message.channel.send('Updated config["{0}"] = {1}'.format(key, json.dumps(value)))
 
 
 async def wconfig_del(message, args):
     key = args.strip()
-    wconfig = config.get_wglobal_config()
-    if key in wconfig:
-        wconfig.pop(key)
+    wc = config.get_writeable()
+    if key in wc:
+        delattr(wc, key)
     else:
         await message.channel.send("No such configuration key: " + key)
         return
 
-    if key in config.Config.wc_default:
-        wconfig[key] = config.Config.wc_default[key]
-        msg = 'Updated config["{0}"] = {1}'.format(key, json.dumps(config.Config.wc_default[key]))
-    else:
-        msg = 'Deleted config["{0}"]'.format(key)
-
-    config.set_wglobal_config(wconfig)
-    await message.channel.send(msg)
+    await config.set_writeable(wc)
+    await message.channel.send(f"Successfully deleted key {key}")
 
 
 hook.Hook.get("on_init").attach(on_init)

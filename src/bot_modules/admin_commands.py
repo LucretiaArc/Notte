@@ -32,9 +32,9 @@ async def set_prefix(message, args):
         new_prefix += " "
 
     guild = message.guild
-    new_config = config.get_guild_config_editable(guild)
-    new_config["token"] = new_prefix
-    config.set_guild_config(guild, new_config)
+    new_config = config.get_guild(guild)
+    new_config.token = new_prefix
+    await config.set_guild(guild, new_config)
 
     logger.info("Prefix for guild {0} set to \"{1}\"".format(guild.id, new_prefix))
     await message.channel.send("Prefix has been set to `{0}`".format(new_prefix))
@@ -45,15 +45,15 @@ async def set_active_channel(message, args):
     Sets this channel as the bot's "active channel", the location where the bot sends reset messages and reminders.
     Use `channel none` to disable reset messages and reminders.
     """
-    new_config = config.get_guild_config_editable(message.guild)
+    new_config = config.get_guild(message.guild)
     if args.strip().lower() == "none":
-        new_config["active_channel"] = 0
-        config.set_guild_config(message.guild, new_config)
+        new_config.active_channel = 0
+        await config.set_guild(message.guild, new_config)
         logger.info("Active channel for guild {0} disabled".format(message.guild.id))
         await message.channel.send("Active channel has been disabled, I won't post reset messages anymore!".format(message.channel.mention))
     else:
-        new_config["active_channel"] = message.channel.id
-        config.set_guild_config(message.guild, new_config)
+        new_config.active_channel = message.channel.id
+        await config.set_guild(message.guild, new_config)
         logger.info("Active channel for guild {0} set to {1}".format(message.guild.id, message.channel.id))
         await message.channel.send("Active channel has been updated, I'll post reset messages in here from now on!".format(message.channel.mention))
 

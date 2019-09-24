@@ -37,10 +37,11 @@ async def resist_search(message, args):
     **hmc** (High Mercury) = *wind*, *bog*, *100*
 
     """
-    replacements = config.get_global_config()["high_dragon_shortcuts"]
     args = args.lower()
-    for long, short in replacements.items():
-        args = args.replace(long, short)
+    alias_lists = config.get_global("hdt_alias")
+    for hdt, aliases in alias_lists.items():
+        for alias in aliases:
+            args = args.replace(alias, hdt)
 
     arg_list = list(map(str.strip, args.split(" ")))
 

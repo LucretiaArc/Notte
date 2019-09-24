@@ -17,9 +17,9 @@ async def on_init(discord_client):
     global client, void_order, void_availability
     client = discord_client
 
-    wc = config.get_wglobal_config()
-    void_order = wc["void_order"]
-    void_availability = wc["void_availability"]
+    wc = config.get_writeable()
+    void_order = wc.void_order
+    void_availability = config.get_writeable().void_availability
 
     await update_void_schedule()
 
@@ -30,7 +30,7 @@ async def on_init(discord_client):
 
 async def before_reset():
     for guild in client.guilds:
-        active_channel = config.get_guild_config(guild)["active_channel"]
+        active_channel = config.get_guild(guild).active_channel
         channel = guild.get_channel(active_channel)
         if channel is not None and channel.permissions_for(guild.me).send_messages:
             await channel.trigger_typing()
@@ -39,7 +39,7 @@ async def before_reset():
 async def on_reset():
     message_string = get_reset_message(datetime.datetime.utcnow())
     for guild in client.guilds:
-        active_channel = config.get_guild_config(guild)["active_channel"]
+        active_channel = config.get_guild(guild).active_channel
         channel = guild.get_channel(active_channel)
         if channel is not None and channel.permissions_for(guild.me).send_messages:
             await channel.send(message_string)
@@ -102,19 +102,20 @@ async def update_void_schedule():
     existing_availability_str = json.dumps(void_availability)
     new_availability_str = json.dumps(new_availability)
     if existing_availability_str != new_availability_str:
-        wc = config.get_wglobal_config()
         void_order = new_order
         void_availability = new_availability
-        wc["void_order"] = void_order
-        wc["void_availability"] = void_availability
-        config.set_wglobal_config(wc)
+
+        wc = config.get_writeable()
+        wc.void_order = void_order
+        wc.void_availability = void_availability
+        await config.set_writeable(wc)
 
         output_message = "Updated Void Schedule:\n"
         for i, day in enumerate(calendar.day_name):
             battles = [battle for battle in void_order if void_availability[battle][i]]
             output_message += f"{day}: {util.readable_list(battles)}\n"
 
-        channel = client.get_channel(config.get_global_config()["logging_channel"])
+        channel = client.get_channel(config.get_global("general")["logging_channel"])
         await util.send_long_message_as_file(channel, output_message, "void_schedule.txt")
 
 

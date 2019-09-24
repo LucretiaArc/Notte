@@ -7,6 +7,7 @@ import typing
 import math
 
 client = None
+dragon_aliases = []
 
 
 async def on_init(discord_client):
@@ -83,15 +84,17 @@ async def threshold(message, args):
         )
     }
 
-    replacements = config.get_global_config()["high_dragon_shortcuts"]
-
     dragon = args.strip().lower()
     if dragon == "":
         await message.channel.send("Please me know which dragon you'd like the thresholds for.")
         return
 
-    if dragon in replacements:
-        dragon = replacements[dragon]
+    alias_lists = config.get_global("hdt_alias")
+    for hdt, aliases in alias_lists.items():
+        if dragon in aliases:
+            dragon = hdt
+            break
+
     if dragon in tables:
         details = encounter_details[dragon]
         embed = discord.Embed(

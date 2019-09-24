@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 client = None
 resolver: "QueryResolver" = None
+query_config = None
 
 
 class QueryResolver:
@@ -75,9 +76,10 @@ class QueryResolver:
 
 
 async def on_init(discord_client):
-    global client, resolver
+    global client, resolver, query_config
     client = discord_client
     resolver = QueryResolver()
+    query_config = config.get_global("custom_query")
 
     initialise_keywords(resolver)
 
@@ -93,12 +95,13 @@ async def scan_for_query(message):
             if len(matches) > 3:
                 await message.channel.send("Too many queries, only the first three will be shown.")
 
+            is_special_guild = message.guild and message.guild.id in query_config["special_guilds"]
             for raw_match in matches[:3]:
                 if len(raw_match) > 50:
                     await message.channel.send("That's way too long, I'm not looking for that! " + util.get_emote("notte_stop"))
                     continue
 
-                response = resolve_query(raw_match, util.is_special_guild(message.guild))
+                response = resolve_query(raw_match, is_special_guild)
                 if isinstance(response, str):
                     await message.channel.send(response)
                 elif isinstance(response, discord.Embed):
@@ -106,8 +109,8 @@ async def scan_for_query(message):
 
 
 def resolve_query(query: str, include_special_responses=False):
-    special_query_messages = config.get_global_config()["special_query_messages"]
-    regular_query_messages = config.get_global_config()["query_messages"]
+    special_query_messages = query_config["special_query_messages"]
+    regular_query_messages = query_config["query_messages"]
     search_term = query.lower()
     embed = None
 
@@ -140,7 +143,6 @@ def resolve_query(query: str, include_special_responses=False):
 def initialise_keywords(query_resolver: QueryResolver):
     original_capacity = len(query_resolver.query_map)
     add_query = query_resolver.add
-    shortcut_config = config.get_global_config()["query_shortcuts"]
 
     adventurers: typing.Dict[str, data.Adventurer] = data.Adventurer.get_all().copy()
     dragons: typing.Dict[str, data.Dragon] = data.Dragon.get_all().copy()
@@ -157,21 +159,23 @@ def initialise_keywords(query_resolver: QueryResolver):
 
     logger.info("Resolving query shortcuts")
 
-    for entity_type in local_data_maps:
-        local_map = local_data_maps[entity_type]
+    for entity_type, local_map in local_data_maps.items():
+        try:
+            aliases = config.get_global(f"query_alias/{entity_type}")
+        except FileNotFoundError:
+            continue
 
         # add all entity shortcuts for this type
-        if entity_type in shortcut_config:
-            for shortcut, expanded in shortcut_config[entity_type].items():
-                try:
-                    resolved_entity = local_map[expanded]
-                except KeyError:
-                    logger.warning(f"Shortcut \"{shortcut}\" = \"{expanded}\" doesn't resolve to any {entity_type}")
-                    continue
+        for shortcut, expanded in aliases.items():
+            try:
+                resolved_entity = local_map[expanded]
+            except KeyError:
+                logger.warning(f"Shortcut \"{shortcut}\" = \"{expanded}\" doesn't resolve to any {entity_type}")
+                continue
 
-                if shortcut in local_map:
-                    logger.warning(f"Shortcut {shortcut} resolves to {entity_type} multiple times")
-                local_map[shortcut] = resolved_entity
+            if shortcut in local_map:
+                logger.warning(f"Shortcut {shortcut} resolves to {entity_type} multiple times")
+            local_map[shortcut] = resolved_entity
 
     logger.info("Query shortcuts resolved.")
     logger.info("Generating queries")

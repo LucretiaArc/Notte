@@ -73,7 +73,7 @@ async def about_message(message, args):
           "Special thanks to AlphaDK for all of his help and feedback!\n" \
           "If you find a bug, want a feature, or have something else to say, you can use `" + \
           config.get_prefix(message.guild) + "report`, and I'll let " + \
-          config.get_global_config()["owner_name"] + " know."
+          config.get_global("general")["owner_name"] + " know."
 
     await message.channel.send(msg)
 
@@ -95,13 +95,13 @@ async def report(message, args):
                       ("" if (isinstance(channel, discord.abc.PrivateChannel) or author.nick is None) else " ({0})".format(author.nick))
         location = "a direct message" if isinstance(channel, discord.abc.PrivateChannel) else ("#{0} ({1}), {2}".format(channel.name, channel.id, message.guild.name))
 
-        await client.get_channel(config.get_global_config()["report_channel"]).send(
+        await client.get_channel(config.get_global("general")["report_channel"]).send(
                                   "{0} in {1} reports:\n{2}".format(author_name, location, args))
     except Exception:
-        await client.get_channel(config.get_global_config()["report_channel"]).send("This report generated an exception: " + args)
+        await client.get_channel(config.get_global("general")["report_channel"]).send("This report generated an exception: " + args)
         raise
     finally:
-        await message.channel.send("Thanks for the report! I've let " + config.get_global_config()["owner_name"] + " know.")
+        await message.channel.send("Thanks for the report! I've let " + config.get_global("general")["owner_name"] + " know.")
 
 
 hook.Hook.get("on_init").attach(on_init)

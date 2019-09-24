@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 client = discord.Client()
 initialised = False
 
-config.Config.init_configuration()
 bot_modules.import_modules()
 
 # Standard events:
