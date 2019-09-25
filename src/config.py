@@ -5,6 +5,7 @@ import logging
 import aiofiles
 import asyncio
 import typing
+import os
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -48,9 +49,10 @@ class WriteableConfig(Config):
 
 
 data_path = Path("../data")
+os.makedirs(data_path / "guild", exist_ok=True)
+
 static_config_cache = {}
 guild_config_cache: typing.Dict[int, GuildConfig] = {}
-guild_config_default_keys = GuildConfig().get_dict().keys()
 writeable_config_cache: WriteableConfig = None
 
 
