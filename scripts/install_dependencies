@@ -1,4 +1,0 @@
-#!/bin/bash
-yum install python3 -y
-easy_install pip
-pip install -r /home/ec2-user/notte/requirements.txt
