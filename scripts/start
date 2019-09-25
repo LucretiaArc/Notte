@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# get token from aws secretsmanager
+token=$(aws secretsmanager get-secret-value --region ap-southeast-2 --secret-id notte/discord_client_token --query SecretString)
+token="${token%\"}"
+token="${token#\"}"
+
+# launch bot
+cd /home/ec2-user/notte/src
+python3 main.py "$token"

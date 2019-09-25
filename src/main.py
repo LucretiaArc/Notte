@@ -1,5 +1,5 @@
 import discord
-import os
+import sys
 import logging
 import bot_modules
 import util
@@ -12,6 +12,10 @@ from hook import Hook
 logging.getLogger().setLevel(logging.INFO)
 log_config.configure_console()
 logger = logging.getLogger(__name__)
+
+if len(sys.argv) != 2:
+    logger.error(f"Expected 1 argument, got {len(sys.argv)}. Discord token must be provided as first and only argument.")
+    exit(-1)
 
 client = discord.Client()
 initialised = False
@@ -89,4 +93,4 @@ util.create_daily_hook("before_reset", 5, 59, 54)
 util.create_daily_hook("download_data", 5, 59, 0)
 
 
-client.run(os.environ["DISCORD_CLIENT_TOKEN"])
+client.run(sys.argv[1])
