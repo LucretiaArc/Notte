@@ -108,7 +108,7 @@ async def update_void_schedule():
         wc = config.get_writeable()
         wc.void_order = void_order
         wc.void_availability = void_availability
-        await config.set_writeable(wc)
+        config.set_writeable(wc)
 
         output_message = "Updated Void Schedule:\n"
         for i, day in enumerate(calendar.day_name):

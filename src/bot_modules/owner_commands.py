@@ -14,6 +14,8 @@ async def on_init(discord_client):
 
     hook.Hook.get("owner!say").attach(say)
     hook.Hook.get("owner!get_config").attach(get_config)
+    hook.Hook.get("owner!inspect_w").attach(inspect_writeable_config)
+    hook.Hook.get("owner!inspect_g").attach(inspect_guild_configs)
     hook.Hook.get("owner!update_data").attach(update_data)
     hook.Hook.get("owner!wc_set").attach(wconfig_set)
     hook.Hook.get("owner!wc_del").attach(wconfig_del)
@@ -35,7 +37,17 @@ async def get_config(message, args):
     if guild is None:
         guild = message.guild
     config_json = json.dumps(config.get_guild(guild).get_dict(), indent=2, sort_keys=True)
-    await message.channel.send("```json\n{0}\n```".format(config_json))
+    await message.channel.send(f"```json\n{config_json}\n```")
+
+
+async def inspect_guild_configs(message, args):
+    guild_config_json = json.dumps(config.guild_config_cache, default=config.Config.get_dict, indent=2)
+    await util.send_long_message_as_file(message.channel, f"```json\n{guild_config_json}\n```")
+
+
+async def inspect_writeable_config(message, args):
+    writable_config_json = json.dumps(config.get_writeable().get_dict(), indent=2, sort_keys=True)
+    await util.send_long_message_as_file(message.channel, f"```json\n{writable_config_json}\n```")
 
 
 async def update_data(message, args):
@@ -61,23 +73,23 @@ async def wconfig_set(message, args):
     try:
         setattr(wc, key, value)
     except ValueError:
-        await message.channel.send("Invalid config key")
+        await message.channel.send(f"Invalid config key: {key}")
         return
-    await config.set_writeable(wc)
+    config.set_writeable(wc)
     await message.channel.send('Updated config["{0}"] = {1}'.format(key, json.dumps(value)))
 
 
 async def wconfig_del(message, args):
     key = args.strip()
     wc = config.get_writeable()
-    if key in wc:
+    if hasattr(wc, key):
         delattr(wc, key)
     else:
-        await message.channel.send("No such configuration key: " + key)
+        await message.channel.send(f"No such configuration key: {key}")
         return
 
-    await config.set_writeable(wc)
-    await message.channel.send(f"Successfully deleted key {key}")
+    config.set_writeable(wc)
+    await message.channel.send(f"Successfully deleted key: {key}")
 
 
 hook.Hook.get("on_init").attach(on_init)

@@ -94,9 +94,8 @@ async def check_news(reschedule):
         if regenerate_config:
             wc.news_recent_article_ids = new_recent_article_ids
             wc.news_recent_article_date = new_recent_article_date
-            await config.set_writeable(wc)
-            logger.warning(
-                f"Regenerated, recent article date = {new_recent_article_date}, IDs = {new_recent_article_ids}")
+            logger.warning(f"Regenerated, recent article date = {new_recent_article_date}, IDs = {new_recent_article_ids}")
+            config.set_writeable(wc)
             return
 
         # sort news items for correct order
@@ -127,7 +126,7 @@ async def check_news(reschedule):
         if len(news_items):
             wc.news_recent_article_ids = new_recent_article_ids
             wc.news_recent_article_date = new_recent_article_date
-            await config.set_writeable(wc)
+            config.set_writeable(wc)
 
         # post news items
         guild_message_sequences = []
