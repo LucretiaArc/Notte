@@ -76,7 +76,7 @@ async def wconfig_set(message, args):
         await message.channel.send(f"Invalid config key: {key}")
         return
     config.set_writeable(wc)
-    await message.channel.send('Updated config["{0}"] = {1}'.format(key, json.dumps(value)))
+    await message.channel.send(f'Updated config["{key}"] = {json.dumps(value)}')
 
 
 async def wconfig_del(message, args):

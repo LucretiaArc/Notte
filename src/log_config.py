@@ -21,7 +21,7 @@ class DiscordHandler(logging.Handler):
                 # We don't need to do anything if this happens, because we should be using a real handler as well.
                 pass
 
-        msg = "```\n{0}\n```".format(self.format(record))
+        msg = f"```\n{self.format(record)}\n```"
         fut = util.send_long_message_as_file(self.channel, msg, filename="exception.txt")
         asyncio.ensure_future(send_log(fut))
 

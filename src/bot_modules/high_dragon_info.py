@@ -98,7 +98,7 @@ async def threshold(message, args):
     if dragon in tables:
         details = encounter_details[dragon]
         embed = discord.Embed(
-            title="{0} HP Requirement".format(details[0]),
+            title=f"{details[0]} HP Requirement",
             description="```\n" + tables[dragon] + "\n```",
             color=details[1].get_colour()
         ).set_footer(

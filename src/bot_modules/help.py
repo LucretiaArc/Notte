@@ -35,7 +35,8 @@ async def help_message(message, args):
         help_msg = "**Available Commands**\n"
         for level in access_levels:
             if util.check_command_permissions(message, level):
-                help_msg += "{0} Commands\n\t*{1}*\n".format(level.title(), ", ".join(sorted(commands[level])))
+                cmd_list = ", ".join(sorted(commands[level]))
+                help_msg += f"{level.title()} Commands\n\t*{cmd_list}*\n"
         help_msg += "\nUse `help <command>` for help with a specific command."
     else:
         # help for a specific command
@@ -44,7 +45,7 @@ async def help_message(message, args):
         for level in access_levels:
             if util.check_command_permissions(message, level):
                 if args.strip().lower() in commands[level]:
-                    command_methods.extend(hook.Hook.get("{0}!{1}".format(level, command)).methods())
+                    command_methods.extend(hook.Hook.get(f"{level}!{command}").methods())
 
         if len(command_methods) == 0:
             # unknown command
@@ -91,12 +92,16 @@ async def report(message, args):
         author = message.author
         channel = message.channel
 
-        author_name = "{0}#{1}".format(author.name, author.discriminator) + \
-                      ("" if (isinstance(channel, discord.abc.PrivateChannel) or author.nick is None) else " ({0})".format(author.nick))
-        location = "a direct message" if isinstance(channel, discord.abc.PrivateChannel) else ("#{0} ({1}), {2}".format(channel.name, channel.id, message.guild.name))
+        if isinstance(channel, discord.abc.PrivateChannel):
+            author_name = f"{author.name}#{author.discriminator}"
+            location = "a direct message"
+        else:
+            author_name = f"{author.name}#{author.discriminator}"
+            if author.nick is not None:
+                author_name += f" ({author.nick})"
+            location = f"#{channel.name} ({channel.id}), {message.guild.name}"
 
-        await client.get_channel(config.get_global("general")["report_channel"]).send(
-                                  "{0} in {1} reports:\n{2}".format(author_name, location, args))
+        await client.get_channel(config.get_global("general")["report_channel"]).send(f"{author_name} in {location} reports:\n{args}")
     except Exception:
         await client.get_channel(config.get_global("general")["report_channel"]).send("This report generated an exception: " + args)
         raise

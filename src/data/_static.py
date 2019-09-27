@@ -22,7 +22,7 @@ class Element(aenum.MultiValueEnum):
         return self.name.capitalize()
 
     def __repr__(self):
-        return "Element.{0}".format(self.name)
+        return f"Element.{self.name}"
 
     def get_colour(self):
         return [0xE73031, 0x1790E0, 0x00D770, 0xFFBA10, 0xA738DE][self.value-1]
@@ -47,7 +47,7 @@ class WeaponType(enum.Enum):
         return self.name.capitalize()
 
     def __repr__(self):
-        return "WeaponType.{0}".format(self.name)
+        return f"WeaponType.{self.name}"
 
 
 class Resistance(aenum.MultiValueEnum):
@@ -65,7 +65,7 @@ class Resistance(aenum.MultiValueEnum):
         return self.name.capitalize()
 
     def __repr__(self):
-        return "Resistance.{0}".format(self.name)
+        return f"Resistance.{self.name}"
 
 
 class DragonGift(aenum.MultiValueEnum):
@@ -85,7 +85,7 @@ class DragonGift(aenum.MultiValueEnum):
         return self.name.replace("_", " ").title()
 
     def __repr__(self):
-        return "DragonGift.{0}".format(self.name)
+        return f"DragonGift.{self.name}"
 
 
 def get_rarity_colour(rarity):

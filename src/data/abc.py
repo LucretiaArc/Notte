@@ -90,20 +90,17 @@ class EntityMapper:
         for attr_name, map_func in self.inst_map_funcs.items():
             if attr_name is not None:
                 if not hasattr(inst, attr_name):
-                    raise AttributeError("Invalid entity attribute: {0}".format(attr_name))
+                    raise AttributeError(f"Invalid entity attribute: {attr_name}")
 
                 args = list(map(entity_data.get, self.inst_map_arg_keys[attr_name]))
                 if None in args:
                     invalid_key = self.inst_map_arg_keys[attr_name][args.index(None)]
-                    raise KeyError("Invalid data key: {0}".format(invalid_key))
+                    raise KeyError(f"Invalid data key: {invalid_key}")
 
                 try:
                     value = map_func(*args)
-                except Exception as e:
-                    logger.exception("Exception encountered while processing attribute \"{0}\" with args {1}:".format(
-                        attr_name,
-                        args
-                    ))
+                except Exception:
+                    logger.exception(f'Exception encountered while processing attribute "{attr_name}" with args {args}:')
                     value = None
 
                 setattr(inst, attr_name, value)
@@ -235,7 +232,7 @@ class EmbedFormatter(string.Formatter):
         if conversion not in self.conversions:
             self.conversions[conversion] = function
         else:
-            raise ValueError("Conversion already exists for key \"{}\"".format(conversion))
+            raise ValueError(f'Conversion already exists for key "{conversion}"')
 
     def get_field(self, field_name, args, kwargs):
         # This is a modified version of the existing implementation of get_field, as defined in string.Formatter.
@@ -292,4 +289,4 @@ class EmbedFormatter(string.Formatter):
             else:
                 return self.default
         else:
-            raise ValueError("Unknown conversion specifier {0!s}".format(conversion))
+            raise ValueError(f"Unknown conversion specifier {conversion!s}")

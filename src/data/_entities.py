@@ -43,10 +43,10 @@ class Adventurer(abc.Entity):
         mp("rarity", mf.int, "Rarity")
         mp("max_hp", mf.sum, "MaxHp", "PlusHp0", "PlusHp1", "PlusHp2", "PlusHp3", "PlusHp4", "McFullBonusHp5")
         mp("max_str", mf.sum, "MaxAtk", "PlusAtk0", "PlusAtk1", "PlusAtk2", "PlusAtk3", "PlusAtk4", "McFullBonusAtk5")
-        mp("ability_1", mf.filtered_list_of(Ability.find), *("Abilities1{0}".format(i + 1) for i in range(4)))
-        mp("ability_2", mf.filtered_list_of(Ability.find), *("Abilities2{0}".format(i + 1) for i in range(4)))
-        mp("ability_3", mf.filtered_list_of(Ability.find), *("Abilities3{0}".format(i + 1) for i in range(4)))
-        mp("coability", mf.filtered_list_of(CoAbility.find), *("ExAbilityData{0}".format(i + 1) for i in range(5)))
+        mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i+1}" for i in range(4)))
+        mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i+1}" for i in range(4)))
+        mp("ability_3", mf.filtered_list_of(Ability.find), *(f"Abilities3{i+1}" for i in range(4)))
+        mp("coability", mf.filtered_list_of(CoAbility.find), *(f"ExAbilityData{i+1}" for i in range(5)))
         mp("skill_1", Skill.find, "Skill1Name")
         mp("skill_2", Skill.find, "Skill2Name")
 
@@ -182,8 +182,8 @@ class Dragon(abc.Entity):
         mp("max_str", mf.int, "MaxAtk")
         mp("favourite_gift", DragonGift.get, "FavoriteType")
 
-        mp("ability_1", mf.filtered_list_of(Ability.find), *("Abilities1{0}".format(i + 1) for i in range(2)))
-        mp("ability_2", mf.filtered_list_of(Ability.find), *("Abilities2{0}".format(i + 1) for i in range(2)))
+        mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i+1}" for i in range(2)))
+        mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i+1}" for i in range(2)))
         mp("skill", Skill.find, "SkillName")
 
         def post_processor(dragon: Dragon):
@@ -262,7 +262,7 @@ class Dragon(abc.Entity):
                 *Release Date: {e.release_date!d}* 
                 """),
             e=self,
-            gift="" if not self.favourite_gift else "{} ({})".format(
+            gift="" if not self.favourite_gift else f"{0} ({1})".format(
                 str(self.favourite_gift),
                 calendar.day_name[self.favourite_gift.value - 1]
             )
@@ -302,9 +302,9 @@ class Wyrmprint(abc.Entity):
         mp("obtained", lambda s: re.split("[,\n]+", mf.text(s)) if mf.text(s) else None, "Obtain")
         mp("release_date", mf.date, "ReleaseDate")
 
-        mp("ability_1", mf.filtered_list_of(Ability.find), *("Abilities1{0}".format(i + 1) for i in range(3)))
-        mp("ability_2", mf.filtered_list_of(Ability.find), *("Abilities2{0}".format(i + 1) for i in range(3)))
-        mp("ability_3", mf.filtered_list_of(Ability.find), *("Abilities3{0}".format(i + 1) for i in range(3)))
+        mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i+1}" for i in range(3)))
+        mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i+1}" for i in range(3)))
+        mp("ability_3", mf.filtered_list_of(Ability.find), *(f"Abilities3{i+1}" for i in range(3)))
 
         def post_processor(wp: Wyrmprint):
             try:

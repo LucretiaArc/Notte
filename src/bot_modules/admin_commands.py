@@ -36,8 +36,8 @@ async def set_prefix(message, args):
     new_config.token = new_prefix
     config.set_guild(guild, new_config)
 
-    logger.info("Prefix for guild {0} set to \"{1}\"".format(guild.id, new_prefix))
-    await message.channel.send("Prefix has been set to `{0}`".format(new_prefix))
+    logger.info(f'Prefix for guild {guild.id} set to "{new_prefix}"')
+    await message.channel.send(f"Prefix has been set to `{new_prefix}`")
 
 
 async def set_active_channel(message, args):
@@ -49,18 +49,18 @@ async def set_active_channel(message, args):
     if args.strip().lower() == "none":
         new_config.active_channel = 0
         config.set_guild(message.guild, new_config)
-        logger.info("Active channel for guild {0} disabled".format(message.guild.id))
-        await message.channel.send("Active channel has been disabled, I won't post reset messages anymore!".format(message.channel.mention))
+        logger.info(f"Active channel for guild {message.guild.id} disabled")
+        await message.channel.send("Active channel has been disabled, I won't post reset messages anymore!")
     else:
         new_config.active_channel = message.channel.id
         config.set_guild(message.guild, new_config)
-        logger.info("Active channel for guild {0} set to {1}".format(message.guild.id, message.channel.id))
-        await message.channel.send("Active channel has been updated, I'll post reset messages in here from now on!".format(message.channel.mention))
+        logger.info(f"Active channel for guild {message.guild.id} set to {message.channel.id}")
+        await message.channel.send("Active channel has been updated, I'll post reset messages in here from now on!")
 
 
 async def reset_prefix(message):
     if "reset prefix" in message.content.lower() and util.check_command_permissions(message, "admin"):
         await set_prefix(message, "!!")
-        logger.info("Prefix for guild {0} reset".format(message.guild.id))
+        logger.info(f"Prefix for guild {message.guild.id} reset")
 
 hook.Hook.get("on_init").attach(on_init)

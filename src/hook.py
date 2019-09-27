@@ -54,21 +54,21 @@ class Hook:
         :return: True if the method was attached, False otherwise.
         """
         if self.__name is not None:
-            hook_desc = '"{0}"'.format(self.__name)
+            hook_desc = f'"{self.__name}"'
         else:
-            hook_desc = "with id {0}".format(id(self))
+            hook_desc = f"with id {id(self)}"
 
         if hasattr(method, "__module__"):
-            method_desc = "{0}.{1}".format(method.__module__, method.__qualname__)
+            method_desc = f"{method.__module__}.{method.__qualname__}"
         else:
             method_desc = method.__qualname__
 
         if method not in self.__methods:
             self.__methods.append(method)
-            logger.info("Attached method {0} to hook {1}".format(method_desc, hook_desc))
+            logger.info(f"Attached method {method_desc} to hook {hook_desc}")
             return True
         else:
-            logger.warning("Method {0} already attached to hook {1}".format(method_desc, hook_desc))
+            logger.warning(f"Method {method_desc} already attached to hook {hook_desc}")
             return False
 
     def detach(self, method):
@@ -79,21 +79,21 @@ class Hook:
         """
 
         if self.__name is not None:
-            hook_desc = '"{0}"'.format(self.__name)
+            hook_desc = f'"{self.__name}"'
         else:
-            hook_desc = "with id {0}".format(id(self))
+            hook_desc = f"with id {id(self)}"
 
         if hasattr(method, "__module__"):
-            method_desc = "{0}.{1}".format(method.__module__, method.__qualname__)
+            method_desc = f"{method.__module__}.{method.__qualname__}"
         else:
             method_desc = method.__qualname__
 
         if method in self.__methods:
             self.__methods.remove(method)
-            logger.info("Detached method {0} from hook {1}".format(method_desc, hook_desc))
+            logger.info(f"Detached method {method_desc} from hook {hook_desc}")
             return True
         else:
-            logger.warning("Method {0} not attached to hook {1}".format(method_desc, hook_desc))
+            logger.warning(f"Method {method_desc} not attached to hook {hook_desc}")
         return False
 
     def methods(self):
@@ -118,15 +118,15 @@ class Hook:
                     method(*args, **kwargs)
             except Exception as e:
                 if self.__name is not None:
-                    logger.exception("Exception in hook {0} from module {1}:".format(self.__name, method.__module__))
+                    logger.exception(f"Exception in hook {self.__name} from module {method.__module__}:")
                 else:
-                    logger.exception(e)
+                    raise e
 
         for task in tasks:
             try:
                 await task
             except Exception as e:
                 if self.__name is not None:
-                    logger.exception("Exception in hook {0} from async method:".format(self.__name))
+                    logger.exception(f"Exception in hook {self.__name} from async method:")
                 else:
-                    logger.exception(e)
+                    raise e

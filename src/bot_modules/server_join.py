@@ -16,7 +16,7 @@ async def on_init(discord_client):
 
 
 async def add_config(guild: discord.Guild):
-    logger.info("Joined guild {0} ({1})".format(guild.id, guild.name))
+    logger.info(f"Joined guild {guild.id} ({guild.name})")
     config.get_guild(guild)
 
 
