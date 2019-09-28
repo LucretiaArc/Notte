@@ -262,7 +262,7 @@ class Dragon(abc.Entity):
                 *Release Date: {e.release_date!d}* 
                 """),
             e=self,
-            gift="" if not self.favourite_gift else f"{0} ({1})".format(
+            gift="" if not self.favourite_gift else "{0} ({1})".format(
                 str(self.favourite_gift),
                 calendar.day_name[self.favourite_gift.value - 1]
             )

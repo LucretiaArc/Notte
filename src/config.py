@@ -54,9 +54,6 @@ class WriteableConfig(Config):
         super().__init__(content)
 
 
-data_path = Path("../data")
-os.makedirs(data_path / "guild", exist_ok=True)
-
 static_config_cache = {}
 guild_config_cache: typing.Dict[str, GuildConfig] = {}
 writeable_config_cache: WriteableConfig = None
@@ -72,7 +69,7 @@ _guild_sync_thread = None
 
 def get_global(path: str):
     if path not in static_config_cache:
-        with open(Path(f"config/{path}.json")) as file:
+        with open(Path(f"../config/{path}.json")) as file:
             static_config_cache[path] = json.load(file)
 
     return static_config_cache[path]
