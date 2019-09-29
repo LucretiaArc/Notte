@@ -161,14 +161,16 @@ def _write_config(s3_obj, friendly_name, content: str):
 
 
 def _writeable_config_sync_thread():
-    _writeable_config_modified.wait()
-    _writeable_config_modified.clear()
-    _write_config(s3_writeable_object, "writeable config", json.dumps(writeable_config_cache.get_dict()))
-    time.sleep(5)
+    while True:
+        _writeable_config_modified.wait()
+        _writeable_config_modified.clear()
+        _write_config(s3_writeable_object, "writeable config", json.dumps(writeable_config_cache.get_dict()))
+        time.sleep(5)
 
 
 def _guild_config_sync_thread():
-    _guild_config_modified.wait()
-    _guild_config_modified.clear()
-    _write_config(s3_guild_object, "guild configs", json.dumps(guild_config_cache, default=Config.get_dict))
-    time.sleep(5)
+    while True:
+        _guild_config_modified.wait()
+        _guild_config_modified.clear()
+        _write_config(s3_guild_object, "guild configs", json.dumps(guild_config_cache, default=Config.get_dict))
+        time.sleep(5)

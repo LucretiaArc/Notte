@@ -265,28 +265,16 @@ class EmbedFormatter(string.Formatter):
 
     def convert_field(self, value, conversion):
         if conversion is None:  # no conversion
-            if value:
-                return value
-            else:
-                return self.default
+            return value if value else self.default
         elif conversion == "r":  # rarity emote
-            return util.get_emote("rarity"+str(value))
+            return util.get_emote(f"rarity{value}")
         elif conversion == "e":  # generic emote
             return util.get_emote(value)
         elif conversion == "d":  # date string from datetime
-            if value:
-                return value.date().isoformat()
-            else:
-                return self.default
+            return value.date().isoformat() if value else self.default
         elif conversion == "o":  # optional value, with newline if present
-            if value:
-                return "\n" + str(value)
-            else:
-                return ""
+            return f"\n{value}" if value else ""
         elif conversion == "l":  # length of value
-            if value:
-                return len(value)
-            else:
-                return self.default
+            return len(value) if value else self.default
         else:
-            raise ValueError(f"Unknown conversion specifier {conversion!s}")
+            raise ValueError(f"Unknown conversion specifier {conversion}")
