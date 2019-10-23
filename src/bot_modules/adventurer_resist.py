@@ -35,6 +35,8 @@ async def resist_search(message, args):
     **hms** (High Midgardsormr) = *flame*, *stun*, *100*
     **hbh** (High Brunhilda) = *water*, *burning*, *100*
     **hmc** (High Mercury) = *wind*, *bog*, *100*
+    **hjp** (High Jupiter) = *dark*, *paralysis*, *100*
+    **hzd** (High Zodiark) = *light*, *curse*, *100*
 
     """
     args = args.lower()

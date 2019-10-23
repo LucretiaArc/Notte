@@ -7,16 +7,114 @@ import typing
 import math
 
 client = None
-dragon_aliases = []
+hdt_threshold_tables = {}
+hdt_encounter_details = {}
+hdt_encounter_difficulties = []
+hdt_encounter_aliases = {}
 
 
 async def on_init(discord_client):
     global client
     client = discord_client
 
+    init_data()
+
     hook.Hook.get("public!xmus").attach(xmus)
     hook.Hook.get("public!threshold").attach(threshold)
     hook.Hook.get("on_mention").attach(handle_mention)
+
+
+def init_data():
+    global hdt_threshold_tables, hdt_encounter_details, hdt_encounter_difficulties, hdt_encounter_aliases
+    hdt_threshold_tables = {
+        "hms": {
+            "standard": generate_threshold_table(7230, 3.6, [0, 7, 9, 15]),
+            "expert": generate_threshold_table(9000, 3.7, [0, 15, 20, 25, 30, 35]),
+            "master": generate_threshold_table(13000, 3.4, [0, 15, 20, 25, 30, 35]),
+        },
+        "hbh": {
+            "standard": generate_threshold_table(7230, 4.8, [0, 7, 9, 15]),
+            "expert": generate_threshold_table(9000, 4.75, [0, 15, 20, 35]),
+            "master": generate_threshold_table(13000, 3.5, [0, 15, 20, 35]),
+        },
+        "hmc": {
+            "standard": generate_threshold_table(7230, 2.75, [0, 7, 9, 15], 0, 1 / 1.1),
+            "expert": generate_threshold_table(9000, 3.2, [0, 7, 9, 15]),
+            "master": generate_threshold_table(13000, 2.4, [0, 7, 9, 15]),
+        },
+        "hjp": {
+            "standard": generate_threshold_table(7230, 4.8, [0, 7, 9, 15, 22]),
+            "expert": generate_threshold_table(9000, 4.2, [0, 7, 9, 15, 22]),
+            "master": generate_threshold_table(13000, 2.6, [0, 7, 9, 15, 22]),
+        },
+        "hzd": {
+            "standard": generate_threshold_table(7996, 4.4, [0, 7, 9, 15, 23]),
+            "expert": generate_threshold_table(8386, 4.4, [0, 7, 9, 15, 23]),
+        },
+    }
+
+    hdt_encounter_details = {
+        "hms": {
+            "name": "High Midgardsormr",
+            "element": data.Element.WIND,
+            "hint": {
+                "standard": "Assumes a fire adventurer with MUB Glorious Tempest equipped.",
+            }
+        },
+        "hbh": {
+            "name": "High Brunhilda",
+            "element": data.Element.FIRE,
+            "hint": {
+                "standard": "Assumes a water adventurer with MUB Volcanic Queen equipped.",
+            }
+        },
+        "hmc": {
+            "name": "High Mercury",
+            "element": data.Element.WATER,
+            "hint": {
+                "standard": "Assumes a wind adventurer WITHOUT Queen of the Blue Seas equipped. "
+                            "The High Mercury fight is based on meeting a DPS check, rather than meeting the HP check. "
+                            "HP values assume that Lowen's S2 will be applied. ",
+                "expert": "Assumes a wind adventurer with MUB Queen of the Blue Seas equipped.",
+                "master": "Assumes a wind adventurer with MUB Queen of the Blue Seas equipped.",
+            }
+        },
+        "hjp": {
+            "name": "High Jupiter",
+            "element": data.Element.LIGHT,
+            "hint": {
+                "standard": "Assumes a dark adventurer with MUB King of the Skies equipped. "
+                            "HP values are those required to live the first Electron Outburst attack, which deals more damage than the initial HP check. "
+                            "All 5* HJP bane void weapons (except the staff) provide a 7% defense bonus.",
+                "expert": "Assumes a dark adventurer with MUB King of the Skies equipped.",
+                "master": "Assumes a dark adventurer with MUB King of the Skies equipped.",
+            }
+        },
+        "hzd": {
+            "name": "High Zodiark",
+            "element": data.Element.DARK,
+            "hint": {
+                "standard": "Assumes a light adventurer with MUB Ruler of Darkness equipped."
+            }
+        },
+    }
+
+    hdt_encounter_difficulties = ["standard", "expert", "master"]
+
+    hdt_encounter_aliases = {}
+
+    alias_lists = config.get_global("hdt_alias")
+    for dragon, aliases in alias_lists.items():
+        for alias in aliases+[dragon]:
+            for difficulty in hdt_encounter_difficulties:
+                data_dict = {
+                    "dragon": dragon,
+                    "difficulty": difficulty
+                }
+
+                hdt_encounter_aliases[f"{difficulty} {alias}"] = data_dict
+                hdt_encounter_aliases[f"{difficulty[0]}{alias}"] = data_dict
+                hdt_encounter_aliases[f"{alias} {difficulty}"] = data_dict
 
 
 async def xmus(message, args):
@@ -42,69 +140,36 @@ async def threshold(message, args):
     Shows tables for high dragon HP requirements.
     `threshold <dragon>` gives the table for a dragon.
     """
-    tables = {
-        "hms": generate_threshold_table(7230, 3.6, [0, 7, 9, 15]),
-        "hbh": generate_threshold_table(7230, 4.8, [0, 7, 9, 15]),
-        "hmc": generate_threshold_table(7230, 2.75, [0, 7, 9, 15], 20, 1/1.1),
-        "hjp": generate_threshold_table(7230, 4.8, [0, 7, 9, 15, 22]),
-        "hzd": generate_threshold_table(7996, 4.4, [0, 7, 9, 15, 23])
-    }
 
-    # (proper name, adventurer element, wyrmprint name, dragon element, extra text)
-    encounter_details = {
-        "hbh": (
-            "High Brunhilda",
-            data.Element.FIRE,
-            "Assumes a water adventurer with MUB Volcanic Queen equipped."
-        ),
-        "hmc": (
-            "High Mercury",
-            data.Element.WATER,
-            "Assumes a wind adventurer WITHOUT Queen of the Blue Seas equipped. "
-            "The High Mercury fight is based on meeting a soft strength requirement, rather than meeting the HP check. "
-            "HP values assume that Lowen's S2 will be applied. "
-        ),
-        "hms": (
-            "High Midgardsormr",
-            data.Element.WIND,
-            "Assumes a fire adventurer with MUB Glorious Tempest equipped."
-        ),
-        "hjp": (
-            "High Jupiter",
-            data.Element.LIGHT,
-            "Assumes a dark adventurer with MUB King of the Skies equipped. "
-            "HP values are those required to live the first Electron Outburst attack, which deals more damage than the "
-            "initial HP check. All 5* HJP bane void weapons (except the staff) provide a 7% defense bonus."
-        ),
-        "hzd": (
-            "High Zodiark",
-            data.Element.DARK,
-            "Assumes a light adventurer with MUB Ruler of Darkness equipped. "
-            "All 5* HZD bane void weapons (except the staff) provide an 8% defense bonus."
-        )
-    }
+    encounter_alias = args.strip().lower()
 
-    dragon = args.strip().lower()
-    if dragon == "":
+    if encounter_alias == "":
         await message.channel.send("Please me know which dragon you'd like the thresholds for.")
         return
 
-    alias_lists = config.get_global("hdt_alias")
-    for hdt, aliases in alias_lists.items():
-        if dragon in aliases:
-            dragon = hdt
-            break
+    if encounter_alias in hdt_encounter_aliases:
+        encounter_data = hdt_encounter_aliases[encounter_alias]
+        dragon = encounter_data["dragon"]
+        difficulty = encounter_data["difficulty"]
 
-    if dragon in tables:
-        details = encounter_details[dragon]
-        embed = discord.Embed(
-            title=f"{details[0]} HP Requirement",
-            description="```\n" + tables[dragon] + "\n```",
-            color=details[1].get_colour()
-        ).set_footer(
-            text=details[2]
-        )
-        await message.channel.send(embed=embed)
+        if difficulty in hdt_threshold_tables[dragon]:
+            details = hdt_encounter_details[dragon]
+            name = details["name"]
+            element = details["element"]
+            hint = details["hint"].get(difficulty) or details["hint"]["standard"]
+            table = hdt_threshold_tables[dragon][difficulty]
+
+            embed = discord.Embed(
+                title=f"{name} {difficulty.title()} HP Requirement",
+                description=f"```\n{table}\n```",
+                color=element.get_colour()
+            ).set_footer(
+                text=hint
+            )
+
+            await message.channel.send(embed=embed)
+        else:
+            await message.channel.send("I don't know the HP thresholds for that difficulty!")
     else:
         await message.channel.send("I haven't seen that high dragon before, they must be scary!")
 
@@ -183,6 +248,3 @@ def generate_ascii_table(content: typing.List[list]):
 
 
 hook.Hook.get("on_init").attach(on_init)
-
-
-
