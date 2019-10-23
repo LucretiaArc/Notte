@@ -58,8 +58,8 @@ static_config_cache = {}
 guild_config_cache: typing.Dict[str, GuildConfig] = {}
 writeable_config_cache: WriteableConfig = None
 
-s3_guild_object = boto3.resource('s3').Object("cloud-cube", os.environ["SERVER_CONFIG_KEY"])
-s3_writeable_object = boto3.resource('s3').Object("cloud-cube", os.environ["GLOBAL_CONFIG_KEY"])
+s3_guild_object = boto3.resource('s3').Object(os.environ["S3_BUCKET_NAME"], os.environ["GUILD_CONFIG_KEY"])
+s3_writeable_object = boto3.resource('s3').Object(os.environ["S3_BUCKET_NAME"], os.environ["WRITEABLE_CONFIG_KEY"])
 
 _guild_config_modified = threading.Event()
 _writeable_config_modified = threading.Event()

@@ -1,5 +1,6 @@
 import discord
 import os
+import sys
 import logging
 import bot_modules
 import util
@@ -8,33 +9,17 @@ import data
 import log_config
 from hook import Hook
 
+os.chdir(sys.path[0])
+
 # set up console logging, defer logging channel setup until client is initialised
 logging.getLogger().setLevel(logging.INFO)
 log_config.configure_console()
 logger = logging.getLogger(__name__)
 
-client = discord.Client()
 initialised = False
-
+client = discord.Client()
 config.init_configuration()
 bot_modules.import_modules()
-
-# Standard events:
-# on_init(client:discord.Client)
-# on_ready()
-# on_guild_join(guild:discord.Guild)
-# on_message(message:discord.Message)
-# on_message_private(message:discord.Message)
-# on_mention(message:discord.Message)
-# on_reset()
-# before_reset()
-# download_data()
-# data_downloaded()
-#
-# Command events:
-# public!COMMAND(message:discord.Message, args:string)
-# admin!COMMAND(message:discord.Message, args:string)
-# owner!COMMAND(message:discord.Message, args:string)
 
 
 @client.event
@@ -47,14 +32,18 @@ async def on_ready():
         await Hook.get("on_init")(client)
 
         initialised = True
-        logger.info(client.user.name + "'s ready to go!")
+        logger.info(f"{client.user.name}'s ready to go!")
 
     await Hook.get("on_ready")()
 
 
 @client.event
 async def on_message(message: discord.Message):
-    if not message.author.bot and (isinstance(message.channel, discord.abc.PrivateChannel) or message.channel.permissions_for(message.guild.me).send_messages):
+    if message.author.bot:
+        return
+
+    if (isinstance(message.channel, discord.DMChannel) or isinstance(message.channel, discord.GroupChannel)
+            or message.channel.permissions_for(message.guild.me).send_messages):
         prefix = config.get_prefix(message.guild)
         if message.content.startswith(prefix):
             if not initialised:

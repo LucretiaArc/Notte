@@ -35,6 +35,9 @@ async def say(message, args):
 async def get_config(message, args):
     guild = client.get_guild(util.safe_int(args.strip(), 0))
     if guild is None:
+        if message.guild is None:
+            await message.channel.send("No configuration for private channels")
+            return
         guild = message.guild
     config_json = json.dumps(config.get_guild(guild).get_dict(), indent=2, sort_keys=True)
     await message.channel.send(f"```json\n{config_json}\n```")

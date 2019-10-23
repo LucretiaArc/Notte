@@ -3,6 +3,7 @@ import logging
 import config
 import util
 import discord
+import textwrap
 import hook
 
 logger = logging.getLogger(__name__)
@@ -69,12 +70,13 @@ async def about_message(message, args):
     """
     Gives information about Notte (that's me!).
     """
-    msg = "Hi, I'm Notte! " + util.get_emote("notte_smile") + " I'm a bot made by Struct to help out with everything Dragalia Lost.\n" \
-          "You can find my source code here: <https://gitlab.com/VStruct/notte>\n" \
-          "Special thanks to AlphaDK for all of his help and feedback!\n" \
-          "If you find a bug, want a feature, or have something else to say, you can use `" + \
-          config.get_prefix(message.guild) + "report`, and I'll let " + \
-          config.get_global("general")["owner_name"] + " know."
+    smile_emote = util.get_emote("notte_smile")
+    msg = textwrap.dedent(f"""
+    Hi, I'm Notte! {smile_emote} I'm a bot made by Struct to help out with everything Dragalia Lost.
+    You can find my source code here: <https://github.com/VStruct/Notte>
+    Special thanks to AlphaDK for all of his help and feedback!
+    If you find a bug, want a feature, or have something else to say, you can use `report`, and I'll let Struct know.
+    """).strip()
 
     await message.channel.send(msg)
 
@@ -106,7 +108,7 @@ async def report(message, args):
         await client.get_channel(config.get_global("general")["report_channel"]).send("This report generated an exception: " + args)
         raise
     finally:
-        await message.channel.send("Thanks for the report! I've let " + config.get_global("general")["owner_name"] + " know.")
+        await message.channel.send("Thanks for the report! I've let Struct know.")
 
 
 hook.Hook.get("on_init").attach(on_init)
