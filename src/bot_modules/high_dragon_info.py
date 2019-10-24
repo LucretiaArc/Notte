@@ -106,6 +106,7 @@ def init_data():
     alias_lists = config.get_global("hdt_alias")
     for dragon, aliases in alias_lists.items():
         for alias in aliases+[dragon]:
+            hdt_encounter_aliases[alias] = {"dragon": dragon, "difficulty": "standard"}
             for difficulty in hdt_encounter_difficulties:
                 data_dict = {
                     "dragon": dragon,
@@ -115,6 +116,7 @@ def init_data():
                 hdt_encounter_aliases[f"{difficulty} {alias}"] = data_dict
                 hdt_encounter_aliases[f"{difficulty[0]}{alias}"] = data_dict
                 hdt_encounter_aliases[f"{alias} {difficulty}"] = data_dict
+
 
 
 async def xmus(message, args):
@@ -138,7 +140,8 @@ async def xmus(message, args):
 async def threshold(message, args):
     """
     Shows tables for high dragon HP requirements.
-    `threshold <dragon>` gives the table for a dragon.
+    `threshold <encounter>` gives the table for an encounter.
+    The encounter has two key parts (a dragon and a difficulty), and both are required for threshold information.
     """
 
     encounter_alias = args.strip().lower()
