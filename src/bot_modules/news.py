@@ -72,7 +72,7 @@ async def check_news(reschedule):
             found_new_items = False
             for item in query_result["contents"]:
                 article_id = item["article_id"]
-                article_date = item["date"]
+                article_date = get_article_date(item)
 
                 # remember date of most recent article, along with all articles posted at that time
                 if article_date > new_recent_article_date:
@@ -143,8 +143,9 @@ async def get_embed_from_result(session: aiohttp.ClientSession, item: dict):
     article_id = item["article_id"]
     article_url = f"https://dragalialost.com/en/news/detail/{article_id}"
     article_title = item["title_name"]
-    article_date = datetime.datetime.utcfromtimestamp(item["date"])
+    article_date = datetime.datetime.utcfromtimestamp(get_article_date(item))
     article_category = item["category_name"]
+    article_is_update = item["is_update"]
 
     logger.info(f"Retrieving news content for article {article_id}")
     content_url = f"https://dragalialost.com/api/index.php" \
@@ -155,18 +156,7 @@ async def get_embed_from_result(session: aiohttp.ClientSession, item: dict):
         logger.warning("Could not retrieve article content")
         return None
 
-    html_content = article_json["data"]["information"]["message"]
-    html_content = html_content.replace("</div>", "\n")
-    html_content = html_content.replace("<br>", "\n")
-    html_content = re.sub(
-        r'<span[^>]+data-local_date="([\d]+)[^>]+>',
-        lambda m: datetime.datetime.utcfromtimestamp(int(m.group(1))).strftime("%I:%M %p, %b %d, %Y (UTC)"),
-        html_content
-    )
-
-    t = TagStripper()
-    t.feed(html_content)
-    html_content = t.get_data()
+    html_content = get_html_content(article_json)
 
     article_content_sections = html_content.split("\n")
     if "Dragalia Life" in article_title and "Now Available" in article_title:
@@ -175,16 +165,18 @@ async def get_embed_from_result(session: aiohttp.ClientSession, item: dict):
             comic_number = int(comic_number_match.group(1))
             embed = await get_comic_embed(session, comic_number)
         else:
-            embed = await get_news_embed(article_title, article_url, article_content_sections)
+            embed = get_news_embed(article_title, article_url, article_content_sections)
+    elif article_title in ("Astral Raids Are Here!", "Astral Raids Are Starting Soon!"):
+        embed = get_astral_raids_embed(article_title, article_url, article_content_sections)
     else:
-        embed = await get_news_embed(article_title, article_url, article_content_sections)
+        embed = get_news_embed(article_title, article_url, article_content_sections)
 
     article_date_pretty = article_date.strftime("%B %d, %I:%M %p (UTC)")
     embed.set_author(
         name=f"{article_category} | Dragalia Lost News",
         icon_url=news_icon
     ).set_footer(
-        text=f"Posted {article_date_pretty}"
+        text=f"{'Updated' if article_is_update else 'Posted'} {article_date_pretty}"
     )
 
     logger.info(f"Retrieved article {article_id} posted {article_date_pretty}")
@@ -231,7 +223,18 @@ async def get_comic_embed(session: aiohttp.ClientSession, comic_number: int):
     )
 
 
-async def get_news_embed(article_title, article_url, content_sections):
+def get_astral_raids_embed(article_title, article_url, article_content_sections):
+    content = article_content_sections[0]
+    raid_boss = article_content_sections[article_content_sections.index("\u25a0Featured Boss")+1]
+    return discord.Embed(
+        title=f"{article_title} ({raid_boss})",
+        url=article_url,
+        description=content,
+        color=news_colour
+    )
+
+
+def get_news_embed(article_title, article_url, content_sections):
     content = ""
     section_count = 0
     for p in content_sections:
@@ -239,7 +242,7 @@ async def get_news_embed(article_title, article_url, content_sections):
         section_count += 1
         if len(content) > 100:
             break
-    content = re.sub("\n+", "\n\n", content).strip()
+    content = re.sub("\n{3,}", "\n\n", content).strip()
     if section_count < len(content_sections):
         content += "\n\n...\n\u200b"
 
@@ -264,6 +267,28 @@ async def get_api_json_response(session: aiohttp.ClientSession, url: str):
             return None
 
         return response_json
+
+
+def get_html_content(article_json):
+    html_content = article_json["data"]["information"]["message"]
+    html_content = html_content.replace("</div>", "\n")
+    html_content = html_content.replace("<br>", "\n")
+    html_content = re.sub(
+        r'<span[^>]+data-local_date="([\d]+)[^>]+>',
+        lambda m: datetime.datetime.utcfromtimestamp(int(m.group(1))).strftime("%I:%M %p, %b %d, %Y (UTC)"),
+        html_content
+    )
+
+    t = TagStripper()
+    t.feed(html_content)
+    return t.get_data()
+
+
+def get_article_date(item: dict):
+    if item["is_update"]:
+        return max(item["date"], item["update_time"])
+    else:
+        return item["date"]
 
 
 async def exec_in_order(coroutines):

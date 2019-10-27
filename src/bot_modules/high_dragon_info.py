@@ -118,7 +118,6 @@ def init_data():
                 hdt_encounter_aliases[f"{alias} {difficulty}"] = data_dict
 
 
-
 async def xmus(message, args):
     """
     Posts a labelled X-Muspelheim pattern, so that groups playing High Brunhilda can negotiate where they're going to move to during that attack.
