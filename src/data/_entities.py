@@ -111,15 +111,9 @@ class Adventurer(abc.Entity):
         fmt = abc.EmbedFormatter()
 
         try:
-            cab_min = self.coability[0].name or "???"
-            cab_max = self.coability[-1].name or "???"
-            coability_str = "{0}({1}-{2})%".format(
-                cab_min[:cab_min.index("+") + 1],
-                re.findall(r"(\d+)%", cab_min)[0],
-                re.findall(r"(\d+)%", cab_max)[0]
-            )
-        except (IndexError, ValueError, TypeError):
-            coability_str = "?"
+            coability_str = self.coability[-1].name or "???"
+        except IndexError:
+            coability_str = "???"
 
         title = fmt.format("{e.rarity!r}{e.element!e}{e.weapon_type!e} {e.name}: {e.title}", e=self)
         description = fmt.format(

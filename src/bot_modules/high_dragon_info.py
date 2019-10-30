@@ -45,7 +45,7 @@ def init_data():
         "hjp": {
             "standard": generate_threshold_table(7230, 4.8, [0, 7, 9, 15, 22]),
             "expert": generate_threshold_table(9000, 4.2, [0, 7, 9, 15, 22]),
-            "master": generate_threshold_table(13000, 2.6, [0, 7, 9, 15, 22]),
+            "master": generate_threshold_table(13000, 4.6, [0, 7, 9, 15, 22]),
         },
         "hzd": {
             "standard": generate_threshold_table(7996, 4.4, [0, 7, 9, 15, 23]),

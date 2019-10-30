@@ -98,7 +98,8 @@ async def scan_for_query(message):
             is_special_guild = message.guild and message.guild.id in query_config["special_guilds"]
             for raw_match in matches[:3]:
                 if len(raw_match) > 50:
-                    await message.channel.send("That's way too long, I'm not looking for that! " + util.get_emote("notte_stop"))
+                    await message.channel.send(
+                        "That's way too long, I'm not looking for that! " + util.get_emote("notte_stop"))
                     continue
 
                 response = resolve_query(raw_match, is_special_guild)
@@ -222,9 +223,14 @@ def initialise_keywords(query_resolver: QueryResolver):
     for name, w in weapons.items():
         # determine descriptions for weapon
         descriptions = [name]
-        if w.availability == "Core" and w.rarity and w.element and w.weapon_type:
-            for element_name in w.element.get_names():
-                descriptions.append(f"{w.rarity}* {element_name} {w.weapon_type.name}")
+        if w.rarity and w.element and w.weapon_type:
+            if w.availability == "Core":
+                for element_name in w.element.get_names():
+                    descriptions.append(f"{w.rarity}* {element_name} {w.weapon_type.name}")
+            elif w.availability == "High Dragon" and w.tier:
+                for element_name in w.element.get_names():
+                    descriptions.append(f"d{w.tier} {element_name} {w.weapon_type.name}")
+                    descriptions.append(f"h{w.tier} {element_name} {w.weapon_type.name}")
 
         for desc in descriptions:
             add_query(desc, w.get_embed())
@@ -251,7 +257,7 @@ def rebuild_resolver():
 async def resolve_keywords(message, args):
     max_dist = QueryResolver.get_match_threshold(args)
     await message.channel.send(
-        util.readable_list([f'"{key}" ({int(100*(1-dist/max_dist))}%)' for dist, key in resolver.match(args)])
+        util.readable_list([f'"{key}" ({int(100 * (1 - dist / max_dist))}%)' for dist, key in resolver.match(args)])
         or "No results found."
     )
 

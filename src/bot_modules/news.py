@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 
 client = None
 news_icon = "https://cdn.discordapp.com/attachments/560454966154756107/599274542732410890/news.png"
-news_colour = 0x00A0FF
+
+
+def get_news_colour(is_update=False): return 0xFF6600 if is_update else 0x00A0FF
 
 
 async def on_init(discord_client):
@@ -107,7 +109,7 @@ async def check_news(reschedule):
                 title="New news posts are available",
                 url="https://dragalialost.com/en/news/",
                 description=f"{len(news_items)} new news posts are available! Click the link above to read them.",
-                color=news_colour
+                color=get_news_colour()
             ).set_author(
                 name="Dragalia Lost News",
                 icon_url=news_icon
@@ -163,13 +165,13 @@ async def get_embed_from_result(session: aiohttp.ClientSession, item: dict):
         comic_number_match = re.search(r"#(\d+)", article_title)
         if comic_number_match:
             comic_number = int(comic_number_match.group(1))
-            embed = await get_comic_embed(session, comic_number)
+            embed = await get_comic_embed(session, comic_number, article_is_update)
         else:
-            embed = get_news_embed(article_title, article_url, article_content_sections)
+            embed = get_news_embed(article_title, article_url, article_content_sections, article_is_update)
     elif article_title in ("Astral Raids Are Here!", "Astral Raids Are Starting Soon!"):
-        embed = get_astral_raids_embed(article_title, article_url, article_content_sections)
+        embed = get_astral_raids_embed(article_title, article_url, article_content_sections, article_is_update)
     else:
-        embed = get_news_embed(article_title, article_url, article_content_sections)
+        embed = get_news_embed(article_title, article_url, article_content_sections, article_is_update)
 
     article_date_pretty = article_date.strftime("%B %d, %I:%M %p (UTC)")
     embed.set_author(
@@ -183,7 +185,7 @@ async def get_embed_from_result(session: aiohttp.ClientSession, item: dict):
     return embed
 
 
-async def get_comic_embed(session: aiohttp.ClientSession, comic_number: int):
+async def get_comic_embed(session: aiohttp.ClientSession, comic_number: int, is_update):
     request_data = {"lang": "en", "type": "dragalialife"}
     api_base_url = "https://comic.dragalialost.com/api/thumbnail_list/"
     comic_base_url = "https://comic.dragalialost.com/dragalialife/en/#detail/"
@@ -217,24 +219,24 @@ async def get_comic_embed(session: aiohttp.ClientSession, comic_number: int):
         title=title,
         url=comic_url,
         description=content,
-        color=news_colour
+        color=get_news_colour(is_update)
     ).set_thumbnail(
         url=comic_thumbnail_url
     )
 
 
-def get_astral_raids_embed(article_title, article_url, article_content_sections):
+def get_astral_raids_embed(article_title, article_url, article_content_sections, is_update):
     content = article_content_sections[0]
     raid_boss = article_content_sections[article_content_sections.index("\u25a0Featured Boss")+1]
     return discord.Embed(
         title=f"{article_title} ({raid_boss})",
         url=article_url,
         description=content,
-        color=news_colour
+        color=get_news_colour(is_update)
     )
 
 
-def get_news_embed(article_title, article_url, content_sections):
+def get_news_embed(article_title, article_url, content_sections, is_update):
     content = ""
     section_count = 0
     for p in content_sections:
@@ -250,7 +252,7 @@ def get_news_embed(article_title, article_url, content_sections):
         title=article_title,
         url=article_url,
         description=content,
-        color=news_colour
+        color=get_news_colour(is_update)
     )
 
 
