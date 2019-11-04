@@ -22,6 +22,7 @@ class QueryResolver:
     def __init__(self):
         self.query_tree = pybktree.BKTree(QueryResolver.calculate_edit_distance)
         self.query_map = {}
+        self.max_query_len = 0
 
     @staticmethod
     def calculate_edit_distance(a, b):
@@ -49,6 +50,7 @@ class QueryResolver:
 
         self.query_map[target_str] = result
         self.query_tree.add(target_str)
+        self.max_query_len = max(self.max_query_len, len(target_str))
 
     def match(self, query_string: str):
         """
@@ -89,17 +91,16 @@ async def on_init(discord_client):
 
 
 async def scan_for_query(message):
-    if "[[" in message.content:
-        matches = re.findall(r"\[\[(.+?)\]\]", message.content.lower())
+    if "[" in message.content:
+        matches = re.findall(r"\[+(.+?)\]+", message.content.lower())
         if len(matches) > 0:
             if len(matches) > 3:
                 await message.channel.send("Too many queries, only the first three will be shown.")
 
             is_special_guild = message.guild and message.guild.id in query_config["special_guilds"]
             for raw_match in matches[:3]:
-                if len(raw_match) > 50:
-                    await message.channel.send(
-                        "That's way too long, I'm not looking for that! " + util.get_emote("notte_stop"))
+                if len(raw_match) > resolver.max_query_len + 5:
+                    await message.channel.send("That's way too much, I'm not looking for that!")
                     continue
 
                 response = resolve_query(raw_match, is_special_guild)
@@ -171,11 +172,11 @@ def initialise_keywords(query_resolver: QueryResolver):
             try:
                 resolved_entity = local_map[expanded]
             except KeyError:
-                logger.warning(f"Shortcut \"{shortcut}\" = \"{expanded}\" doesn't resolve to any {entity_type}")
+                logger.warning(f"Shortcut '{shortcut}' = '{expanded}' doesn't resolve to any {entity_type}")
                 continue
 
             if shortcut in local_map:
-                logger.warning(f"Shortcut {shortcut} resolves to {entity_type} multiple times")
+                logger.warning(f"Shortcut '{shortcut}'' resolves to {entity_type} multiple times")
             local_map[shortcut] = resolved_entity
 
     logger.info("Query shortcuts resolved.")
@@ -238,11 +239,12 @@ def initialise_keywords(query_resolver: QueryResolver):
                 add_query(f"{desc} skill", w.skill.get_embed())
                 add_query(f"{desc} s1", w.skill.get_embed())
             if w.ability_1:
-                add_query(f"{name} a1", w.ability_1.get_embed())
+                add_query(f"{desc} a1", w.ability_1.get_embed())
             if w.ability_2:
-                add_query(f"{name} a2", w.ability_2.get_embed())
+                add_query(f"{desc} a2", w.ability_2.get_embed())
 
     logger.info(f"{len(query_resolver.query_map) - original_capacity} queries generated and added to resolver.")
+    logger.info(f"Determined maximum query length {query_resolver.max_query_len}")
 
 
 def rebuild_resolver():

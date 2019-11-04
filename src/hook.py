@@ -65,7 +65,7 @@ class Hook:
 
         if method not in self.__methods:
             self.__methods.append(method)
-            logger.info(f"Attached method {method_desc} to hook {hook_desc}")
+            logger.debug(f"Attached method {method_desc} to hook {hook_desc}")
             return True
         else:
             logger.warning(f"Method {method_desc} already attached to hook {hook_desc}")

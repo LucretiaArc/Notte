@@ -40,7 +40,7 @@ def init_data():
         "hmc": {
             "standard": generate_threshold_table(7230, 2.75, [0, 7, 9, 15], 0, 1 / 1.1),
             "expert": generate_threshold_table(9000, 3.2, [0, 7, 9, 15]),
-            "master": generate_threshold_table(13000, 2.4, [0, 7, 9, 15]),
+            "master": generate_threshold_table(13000, 3.1, [0, 7, 9, 15]),
         },
         "hjp": {
             "standard": generate_threshold_table(7230, 4.8, [0, 7, 9, 15, 22]),
@@ -73,7 +73,6 @@ def init_data():
             "element": data.Element.WATER,
             "hint": {
                 "standard": "Assumes a wind adventurer WITHOUT Queen of the Blue Seas equipped. "
-                            "The High Mercury fight is based on meeting a DPS check, rather than meeting the HP check. "
                             "HP values assume that Lowen's S2 will be applied. ",
                 "expert": "Assumes a wind adventurer with MUB Queen of the Blue Seas equipped.",
                 "master": "Assumes a wind adventurer with MUB Queen of the Blue Seas equipped.",
