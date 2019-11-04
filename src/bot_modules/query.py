@@ -92,7 +92,7 @@ async def on_init(discord_client):
 
 async def scan_for_query(message):
     if "[" in message.content:
-        matches = re.findall(r"\[+(.+?)\]+", message.content.lower())
+        matches = re.findall(r"\[\[(.+?)\]\]", message.content.lower())
         if len(matches) > 0:
             if len(matches) > 3:
                 await message.channel.send("Too many queries, only the first three will be shown.")
