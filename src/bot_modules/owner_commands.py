@@ -13,6 +13,7 @@ async def on_init(discord_client):
     client = discord_client
 
     hook.Hook.get("owner!say").attach(say)
+    hook.Hook.get("owner!send_typing").attach(send_typing)
     hook.Hook.get("owner!get_config").attach(get_config)
     hook.Hook.get("owner!inspect_w").attach(inspect_writeable_config)
     hook.Hook.get("owner!inspect_g").attach(inspect_guild_configs)
@@ -30,6 +31,11 @@ async def say(message, args):
         await message.channel.send("I don't have permission to send messages in that channel. Sorry!")
     except AttributeError:
         await message.channel.send("I couldn't find that channel. Sorry!")
+
+
+async def send_typing(message, args):
+    channel = client.get_channel(util.safe_int(args.strip(), 0))
+    await channel.trigger_typing()
 
 
 async def get_config(message, args):

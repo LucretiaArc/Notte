@@ -26,7 +26,7 @@ async def on_init(discord_client):
 
     now = datetime.datetime.utcnow()
     mins_past_hour = (now - now.replace(minute=0, second=0, microsecond=0)).total_seconds() / 60
-    seconds_wait = 60 * (5 - (mins_past_hour - 5 * math.floor(mins_past_hour / 5))) + 15
+    seconds_wait = 60 * (5 - (mins_past_hour - 5 * math.floor(mins_past_hour / 5))) + 5
     asyncio.get_event_loop().call_later(seconds_wait, lambda: asyncio.ensure_future(check_news(True)))
 
     if seconds_wait > 30:
