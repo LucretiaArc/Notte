@@ -242,6 +242,8 @@ def initialise_keywords(query_resolver: QueryResolver):
                 add_query(f"{desc} a1", w.ability_1.get_embed())
             if w.ability_2:
                 add_query(f"{desc} a2", w.ability_2.get_embed())
+            if w.obtained == "Crafting":
+                add_query(f"{desc} cost", w.get_crafting_cost_embed())
 
     logger.info(f"{len(query_resolver.query_map) - original_capacity} queries generated and added to resolver.")
     logger.info(f"Determined maximum query length {query_resolver.max_query_len}")

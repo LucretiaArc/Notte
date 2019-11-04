@@ -43,10 +43,10 @@ class Adventurer(abc.Entity):
         mp("rarity", mf.int, "Rarity")
         mp("max_hp", mf.sum, "MaxHp", "PlusHp0", "PlusHp1", "PlusHp2", "PlusHp3", "PlusHp4", "McFullBonusHp5")
         mp("max_str", mf.sum, "MaxAtk", "PlusAtk0", "PlusAtk1", "PlusAtk2", "PlusAtk3", "PlusAtk4", "McFullBonusAtk5")
-        mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i+1}" for i in range(4)))
-        mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i+1}" for i in range(4)))
-        mp("ability_3", mf.filtered_list_of(Ability.find), *(f"Abilities3{i+1}" for i in range(4)))
-        mp("coability", mf.filtered_list_of(CoAbility.find), *(f"ExAbilityData{i+1}" for i in range(5)))
+        mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(4)))
+        mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(4)))
+        mp("ability_3", mf.filtered_list_of(Ability.find), *(f"Abilities3{i + 1}" for i in range(4)))
+        mp("coability", mf.filtered_list_of(CoAbility.find), *(f"ExAbilityData{i + 1}" for i in range(5)))
         mp("skill_1", Skill.find, "Skill1Name")
         mp("skill_2", Skill.find, "Skill2Name")
 
@@ -176,8 +176,8 @@ class Dragon(abc.Entity):
         mp("max_str", mf.int, "MaxAtk")
         mp("favourite_gift", DragonGift.get, "FavoriteType")
 
-        mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i+1}" for i in range(2)))
-        mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i+1}" for i in range(2)))
+        mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(2)))
+        mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(2)))
         mp("skill", Skill.find, "SkillName")
 
         def post_processor(dragon: Dragon):
@@ -296,9 +296,9 @@ class Wyrmprint(abc.Entity):
         mp("obtained", lambda s: re.split("[,\n]+", mf.text(s)) if mf.text(s) else None, "Obtain")
         mp("release_date", mf.date, "ReleaseDate")
 
-        mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i+1}" for i in range(3)))
-        mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i+1}" for i in range(3)))
-        mp("ability_3", mf.filtered_list_of(Ability.find), *(f"Abilities3{i+1}" for i in range(3)))
+        mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(3)))
+        mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(3)))
+        mp("ability_3", mf.filtered_list_of(Ability.find), *(f"Abilities3{i + 1}" for i in range(3)))
 
         def post_processor(wp: Wyrmprint):
             try:
@@ -402,6 +402,19 @@ class Weapon(abc.Entity):
         mp("skill", Skill.find, "SkillName")
         mp("availability", mf.text, "Availability")
 
+        def crafting_materials(*args):
+            arg_pairs = zip(*[iter(args)] * 2)
+            return {k: util.safe_int(v, 0) for k, v in arg_pairs if k and k != "0"}
+
+        mp("crafting_materials", crafting_materials,
+           'CONCAT("Rupies")', "AssembleCoin",
+           "CraftMaterial1", "CraftMaterialQuantity1",
+           "CraftMaterial2", "CraftMaterialQuantity2",
+           "CraftMaterial3", "CraftMaterialQuantity3",
+           "CraftMaterial4", "CraftMaterialQuantity4",
+           "CraftMaterial5", "CraftMaterialQuantity5",
+           )
+
         mp(None, mf.none, "CraftGroupId", "CraftNodeId", "ParentCraftNodeId")
 
         def mapper_post_processor(weapon: Weapon):
@@ -475,6 +488,7 @@ class Weapon(abc.Entity):
         self.ability_1: Ability = None
         self.ability_2: Ability = None
 
+        self.crafting_materials = {}
         self.crafted_from: Weapon = None
         self.crafted_to: typing.List[Weapon] = []
         self.tier: int = None
@@ -562,6 +576,36 @@ class Weapon(abc.Entity):
             e=self,
             tier=("wtier" + str(w_tier)) if self.obtained == "Crafting" else ""
         )
+
+    def get_crafting_cost(self):
+        material_cost = collections.Counter()
+        material_cost.update(self.crafting_materials)
+        if self.crafted_from:
+            prerequisite_materials = self.crafted_from.get_crafting_cost()
+            material_cost.update({k: v * 5 for k, v in prerequisite_materials.items()})
+
+        return dict(material_cost)
+
+    def get_crafting_cost_embed(self):
+        if self.obtained == "Crafting":
+            crafting_cost = self.get_crafting_cost()
+            content = "**Total Crafting Cost**\n" + "\n".join(f"**{k}**: {v:,}" for k, v in crafting_cost.items())
+
+            if self.element is not None:
+                colour = self.element.get_colour()
+            elif self.rarity is not None:
+                colour = get_rarity_colour(self.rarity)
+            else:
+                colour = discord.Embed.Empty
+
+            return discord.Embed(
+                title=self.get_title_string(),
+                description=content,
+                url=util.get_link(self.name),
+                colour=colour
+            )
+
+        return None
 
 
 class Skill(abc.Entity):
