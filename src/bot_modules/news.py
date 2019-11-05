@@ -37,9 +37,9 @@ async def on_init(discord_client):
 
 async def check_news(reschedule):
     if reschedule:
-        # trigger next 5 minute interval (15 secs delayed)
+        # trigger next 5 minute interval (5 secs delayed)
         now = datetime.datetime.utcnow()
-        time_delta = (now + datetime.timedelta(5 / 1440)).replace(second=15, microsecond=0) - now
+        time_delta = (now + datetime.timedelta(5 / 1440)).replace(second=5, microsecond=0) - now
         asyncio.get_event_loop().call_later(time_delta.total_seconds(), lambda: asyncio.ensure_future(check_news(True)))
 
     async with aiohttp.ClientSession() as session:
