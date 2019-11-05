@@ -20,6 +20,7 @@ async def on_init(discord_client):
     init_data()
 
     hook.Hook.get("public!xmus").attach(xmus)
+    hook.Hook.get("public!whirlpools").attach(whirlpools)
     hook.Hook.get("public!threshold").attach(threshold)
     hook.Hook.get("on_mention").attach(handle_mention)
 
@@ -133,6 +134,22 @@ async def xmus(message, args):
             "B is right\n"
             "C is bottom\n"
             "D is left")
+
+
+async def whirlpools(message, args):
+    """
+    Posts a diagram for Master High Mercury's whirlpool attack, to indicate where the safe zones are.
+    """
+    if message.channel.permissions_for(message.guild.me).attach_files:
+        await message.channel.send(file=discord.File("../upload/whirlpools.png"))
+    elif message.channel.permissions_for(message.guild.me).embed_links:
+        await message.channel.send(
+            "https://cdn.discordapp.com/attachments/560454966154756107/641107074469724201/whirlpools.png")
+    else:
+        await message.channel.send(
+            "https://cdn.discordapp.com/attachments/560454966154756107/641107074469724201/whirlpools.png\n"
+            "If four whirlpools appear, safe zones are on the left and the bottom.\n"
+            "If three whirlpools appear, the safe zone is on the top.")
 
 
 async def threshold(message, args):
