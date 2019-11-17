@@ -218,9 +218,6 @@ def initialise_keywords(query_resolver: QueryResolver):
         if wp.ability_3:
             add_query(f"{name} a3", wp.ability_3[-1].get_embed())
 
-    for name, s in skills.items():
-        add_query(name, s.get_embed())
-
     for name, w in weapons.items():
         # determine descriptions for weapon
         descriptions = [name]
@@ -244,6 +241,9 @@ def initialise_keywords(query_resolver: QueryResolver):
                 add_query(f"{desc} a2", w.ability_2.get_embed())
             if w.obtained == "Crafting":
                 add_query(f"{desc} cost", w.get_crafting_cost_embed())
+
+    for name, s in skills.items():
+        add_query(name, s.get_embed())
 
     logger.info(f"{len(query_resolver.query_map) - original_capacity} queries generated and added to resolver.")
     logger.info(f"Determined maximum query length {query_resolver.max_query_len}")

@@ -49,8 +49,9 @@ def init_data():
             "master": generate_threshold_table(13000, 4.6, [0, 7, 9, 15, 22]),
         },
         "hzd": {
-            "standard": generate_threshold_table(7996, 4.4, [0, 7, 9, 15, 23]),
-            "expert": generate_threshold_table(8386, 4.4, [0, 7, 9, 15, 23]),
+            "standard": generate_threshold_table(7996, 4.4, [0, 15, 23, 30, 38]),
+            "expert": generate_threshold_table(8386, 4.4, [0, 15, 30, 45], 0, 1),
+            "master": generate_threshold_table(9000, 4, [0, 15, 30, 45], 0, 1),
         },
     }
 
@@ -94,7 +95,11 @@ def init_data():
             "name": "High Zodiark",
             "element": data.Element.DARK,
             "hint": {
-                "standard": "Assumes a light adventurer with MUB Ruler of Darkness equipped."
+                "standard": "Assumes a light adventurer with MUB Ruler of Darkness equipped.",
+                "expert": "Assumes a light adventurer WITHOUT Ruler of Darkness equipped. "
+                          "It is recommended to have two Gala Princes use S2 at the start of the fight for a 30% total defense boost.",
+                "master": "Assumes a light adventurer WITHOUT Ruler of Darkness equipped. "
+                          "It is recommended to have two Gala Princes use S2 at the start of the fight for a 30% total defense boost.",
             }
         },
     }
