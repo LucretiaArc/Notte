@@ -42,12 +42,23 @@ def get_reset_message(date: datetime.datetime):
         "all Elemental Ruins"
     ]
 
+    hdt_available = [
+        "High **Midgardsormr**'s Trial and High **Mercury**'s Trial",
+        "High **Brunhilda**'s Trial and High **Zodiark**'s Trial",
+        "High **Mercury**'s Trial and High **Jupiter**'s Trial",
+        "High **Midgardsormr**'s Trial and High **Zodiark**'s Trial",
+        "High **Brunhilda**'s Trial and High **Jupiter**'s Trial",
+        "all High Dragon Trials",
+        "all High Dragon Trials"
+    ]
+
     if date.tzinfo:
         date = date.astimezone(datetime.timezone.utc)
 
     message_lines = [
         "It's time for the daily reset!",
         f"Expert difficulty is available in {ruins_available[date.weekday()]}!",
+        f"Master difficulty is available in {hdt_available[date.weekday()]}!",
         ""  # separate conditional lines from constant lines
     ]
 
