@@ -48,8 +48,6 @@ class WriteableConfig(Config):
     def __init__(self, content=None):
         self.news_recent_article_ids = []
         self.news_recent_article_date = 0
-        self.void_order = []
-        self.void_availability = {}
 
         super().__init__(content)
 
