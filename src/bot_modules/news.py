@@ -33,6 +33,7 @@ async def on_init(discord_client):
         await check_news(False)
 
     hook.Hook.get("owner!check_news").attach(lambda m, a: asyncio.ensure_future(check_news(False)))
+    hook.Hook.get("on_reset").attach(lambda: asyncio.ensure_future(check_news(False)))
 
 
 async def check_news(reschedule):
