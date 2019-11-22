@@ -1,4 +1,4 @@
-discord.py==1.2.3
+discord.py==1.2.5
 aiohttp==3.5.4
 aenum==2.1.2
 mwparserfromhell==0.5.3
