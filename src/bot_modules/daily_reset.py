@@ -32,16 +32,6 @@ async def on_reset():
 
 
 def get_reset_message(date: datetime.datetime):
-    ruins_available = [
-        "all Elemental Ruins",
-        "Flamehowl Ruins",
-        "Waterscour Ruins",
-        "Windmaul Ruins",
-        "Lightsunder Ruins",
-        "Shadowsteep Ruins",
-        "all Elemental Ruins"
-    ]
-
     hdt_available = [
         "High **Midgardsormr**'s Trial and High **Mercury**'s Trial",
         "High **Brunhilda**'s Trial and High **Zodiark**'s Trial",
@@ -57,7 +47,6 @@ def get_reset_message(date: datetime.datetime):
 
     message_lines = [
         "It's time for the daily reset!",
-        f"Expert difficulty is available in {ruins_available[date.weekday()]}!",
         f"Master difficulty is available in {hdt_available[date.weekday()]}!",
         ""  # separate conditional lines from constant lines
     ]

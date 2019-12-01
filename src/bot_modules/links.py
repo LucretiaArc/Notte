@@ -28,7 +28,7 @@ async def mercurial_gauntlet(message, args):
 
 async def unit_calculator(message, args):
     """Links to the unit calculator."""
-    await message.channel.send("<https://junlico.github.io/dragalia-lost/stats/en>")
+    await message.channel.send("<https://dragalialost.info/stats/en>")
 
 
 async def dps_simulator(message, args):
