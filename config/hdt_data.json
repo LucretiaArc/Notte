@@ -1,0 +1,117 @@
+{
+  "hms": {
+    "dragon_name": "Midgardsormr",
+    "dragon_element": "Wind",
+    "adventurer_element": "Fire",
+    "wyrmprint": "Glorious Tempest",
+    "fight_info": {
+      "standard": {
+        "str": 7230,
+        "hp_check_multi": 3.6,
+        "recommended_def": [0, 7, 9, 15]
+      },
+      "expert": {
+        "str": 9000,
+        "hp_check_multi": 3.7,
+        "recommended_def": [0, 15, 20, 25, 30, 35]
+      },
+      "master": {
+        "str": 13000,
+        "hp_check_multi": 3.4,
+        "recommended_def": [0, 15, 20, 25, 30, 35]
+      }
+    }
+  },
+  "hbh": {
+    "dragon_name": "Brunhilda",
+    "dragon_element": "Fire",
+    "adventurer_element": "Water",
+    "wyrmprint": "Volcanic Queen",
+    "fight_info": {
+      "standard": {
+        "str": 7230,
+        "hp_check_multi": 4.8,
+        "recommended_def": [0, 7, 9, 15]
+      },
+      "expert": {
+        "str": 9000,
+        "hp_check_multi": 4.75,
+        "recommended_def": [0, 15, 20, 35]
+      },
+      "master": {
+        "str": 13000,
+        "hp_check_multi": 3.5,
+        "recommended_def": [0, 15, 20, 35]
+      }
+    }
+  },
+  "hmc": {
+    "dragon_name": "Mercury",
+    "dragon_element": "Water",
+    "adventurer_element": "Wind",
+    "wyrmprint": "Queen of the Blue Seas",
+    "fight_info": {
+      "standard": {
+        "str": 7230,
+        "hp_check_multi": 2.75,
+        "recommended_def": [0, 7, 9, 15]
+      },
+      "expert": {
+        "str": 9000,
+        "hp_check_multi": 3.2,
+        "recommended_def": [0, 7, 9, 15]
+      },
+      "master": {
+        "str": 13000,
+        "hp_check_multi": 3.1,
+        "recommended_def": [0, 7, 9, 15]
+      }
+    }
+  },
+  "hjp": {
+    "dragon_name": "Jupiter",
+    "dragon_element": "Light",
+    "adventurer_element": "Dark",
+    "wyrmprint": "King of the Skies",
+    "fight_info": {
+      "standard": {
+        "str": 7230,
+        "hp_check_multi": 4.8,
+        "recommended_def": [0, 7, 9, 15, 22]
+      },
+      "expert": {
+        "str": 9000,
+        "hp_check_multi": 4.2,
+        "recommended_def": [0, 7, 9, 15, 22]
+      },
+      "master": {
+        "str": 13000,
+        "hp_check_multi": 4.6,
+        "recommended_def": [0, 7, 9, 15]
+      }
+    }
+  },
+  "hzd": {
+    "dragon_name": "Zodiark",
+    "dragon_element": "Dark",
+    "adventurer_element": "Light",
+    "wyrmprint": "Ruler of Darkness",
+    "fight_info": {
+      "standard": {
+        "str": 7996,
+        "hp_check_multi": 4.4,
+        "recommended_def": [0, 15, 23, 30, 38]
+      },
+      "expert": {
+        "str": 8386,
+        "hp_check_multi": 4.4,
+        "recommended_def": [0, 15, 30, 45]
+      },
+      "master": {
+        "str": 9000,
+        "hp_check_multi": 4.0,
+        "recommended_def": [0, 15, 30, 45]
+      }
+    }
+  }
+}

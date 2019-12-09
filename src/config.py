@@ -65,7 +65,7 @@ _writeable_sync_thread = None
 _guild_sync_thread = None
 
 
-def get_global(path: str):
+def get_global(path: str) -> dict:
     if path not in static_config_cache:
         with open(Path(f"../config/{path}.json")) as file:
             static_config_cache[path] = json.load(file)

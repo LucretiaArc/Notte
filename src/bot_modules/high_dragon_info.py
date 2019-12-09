@@ -7,17 +7,13 @@ import typing
 import math
 
 client = None
-hdt_threshold_tables = {}
-hdt_encounter_details = {}
-hdt_encounter_difficulties = []
-hdt_encounter_aliases = {}
+hdt_encounter_queries = {}
 
 
 async def on_init(discord_client):
-    global client
+    global client, hdt_encounter_queries
     client = discord_client
-
-    init_data()
+    hdt_encounter_queries = generate_queries()
 
     hook.Hook.get("public!xmus").attach(xmus)
     hook.Hook.get("public!whirlpools").attach(whirlpools)
@@ -25,102 +21,29 @@ async def on_init(discord_client):
     hook.Hook.get("on_mention").attach(handle_mention)
 
 
-def init_data():
-    global hdt_threshold_tables, hdt_encounter_details, hdt_encounter_difficulties, hdt_encounter_aliases
-    hdt_threshold_tables = {
-        "hms": {
-            "standard": generate_threshold_table(7230, 3.6, [0, 7, 9, 15]),
-            "expert": generate_threshold_table(9000, 3.7, [0, 15, 20, 25, 30, 35]),
-            "master": generate_threshold_table(13000, 3.4, [0, 15, 20, 25, 30, 35]),
-        },
-        "hbh": {
-            "standard": generate_threshold_table(7230, 4.8, [0, 7, 9, 15]),
-            "expert": generate_threshold_table(9000, 4.75, [0, 15, 20, 35]),
-            "master": generate_threshold_table(13000, 3.5, [0, 15, 20, 35]),
-        },
-        "hmc": {
-            "standard": generate_threshold_table(7230, 2.75, [0, 7, 9, 15], 0, 1 / 1.1),
-            "expert": generate_threshold_table(9000, 3.2, [0, 7, 9, 15]),
-            "master": generate_threshold_table(13000, 3.1, [0, 7, 9, 15]),
-        },
-        "hjp": {
-            "standard": generate_threshold_table(7230, 4.8, [0, 7, 9, 15, 22]),
-            "expert": generate_threshold_table(9000, 4.2, [0, 7, 9, 15, 22]),
-            "master": generate_threshold_table(13000, 4.6, [0, 7, 9, 15, 22]),
-        },
-        "hzd": {
-            "standard": generate_threshold_table(7996, 4.4, [0, 15, 23, 30, 38]),
-            "expert": generate_threshold_table(8386, 4.4, [0, 15, 30, 45], 0, 1),
-            "master": generate_threshold_table(9000, 4, [0, 15, 30, 45], 0, 1),
-        },
-    }
-
-    hdt_encounter_details = {
-        "hms": {
-            "name": "High Midgardsormr",
-            "element": data.Element.WIND,
-            "hint": {
-                "standard": "Assumes a fire adventurer with MUB Glorious Tempest equipped.",
-            }
-        },
-        "hbh": {
-            "name": "High Brunhilda",
-            "element": data.Element.FIRE,
-            "hint": {
-                "standard": "Assumes a water adventurer with MUB Volcanic Queen equipped.",
-            }
-        },
-        "hmc": {
-            "name": "High Mercury",
-            "element": data.Element.WATER,
-            "hint": {
-                "standard": "Assumes a wind adventurer WITHOUT Queen of the Blue Seas equipped. "
-                            "HP values assume that Lowen's S2 will be applied. ",
-                "expert": "Assumes a wind adventurer with MUB Queen of the Blue Seas equipped.",
-                "master": "Assumes a wind adventurer with MUB Queen of the Blue Seas equipped.",
-            }
-        },
-        "hjp": {
-            "name": "High Jupiter",
-            "element": data.Element.LIGHT,
-            "hint": {
-                "standard": "Assumes a dark adventurer with MUB King of the Skies equipped. "
-                            "HP values are those required to live the first Electron Outburst attack, which deals more damage than the initial HP check. "
-                            "All 5* HJP bane void weapons (except the staff) provide a 7% defense bonus.",
-                "expert": "Assumes a dark adventurer with MUB King of the Skies equipped.",
-                "master": "Assumes a dark adventurer with MUB King of the Skies equipped.",
-            }
-        },
-        "hzd": {
-            "name": "High Zodiark",
-            "element": data.Element.DARK,
-            "hint": {
-                "standard": "Assumes a light adventurer with MUB Ruler of Darkness equipped.",
-                "expert": "Assumes a light adventurer WITHOUT Ruler of Darkness equipped. "
-                          "It is recommended to have two Gala Princes use S2 at the start of the fight for a 30% total defense boost.",
-                "master": "Assumes a light adventurer WITHOUT Ruler of Darkness equipped. "
-                          "It is recommended to have two Gala Princes use S2 at the start of the fight for a 30% total defense boost.",
-            }
-        },
-    }
-
-    hdt_encounter_difficulties = ["standard", "expert", "master"]
-
-    hdt_encounter_aliases = {}
-
+def generate_queries():
+    queries = {}
+    hdt_data = config.get_global("hdt_data")
     alias_lists = config.get_global("hdt_alias")
-    for dragon, aliases in alias_lists.items():
-        for alias in aliases+[dragon]:
-            hdt_encounter_aliases[alias] = {"dragon": dragon, "difficulty": "standard"}
-            for difficulty in hdt_encounter_difficulties:
-                data_dict = {
-                    "dragon": dragon,
-                    "difficulty": difficulty
-                }
 
-                hdt_encounter_aliases[f"{difficulty} {alias}"] = data_dict
-                hdt_encounter_aliases[f"{difficulty[0]}{alias}"] = data_dict
-                hdt_encounter_aliases[f"{alias} {difficulty}"] = data_dict
+    for hdt, dragon_info in hdt_data.items():
+        dragon_name = dragon_info["dragon_name"]
+        dragon_element = data.Element(dragon_info["dragon_element"])
+        resist_wyrmprint_name = dragon_info["wyrmprint"]
+        aliases = alias_lists[hdt] + [hdt]
+        for difficulty, difficulty_info in dragon_info["fight_info"].items():
+            embed = discord.Embed(
+                title=f"High {dragon_name} {difficulty.title()} HP Requirement",
+                description=generate_description(resist_wyrmprint_name, difficulty_info),
+                color=dragon_element.get_colour()
+            )
+
+            for alias in aliases:
+                queries[f"{difficulty} {alias}"] = embed
+                queries[f"{difficulty[0]}{alias}"] = embed
+                queries[f"{alias} {difficulty}"] = embed
+
+    return queries
 
 
 async def xmus(message, args):
@@ -170,31 +93,10 @@ async def threshold(message, args):
         await message.channel.send("Please me know which dragon you'd like the thresholds for.")
         return
 
-    if encounter_alias in hdt_encounter_aliases:
-        encounter_data = hdt_encounter_aliases[encounter_alias]
-        dragon = encounter_data["dragon"]
-        difficulty = encounter_data["difficulty"]
-
-        if difficulty in hdt_threshold_tables[dragon]:
-            details = hdt_encounter_details[dragon]
-            name = details["name"]
-            element = details["element"]
-            hint = details["hint"].get(difficulty) or details["hint"]["standard"]
-            table = hdt_threshold_tables[dragon][difficulty]
-
-            embed = discord.Embed(
-                title=f"{name} {difficulty.title()} HP Requirement",
-                description=f"```\n{table}\n```",
-                color=element.get_colour()
-            ).set_footer(
-                text=hint
-            )
-
-            await message.channel.send(embed=embed)
-        else:
-            await message.channel.send("I don't know the HP thresholds for that difficulty!")
+    if encounter_alias in hdt_encounter_queries:
+        await message.channel.send(embed=hdt_encounter_queries[encounter_alias])
     else:
-        await message.channel.send("I haven't seen that high dragon before, they must be scary!")
+        await message.channel.send("I don't know thresholds for that, sorry!")
 
 
 async def handle_mention(message):
@@ -209,11 +111,12 @@ async def handle_mention(message):
         await message.channel.send(f"You should play High {dragon}'s Trial!")
 
 
-def calc_threshold(strength, skill_multi, base_defense, defense_add, damage_multi):
-    # see https://dragalialost.gamepedia.com/Damage_Formula
-    defense = base_defense * (1 + defense_add/100)
-    max_damage = math.floor((5/3) * (damage_multi * strength * skill_multi * 0.5 * 1.05) / defense)
-    return max_damage + 1
+def generate_description(print_name: str, fight_info: dict):
+    # print damage reduction multiplier is 0.7125
+    strength, skill_multi, def_mods = fight_info["str"], fight_info["hp_check_multi"], fight_info["recommended_def"]
+    table_a = generate_threshold_table(strength, skill_multi, def_mods, 0, 0.7125)
+    table_b = generate_threshold_table(strength, skill_multi, def_mods, 0, 1)
+    return f"With {print_name} Equipped:\n```\n{table_a}```\nWithout {print_name} Equipped:\n```\n{table_b}```"
 
 
 def generate_threshold_table(strength, skill_multi, defense_mods, def_skill_mod=0, damage_multi=0.7125):
@@ -225,16 +128,23 @@ def generate_threshold_table(strength, skill_multi, defense_mods, def_skill_mod=
     return generate_ascii_table(table_rows)
 
 
+def calc_threshold(strength, skill_multi, base_defense, defense_add, damage_multi):
+    # see https://dragalialost.gamepedia.com/Damage_Formula
+    defense = base_defense * (1 + defense_add/100)
+    max_damage = math.floor((5/3) * (damage_multi * strength * skill_multi * 0.5 * 1.05) / defense)
+    return max_damage + 1
+
+
 def generate_ascii_table(content: typing.List[list]):
     """
     Generates an ascii table from a list of rows
     :param content: list of rows containing values to put in the table
     :return: string containing ascii table
     """
-    cb_h, cb_v = "─│"  # bar characters
-    cc_ul, cc_ur, cc_bl, cc_br = "┌┐└┘"  # corner characters
-    ct_u, ct_l, ct_r, ct_b = "┬├┤┴"  # T characters
-    c_cross = "┼"  # cross character
+    char_bar_h, char_bar_v = "─│"  # bar characters
+    char_corner_tl, char_corner_tr, char_corner_bl, char_corner_br = "┌┐└┘"  # corner characters
+    char_tack_t, char_tack_l, char_tack_r, char_tack_b = "┬├┤┴"  # T characters
+    char_cross = "┼"  # cross character
 
     output = ""
 
@@ -245,22 +155,23 @@ def generate_ascii_table(content: typing.List[list]):
     width = len(content[0])
     max_widths = [max((len(str(l[x])) for l in content)) for x in range(width)]  # max width for each column
 
+    # generate table rows
     for y in range(height+1):
-        # separator row
+        # separator (non-data) row
         if y == 0:
-            left_cap = cc_ul
-            right_cap = cc_ur + "\n"
-            mid_connector = ct_u
+            left_cap = char_corner_tl
+            right_cap = char_corner_tr + "\n"
+            mid_connector = char_tack_t
         elif y == height:
-            left_cap = cc_bl
-            right_cap = cc_br
-            mid_connector = ct_b
+            left_cap = char_corner_bl
+            right_cap = char_corner_br
+            mid_connector = char_tack_b
         else:
-            left_cap = ct_l
-            right_cap = ct_r + "\n"
-            mid_connector = c_cross
+            left_cap = char_tack_l
+            right_cap = char_tack_r + "\n"
+            mid_connector = char_cross
 
-        output += left_cap + mid_connector.join(cb_h * (w + 2) for w in max_widths) + right_cap
+        output += left_cap + mid_connector.join(char_bar_h * (w + 2) for w in max_widths) + right_cap
 
         # data row
         if y < height:
