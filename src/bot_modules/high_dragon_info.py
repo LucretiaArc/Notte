@@ -116,7 +116,7 @@ def generate_description(print_name: str, fight_info: dict):
     strength, skill_multi, def_mods = fight_info["str"], fight_info["hp_check_multi"], fight_info["recommended_def"]
     table_a = generate_threshold_table(strength, skill_multi, def_mods, 0, 0.7125)
     table_b = generate_threshold_table(strength, skill_multi, def_mods, 0, 1)
-    return f"With {print_name} Equipped:\n```\n{table_a}```\nWithout {print_name} Equipped:\n```\n{table_b}```"
+    return f"With {print_name} equipped:\n```\n{table_a}```\nWithout {print_name} equipped:\n```\n{table_b}```"
 
 
 def generate_threshold_table(strength, skill_multi, defense_mods, def_skill_mod=0, damage_multi=0.7125):
