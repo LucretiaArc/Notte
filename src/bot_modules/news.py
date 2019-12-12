@@ -132,14 +132,11 @@ async def check_news(reschedule):
             config.set_writeable(wc)
 
         # post news items
-        guild_message_sequences = []
         for guild in client.guilds:
             active_channel = config.get_guild(guild).active_channel
             channel = guild.get_channel(active_channel)
             if channel is not None and channel.permissions_for(guild.me).send_messages:
-                guild_message_sequences.append(exec_in_order([channel.send(embed=e) for e in embeds]))
-
-        await asyncio.gather(*guild_message_sequences)
+                asyncio.ensure_future(exec_in_order([channel.send(embed=e) for e in embeds]))
 
 
 async def get_embed_from_result(session: aiohttp.ClientSession, item: dict):
