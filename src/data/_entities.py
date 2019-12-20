@@ -708,7 +708,7 @@ class Ability(abc.Entity):
             if not text:
                 return None
 
-            return re.sub(r"\([^)]+\)", "", text).strip() or None
+            return re.sub(r"\([^)]+\)", "", text).replace("%", "").strip() or None
 
         mapper = abc.EntityMapper(Ability)
         cls.repository = abc.EntityRepository(mapper, "Abilities")

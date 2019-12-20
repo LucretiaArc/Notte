@@ -62,6 +62,7 @@ async def check_news(reschedule):
         new_recent_article_ids = stored_recent_article_ids.copy()
         new_recent_article_date = stored_recent_article_date
         news_items = []
+        news_item_ids = set()
         next_priority = 1e9
         found_new_items = True
         while found_new_items:
@@ -89,8 +90,10 @@ async def check_news(reschedule):
                 # determine whether to post this article
                 if (article_date > stored_recent_article_date) or (
                         article_date == stored_recent_article_date and article_id not in stored_recent_article_ids):
-                    news_items.append(item)
                     found_new_items = True
+                    if article_id not in news_item_ids:
+                        news_items.append(item)
+                        news_item_ids.add(article_id)
 
             next_priority = util.safe_int(query_result["priority_lower_than"], 0)
 

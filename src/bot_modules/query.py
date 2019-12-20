@@ -10,6 +10,9 @@ import pybktree
 import config
 import util
 import typing
+import collections
+import textwrap
+import natsort
 
 logger = logging.getLogger(__name__)
 
@@ -35,15 +38,17 @@ class QueryResolver:
     def get_match_threshold(input_string: str):
         return 1 + 0.3 * len(input_string)
 
-    def add(self, target: str, result):
+    def add(self, target: str, result, suppress_warning=False):
         """
         Adds a string as a resolution target, with a result object to map to it.
         :param target: target string to map to result object
         :param result: object to map, may not be None
+        :param suppress_warning: suppress the generation of a warning in the case that the query string already exists
         """
         target_str = target.lower()
         if target_str in self.query_map:
-            logger.warning(f'Query string "{target_str}" already exists, ignoring new addition')
+            if not suppress_warning:
+                logger.warning(f'Query string "{target_str}" already exists, ignoring new addition')
             return
         elif result is None:
             raise ValueError(f"Result may not be None")
@@ -151,12 +156,14 @@ def initialise_keywords(query_resolver: QueryResolver):
     wyrmprints: typing.Dict[str, data.Wyrmprint] = data.Wyrmprint.get_all().copy()
     skills: typing.Dict[str, data.Skill] = data.Skill.get_all().copy()
     weapons: typing.Dict[str, data.Weapon] = data.Weapon.get_all().copy()
+    abilities: typing.Dict[str, data.Ability] = data.Ability.get_all().copy()
 
     local_data_maps = {
         "adventurer": adventurers,
         "dragon": dragons,
         "wyrmprint": wyrmprints,
         "skill": skills,
+        "ability": abilities
     }
 
     logger.info("Resolving query shortcuts")
@@ -244,6 +251,43 @@ def initialise_keywords(query_resolver: QueryResolver):
 
     for name, s in skills.items():
         add_query(name, s.get_embed())
+
+    generic_ability_map = collections.defaultdict(list)
+    for k, ab in abilities.items():
+        # this will need to be addressed if different abilities have the same name
+        add_query(ab.name, ab.get_embed(), True)
+        generic_ability_map[ab.generic_name].append(ab)
+
+    generic_description = config.get_global("ability_disambiguation")
+    for name, ab_list in generic_ability_map.items():
+        if len(ab_list) == 1:
+            embed = ab_list[0].get_embed()
+            add_query(name, embed, True)
+        else:
+            if name in generic_description:
+                desc = f"*{generic_description[name]}*"
+            else:
+                desc = ""
+                logger.warning(f"No description for generic ability {name}")
+
+            names = natsort.natsorted(set(ab.name for ab in ab_list))
+            if len(names) > 15:
+                names = names[:15] + ["..."]
+
+            name_list = "\n".join(names)
+            content = textwrap.dedent(f"""
+                {desc}
+
+                {name_list}
+                """)
+
+            embed = discord.Embed(
+                title=f"{name} (Disambiguation)",
+                description=content.strip(),
+                color=0xFF7000
+            )
+
+            add_query(name, embed)
 
     logger.info(f"{len(query_resolver.query_map) - original_capacity} queries generated and added to resolver.")
     logger.info(f"Determined maximum query length {query_resolver.max_query_len}")
