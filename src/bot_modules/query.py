@@ -236,6 +236,11 @@ def initialise_keywords(query_resolver: QueryResolver):
                 for element_name in w.element.get_names():
                     descriptions.append(f"d{w.tier} {element_name} {w.weapon_type.name}")
                     descriptions.append(f"h{w.tier} {element_name} {w.weapon_type.name}")
+            elif w.availability == "Agito" and w.tier:
+                for element_name in w.element.get_names():
+                    descriptions.append(f"a{w.tier} {element_name} {w.weapon_type.name}")
+                    if w.tier == 1:
+                        descriptions.append(f"{w.rarity}* {element_name} {w.weapon_type.name}")
 
         for desc in descriptions:
             add_query(desc, w.get_embed())

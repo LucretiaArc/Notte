@@ -89,6 +89,6 @@ class DragonGift(aenum.MultiValueEnum):
 
 
 def get_rarity_colour(rarity):
-    if 1 <= rarity <= 5:
-        return [0xA39884, 0xA3E47A, 0xE29452, 0xCEE7FF, 0xFFCD26][rarity-1]
+    if 1 <= rarity <= 6:
+        return [0xA39884, 0xA3E47A, 0xE29452, 0xCEE7FF, 0xFFCD26, 0xC373E1][rarity-1]
     return 0

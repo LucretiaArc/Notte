@@ -1,5 +1,6 @@
 import calendar
 import collections
+import itertools
 import discord
 import re
 import util
@@ -61,10 +62,7 @@ class Adventurer(abc.Entity):
 
             for sk in [adv.skill_1, adv.skill_2]:
                 if sk:
-                    if sk.owner:
-                        logger.warning(f"Skill {sk.name} already has owner")
-                    else:
-                        sk.owner = adv
+                    sk.owner.append(adv)
 
             return True
 
@@ -190,10 +188,7 @@ class Dragon(abc.Entity):
                 dragon.max_might = None
 
             if dragon.skill:
-                if dragon.skill.owner:
-                    logger.warning(f"Skill {dragon.skill.name} already has owner")
-                else:
-                    dragon.skill.owner = dragon
+                dragon.skill.owner.append(dragon)
 
             return True
 
@@ -428,10 +423,7 @@ class Weapon(abc.Entity):
                 weapon.max_might = None
 
             if weapon.skill:
-                if weapon.skill.owner:
-                    logger.warning(f"Skill {weapon.skill.name} already has owner")
-                else:
-                    weapon.skill.owner = weapon
+                weapon.skill.owner.append(weapon)
 
             return True
 
@@ -634,23 +626,25 @@ class Skill(abc.Entity):
         mp = mapper.add_property  # mapper property
         mf = abc.EntityMapper  # mapper functions
 
+        def map_level(desc, sp):
+            return Skill.SkillLevel(mf.text(desc), mf.int(sp))
+
         def skill_levels(*args):
-            s1 = Skill.SkillLevel(mf.text(args[0]), mf.int(args[3]))
-            s2 = Skill.SkillLevel(mf.text(args[1]), mf.int(args[4]))
-            s3 = Skill.SkillLevel(mf.text(args[2]), mf.int(args[5]))
-
-            if args[6] != "1":
-                return [s1, s2, s3]
-
-            return [s1, s2]
+            arg_pairs = itertools.zip_longest(*([iter(args[1:])] * 2))
+            mapped_levels = itertools.starmap(map_level, arg_pairs)
+            valid_levels = list(itertools.takewhile(lambda sl: sl.description, mapped_levels))
+            if args[0]:
+                return valid_levels[:2]
+            else:
+                return valid_levels
 
         mp("name", mf.text, "Name")
-        mp("levels", skill_levels, "Description1", "Description2", "Description3", "Sp", "SPLv2", "SPLv2", "HideLevel3")
+        mp("levels", skill_levels, "HideLevel3", "Description1", "Sp", "Description2", "SPLv2", "Description3", "Sp", "Description4", "Sp")
 
     def __init__(self):
         self.name = ""
         self.levels: typing.List[Skill.SkillLevel] = []
-        self.owner: abc.Entity = None  # needs to be updated manually
+        self.owner: typing.List[abc.Entity] = []  # updated in postprocess
 
     def __str__(self):
         return self.name
@@ -672,15 +666,27 @@ class Skill(abc.Entity):
         fmt = abc.EmbedFormatter()
 
         title = fmt.format("{e.name} (Lv. {e.levels!l} Skill)", e=self)
+
+        if len(self.owner) == 0:
+            owner_str = ""
+        elif len(self.owner) == 1:
+            owner_str = fmt.format("**Used by:** {owner}", owner=self.owner[0])
+        else:
+            owners = "\n".join(str(e) for e in self.owner[:5])
+            if len(self.owner) > 5:
+                owners += "\n..."
+            owner_str = fmt.format("\n**Used by**\n{owner_list}", owner_list=owners)
+
         description = fmt.format(
             textwrap.dedent("""
                 {max_level.description}
 
                 **Cost:** {max_level.sp} SP
-                **Used by:** {e.owner}
+                {owner_str}
                 """),
             e=self,
-            max_level=self.levels[-1] if self.levels else Skill.SkillLevel("", 0)
+            max_level=self.levels[-1] if self.levels else Skill.SkillLevel("", 0),
+            owner_str=owner_str
         )
 
         return discord.Embed(
