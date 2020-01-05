@@ -33,6 +33,12 @@ class Adventurer(abc.Entity):
         mp = mapper.add_property  # mapper property
         mf = abc.EntityMapper  # mapper functions
 
+        def max_stat(max_limit_break, max_50, max_70, mc_50_bonus, *plus_hp):
+            if int(max_limit_break) >= 5:
+                return int(max_70) + int(mc_50_bonus) + sum(map(int, plus_hp))
+            else:
+                return int(max_50) + int(mc_50_bonus) + sum(map(int, plus_hp[:5]))
+
         mp("full_name", mf.text, "FullName")
         mp("name", mf.text, "Name")
         mp("title", mf.text, "Title")
@@ -42,8 +48,9 @@ class Adventurer(abc.Entity):
         mp("weapon_type", WeaponType.get, "WeaponTypeId")
         mp("element", Element.get, "ElementalTypeId")
         mp("rarity", mf.int, "Rarity")
-        mp("max_hp", mf.sum, "MaxHp", "PlusHp0", "PlusHp1", "PlusHp2", "PlusHp3", "PlusHp4", "McFullBonusHp5")
-        mp("max_str", mf.sum, "MaxAtk", "PlusAtk0", "PlusAtk1", "PlusAtk2", "PlusAtk3", "PlusAtk4", "McFullBonusAtk5")
+        mp("max_hp", max_stat, "MaxLimitBreakCount", "MaxHp", "AddMaxHp1", "McFullBonusHp5", "PlusHp0", "PlusHp1", "PlusHp2", "PlusHp3", "PlusHp4", "PlusHp5")
+        mp("max_str", max_stat, "MaxLimitBreakCount", "MaxAtk", "AddMaxAtk1", "McFullBonusAtk5", "PlusAtk0", "PlusAtk1", "PlusAtk2", "PlusAtk3", "PlusAtk4", "PlusAtk5")
+        mp("max_nodes", lambda n: 70 if int(n) >= 5 else 50, "MaxLimitBreakCount")
         mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(4)))
         mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(4)))
         mp("ability_3", mf.filtered_list_of(Ability.find), *(f"Abilities3{i + 1}" for i in range(4)))
@@ -53,11 +60,18 @@ class Adventurer(abc.Entity):
 
         def post_processor(adv: Adventurer):
             try:
-                # max might adds 500 for all max level skills, 120 for force strike level 2
-                adv.max_might = adv.max_hp + adv.max_str + 500 + 120 + \
-                                adv.ability_1[-1].might + adv.ability_2[-1].might + adv.ability_3[-1].might + \
-                                adv.coability[-1].might
-            except (IndexError, TypeError):
+                adv.max_might = sum((
+                    adv.max_hp,
+                    adv.max_str,
+                    100 * len(adv.skill_1.levels),
+                    100 * len(adv.skill_2.levels),
+                    adv.ability_1[-1].might,
+                    adv.ability_2[-1].might,
+                    adv.ability_3[-1].might,
+                    adv.coability[-1].might,
+                    120,  # force strike level 2
+                ))
+            except (IndexError, TypeError, AttributeError):
                 adv.max_might = None
 
             for sk in [adv.skill_1, adv.skill_2]:
@@ -81,6 +95,7 @@ class Adventurer(abc.Entity):
         self.max_hp = 0
         self.max_str = 0
         self.max_might = 0
+        self.max_nodes = 0
 
         self.skill_1: Skill = None
         self.skill_2: Skill = None
@@ -181,9 +196,14 @@ class Dragon(abc.Entity):
         def post_processor(dragon: Dragon):
             try:
                 # max might adds 300 for bond 30, 100 for skill 1
-                dragon.max_might = dragon.max_hp + dragon.max_str + 300 + 100 + \
-                                   (0 if not dragon.ability_1 else dragon.ability_1[-1].might) + \
-                                   (0 if not dragon.ability_2 else dragon.ability_2[-1].might)
+                dragon.max_might = sum((
+                    dragon.max_hp,
+                    dragon.max_str,
+                    300,  # bond 30
+                    100,  # skill 1
+                    (0 if not dragon.ability_1 else dragon.ability_1[-1].might),
+                    (0 if not dragon.ability_2 else dragon.ability_2[-1].might)
+                ))
             except (IndexError, TypeError):
                 dragon.max_might = None
 
@@ -297,10 +317,13 @@ class Wyrmprint(abc.Entity):
 
         def post_processor(wp: Wyrmprint):
             try:
-                wp.max_might = wp.max_hp + wp.max_str + \
-                               (0 if not wp.ability_1 else wp.ability_1[-1].might) + \
-                               (0 if not wp.ability_2 else wp.ability_2[-1].might) + \
-                               (0 if not wp.ability_3 else wp.ability_3[-1].might)
+                wp.max_might = sum((
+                    wp.max_hp,
+                    wp.max_str,
+                    (0 if not wp.ability_1 else wp.ability_1[-1].might),
+                    (0 if not wp.ability_2 else wp.ability_2[-1].might),
+                    (0 if not wp.ability_3 else wp.ability_3[-1].might)
+                ))
             except (IndexError, TypeError):
                 wp.max_might = None
 
@@ -415,10 +438,13 @@ class Weapon(abc.Entity):
         def mapper_post_processor(weapon: Weapon):
             # max might adds 100 for skill if it exists
             try:
-                weapon.max_might = weapon.max_hp + weapon.max_str + \
-                                   (0 if not weapon.ability_1 else weapon.ability_1.might) + \
-                                   (0 if not weapon.ability_2 else weapon.ability_2.might) + \
-                                   (0 if not weapon.skill else 100)
+                weapon.max_might = sum((
+                    weapon.max_hp,
+                    weapon.max_str,
+                    (0 if not weapon.ability_1 else weapon.ability_1.might),
+                    (0 if not weapon.ability_2 else weapon.ability_2.might),
+                    (0 if not weapon.skill else 100)
+                ))
             except (IndexError, TypeError):
                 weapon.max_might = None
 

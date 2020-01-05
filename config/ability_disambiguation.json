@@ -114,6 +114,7 @@
   "Last Offense": "Buffs strength when HP drops to 30%.",
   "Last Recovery": "Grants an HP regen buff when HP drops to 30%.",
   "Light Res": "Reduces light damage taken.",
+  "Love's Shield": "Using Love & Acclaim grants the user a one-use shield.",
   "Magical Modification": "Using Ancient Ray grants Cleo the \"Altered Strike\" effect. When this effect is active, Cleo's next force strike will create a buff zone that increases the strength of adventurers inside it. This effect cannot stack, and will be consumed on use.",
   "Mana": "Increases Mana intake for clearing quests.",
   "Mercury Res": "Reduces damage taken from Mercury.",
@@ -184,9 +185,11 @@
   "Valor": "Increases valor intake for clearing quests.",
   "Volcanic Chimera's Bane": "Increases damage to the Volcanic Chimera.",
   "Water Res": "Reduces water damage taken.",
+  "Whirlwind Strength": "Increases strength when the combo count is N or higher.",
   "Wily Machine's Bane": "Increases damage to Wily Machine 2.",
   "Wind Res": "Reduces wind damage taken.",
   "Windwhistle Grass": "Increases wind whistle grass intake for clearing quests.",
   "Woodland Blessing": "Reduces susceptibility to stun and sleep.",
+  "World's Dream": "Grants the user's force strikes the ability to dispel one enemy buff when the combo count is N or higher.",
   "Zodiark Res": "Reduces damage taken from Zodiark."
 }
