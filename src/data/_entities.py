@@ -656,16 +656,18 @@ class Skill(abc.Entity):
             return Skill.SkillLevel(mf.text(desc), mf.int(sp))
 
         def skill_levels(*args):
+            max_level = int(args[0])
             arg_pairs = itertools.zip_longest(*([iter(args[1:])] * 2))
             mapped_levels = itertools.starmap(map_level, arg_pairs)
             valid_levels = list(itertools.takewhile(lambda sl: sl.description, mapped_levels))
-            if args[0]:
-                return valid_levels[:2]
-            else:
-                return valid_levels
+            return valid_levels[:max_level]
 
         mp("name", mf.text, "Name")
-        mp("levels", skill_levels, "HideLevel3", "Description1", "Sp", "Description2", "SPLv2", "Description3", "Sp", "Description4", "Sp")
+        mp("levels", skill_levels, "MaxSkillLevel",
+           "Description1", "Sp",
+           "Description2", "SPLv2",
+           "Description3", "Sp",
+           "Description4", "Sp")
 
     def __init__(self):
         self.name = ""
