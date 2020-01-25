@@ -4,7 +4,7 @@ import config
 import aiohttp
 import logging
 import json
-import util
+import time
 import discord
 import html.parser
 import re
@@ -47,72 +47,44 @@ async def check_news(reschedule):
         list_base_url = "https://dragalialost.com/api/index.php?" \
                         "format=json&type=information&action=information_list&lang=en_us&priority_lower_than="
 
+        response_json = await get_api_json_response(session, list_base_url)
+        if not response_json:
+            logger.error("Could not retrieve article list")
+            return
+
+        query_result = response_json["data"]
+
         wc = config.get_writeable()
-        stored_recent_article_ids = wc.news_recent_article_ids
-        stored_recent_article_date = wc.news_recent_article_date
-
-        if not stored_recent_article_ids or not stored_recent_article_date:
-            logger.warning("Missing article history, regenerating...")
-            stored_recent_article_ids = []
-            stored_recent_article_date = 0
-            regenerate_config = True
-        else:
-            regenerate_config = False
-
-        new_recent_article_ids = stored_recent_article_ids.copy()
-        new_recent_article_date = stored_recent_article_date
-        news_items = []
-        news_item_ids = set()
-        next_priority = 1e9
-        found_new_items = True
-        while found_new_items:
-            response_json = await get_api_json_response(session, list_base_url + str(next_priority))
-            if not response_json:
-                logger.warning("Could not retrieve article list")
-                return
-
-            query_result = response_json["data"]["category"]
-
-            found_new_items = False
-            for item in query_result["contents"]:
-                article_id = item["article_id"]
-                article_date = get_article_date(item)
-
-                # remember date of most recent article, along with all articles posted at that time
-                if article_date > new_recent_article_date:
-                    new_recent_article_date = article_date
-                    new_recent_article_ids = [article_id]
-                    if regenerate_config:
-                        stored_recent_article_date = new_recent_article_date
-                elif article_date == new_recent_article_date and article_id not in new_recent_article_ids:
-                    new_recent_article_ids.append(article_id)
-
-                # determine whether to post this article
-                if (article_date > stored_recent_article_date) or (
-                        article_date == stored_recent_article_date and article_id not in stored_recent_article_ids):
-                    found_new_items = True
-                    if article_id not in news_item_ids:
-                        news_items.append(item)
-                        news_item_ids.add(article_id)
-
-            next_priority = util.safe_int(query_result["priority_lower_than"], 0)
-
-        if regenerate_config:
-            wc.news_recent_article_ids = new_recent_article_ids
-            wc.news_recent_article_date = new_recent_article_date
-            logger.warning(f"Regenerated, recent article date = {new_recent_article_date}, IDs = {new_recent_article_ids}")
+        stored_ids = wc.news_ids
+        stored_time = wc.news_update_time
+        if not stored_ids and not stored_time:
+            wc.news_ids = query_result["new_article_list"]
+            wc.news_update_time = math.ceil(time.time())
+            logger.info(f"Regenerated article history, time = {wc.news_update_time}, IDs = {wc.news_ids}")
             config.set_writeable(wc)
             return
 
-        # sort news items for correct order
-        news_items = sorted(news_items, key=lambda d: d["priority"])
+        # new posts
+        new_article_ids = list(reversed(query_result["new_article_list"]))
+        new_article_ids = [i for i in new_article_ids if i not in stored_ids]
+        new_stored_ids = query_result["new_article_list"].copy() or stored_ids
 
-        if len(news_items) >= 10:
+        # updated posts
+        updated_articles = sorted(query_result["update_article_list"], key=lambda d: d["update_time"])
+        updated_article_ids = [d["id"] for d in updated_articles if d["update_time"] > stored_time]
+        updated_article_ids = [i for i in updated_article_ids if i not in new_article_ids]
+        new_stored_time = updated_articles[-1]["update_time"] if updated_articles else stored_time
+
+        # filter blacklisted articles
+        article_blacklist = config.get_global("general")["news_article_blacklist"]
+        news_articles = [i for i in new_article_ids + updated_article_ids if i not in article_blacklist]
+
+        if len(news_articles) >= 10:
             # too many news items, post a generic notification
             embeds = [discord.Embed(
                 title="New news posts are available",
                 url="https://dragalialost.com/en/news/",
-                description=f"{len(news_items)} new news posts are available! Click the link above to read them.",
+                description=f"{len(news_articles)} new news posts are available! Click the link above to read them.",
                 color=get_news_colour()
             ).set_author(
                 name="Dragalia Lost News",
@@ -121,20 +93,19 @@ async def check_news(reschedule):
         else:
             # generate embeds from articles
             embeds = []
-            article_blacklist = config.get_global("general")["news_article_blacklist"]
-            for item in news_items:
-                if item["article_id"] not in article_blacklist:
-                    item_embed = await get_embed_from_result(session, item)
-                    if item_embed:
-                        embeds.append(item_embed)
+            for article_id in news_articles:
+                article_embed = await get_article_embed(session, article_id, article_id in updated_article_ids)
+                if article_embed:
+                    embeds.append(article_embed)
 
-        # update config
-        if len(news_items):
-            wc.news_recent_article_ids = new_recent_article_ids
-            wc.news_recent_article_date = new_recent_article_date
-            config.set_writeable(wc)
+    # update config
+    wc.news_ids = new_stored_ids
+    wc.news_update_time = new_stored_time
+    if wc.news_ids != stored_ids or wc.news_update_time != stored_time:
+        config.set_writeable(wc)
 
-        # post news items
+    # post articles
+    if embeds:
         for guild in client.guilds:
             active_channel = config.get_guild(guild).active_channel
             channel = guild.get_channel(active_channel)
@@ -142,14 +113,7 @@ async def check_news(reschedule):
                 asyncio.ensure_future(exec_in_order([channel.send(embed=e) for e in embeds]))
 
 
-async def get_embed_from_result(session: aiohttp.ClientSession, item: dict):
-    article_id = item["article_id"]
-    article_url = f"https://dragalialost.com/en/news/detail/{article_id}"
-    article_title = item["title_name"]
-    article_date = datetime.datetime.utcfromtimestamp(get_article_date(item))
-    article_category = item["category_name"]
-    article_is_update = item["is_update"]
-
+async def get_article_embed(session: aiohttp.ClientSession, article_id: int, article_is_update: bool):
     logger.info(f"Retrieving news content for article {article_id}")
     content_url = f"https://dragalialost.com/api/index.php" \
         f"?format=json&type=information&action=information_detail&lang=en_us&article_id={article_id}"
@@ -158,6 +122,12 @@ async def get_embed_from_result(session: aiohttp.ClientSession, item: dict):
     if not article_json:
         logger.warning("Could not retrieve article content")
         return None
+    article_data = article_json["data"]["information"]
+
+    article_url = f"https://dragalialost.com/en/news/detail/{article_id}"
+    article_title = article_data["title_name"]
+    article_date = datetime.datetime.utcfromtimestamp(get_article_date(article_data, article_is_update))
+    article_category = article_data["category_name"]
 
     html_content = get_html_content(article_json)
 
@@ -287,11 +257,11 @@ def get_html_content(article_json):
     return t.get_data()
 
 
-def get_article_date(item: dict):
-    if item["is_update"]:
-        return max(item["date"], item["update_time"])
+def get_article_date(item: dict, is_update: bool):
+    if is_update:
+        return max(item["start_time"], item["update_time"])
     else:
-        return item["date"]
+        return item["start_time"]
 
 
 async def exec_in_order(coroutines):

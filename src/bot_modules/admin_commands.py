@@ -42,7 +42,7 @@ async def set_prefix(message, args):
 
 async def set_active_channel(message, args):
     """
-    Sets this channel as the bot's "active channel", the location where the bot sends reset messages and reminders.
+    Sets this channel as the bot's "active channel", the location where the bot sends reset messages and news.
     Use `channel none` to disable reset messages and reminders.
     """
     new_config = config.get_guild(message.guild)

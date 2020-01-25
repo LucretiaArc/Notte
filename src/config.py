@@ -46,8 +46,8 @@ class GuildConfig(Config):
 
 class WriteableConfig(Config):
     def __init__(self, content=None):
-        self.news_recent_article_ids = []
-        self.news_recent_article_date = 0
+        self.news_ids = []
+        self.news_update_time = 0
 
         super().__init__(content)
 
