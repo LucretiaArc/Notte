@@ -107,8 +107,9 @@ async def resist_search(message, args):
         await message.channel.send("Too much! Try narrowing down your search.")
         return
 
-    result_sections = []
+    result_lines = []
     adventurers = data.Adventurer.get_all()
+    emote = util.get_emote
     for res in resist_list:
         match_list = []
         for el in element_list:
@@ -117,13 +118,12 @@ async def resist_search(message, args):
             ))))
 
         if len(match_list) > 0 or res in specified_resists:  # include resists specifically searched for
-            result_string = util.get_emote(res) + "** " + str(res) + " Resistance**\n"
+            result_lines.append(f"{emote(res)} **{res} Resistance**")
         else:
             continue
 
         if len(match_list) == 0:
-            result_string += util.get_emote("blank")*2 + " *No results.*"
-            result_sections.append(result_string)
+            result_lines.append(f"{emote('blank')*2} *No results.* ")
             continue
 
         # sorting
@@ -140,23 +140,17 @@ async def resist_search(message, args):
                 break
 
             if adv_res_percent < current_resist:
-                if current_resist < 101:  # don't separate the resist header from the first section
-                    result_sections.append(result_string)
-                    result_string = ""
                 current_resist = adv_res_percent
-                result_string += util.get_emote("blank")*2 + " **" + str(adv_res_percent) + "%**"
+                result_lines.append(f"{emote('blank')*2} **{adv_res_percent}%**")
 
-            result_string += "\n" + util.get_emote("rarity" + str(adv.rarity)) + \
-                             util.get_emote(adv.element) + " " + adv.full_name
+            result_lines.append(f"{emote('rarity' + str(adv.rarity))}{emote(adv.element)} {adv.full_name}")
 
-        result_sections.append(result_string)
-
-    if len(result_sections) == 0:
+    if len(result_lines) == 0:
         await message.channel.send("I didn't find anything! Maybe there's nobody that matches your search?")
 
     # avoid huge messages by breaking them up at every resist
     output_message = ""
-    for section in result_sections:
+    for section in result_lines:
         section = section.strip()
         if len(output_message + "\n" + section) > 2000:
             await message.channel.send(output_message)
