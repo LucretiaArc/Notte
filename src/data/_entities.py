@@ -70,6 +70,7 @@ class Adventurer(abc.Entity):
                     adv.ability_3[-1].might,
                     adv.coability[-1].might,
                     120,  # force strike level 2
+                    200 if adv.max_nodes > 50 else 0  # standard attack level 2
                 ))
             except (IndexError, TypeError, AttributeError):
                 adv.max_might = None
