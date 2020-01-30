@@ -24,24 +24,19 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    now = datetime.datetime.utcnow()
-    mins_past_hour = (now - now.replace(minute=0, second=0, microsecond=0)).total_seconds() / 60
-    seconds_wait = 60 * (5 - (mins_past_hour - 5 * math.floor(mins_past_hour / 5))) + 5
-    asyncio.get_event_loop().call_later(seconds_wait, lambda: asyncio.ensure_future(check_news(True)))
-
-    if seconds_wait > 30:
-        await check_news(False)
+    await check_news(True)
 
     hook.Hook.get("owner!check_news").attach(lambda m, a: asyncio.ensure_future(check_news(False)))
-    hook.Hook.get("on_reset").attach(lambda: asyncio.ensure_future(check_news(False)))
 
 
 async def check_news(reschedule):
     if reschedule:
-        # trigger next 5 minute interval (5 secs delayed)
         now = datetime.datetime.utcnow()
-        time_delta = (now + datetime.timedelta(5 / 1440)).replace(second=5, microsecond=0) - now
-        asyncio.get_event_loop().call_later(time_delta.total_seconds(), lambda: asyncio.ensure_future(check_news(True)))
+        next_check = now.replace(minute=5 * math.floor(now.minute / 5), second=1, microsecond=0) + datetime.timedelta(minutes=5)
+        time_delta = (next_check - now).total_seconds()
+        asyncio.get_event_loop().call_later(time_delta, lambda: asyncio.ensure_future(check_news(True)))
+        if time_delta < 240:
+            return
 
     async with aiohttp.ClientSession() as session:
         list_base_url = "https://dragalialost.com/api/index.php?" \
