@@ -44,6 +44,7 @@ class Adventurer(abc.Entity):
         mp("title", mf.text, "Title")
         mp("description", mf.text, "Description")
         mp("obtained", mf.text, "Obtain")
+        mp("availability", mf.text, "Availability")
         mp("release_date", mf.date, "ReleaseDate")
         mp("weapon_type", WeaponType.get, "WeaponTypeId")
         mp("element", Element.get, "ElementalTypeId")
@@ -89,6 +90,7 @@ class Adventurer(abc.Entity):
         self.title = ""
         self.description = ""
         self.obtained = ""
+        self.availability = ""
         self.release_date: datetime.datetime = None
         self.weapon_type: WeaponType = None
         self.rarity = 0
@@ -159,6 +161,9 @@ class Adventurer(abc.Entity):
             colour=discord.Embed.Empty if not self.element else self.element.get_colour()
         )
 
+    def get_title_with_emotes(self):
+        return abc.EmbedFormatter().format("{e.rarity!r}{e.element!e}{e.weapon_type!e} {e.full_name}", e=self)
+
 
 class Dragon(abc.Entity):
     """
@@ -183,6 +188,7 @@ class Dragon(abc.Entity):
         mp("title", mf.text, "Title")
         mp("description", mf.text, "ProfileText")
         mp("obtained", mf.text, "Obtain")
+        mp("availability", mf.text, "Availability")
         mp("release_date", mf.date, "ReleaseDate")
         mp("rarity", mf.int, "Rarity")
         mp("element", Element.get, "ElementalTypeId")
@@ -221,6 +227,7 @@ class Dragon(abc.Entity):
         self.title = ""
         self.description = ""
         self.obtained = ""
+        self.availability = ""
         self.release_date: datetime.datetime = None
         self.rarity = 0
         self.element: Element = None
@@ -285,6 +292,9 @@ class Dragon(abc.Entity):
             colour=discord.Embed.Empty if not self.element else self.element.get_colour()
         )
 
+    def get_title_with_emotes(self):
+        return abc.EmbedFormatter().format("{e.rarity!r}{e.element!e} {e.full_name}", e=self)
+
 
 class Wyrmprint(abc.Entity):
     """
@@ -310,6 +320,7 @@ class Wyrmprint(abc.Entity):
         mp("max_hp", mf.int, "MaxHp")
         mp("max_str", mf.int, "MaxAtk")
         mp("obtained", lambda s: re.split("[,\n]+", mf.text(s)) if mf.text(s) else None, "Obtain")
+        mp("availability", mf.text, "Availability")
         mp("release_date", mf.date, "ReleaseDate")
 
         mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(3)))
@@ -336,6 +347,7 @@ class Wyrmprint(abc.Entity):
         self.name = ""
         self.rarity = 0
         self.obtained = []
+        self.availability = ""
         self.release_date: datetime.datetime = None
         self.max_hp = 0
         self.max_str = 0
@@ -413,13 +425,13 @@ class Weapon(abc.Entity):
         mp("weapon_type", WeaponType.get, "TypeId")
         mp("element", Element.get, "ElementalTypeId")
         mp("obtained", mf.text, "Obtain")
+        mp("availability", mf.text, "Availability")
         mp("max_hp", mf.int, "MaxHp")
         mp("max_str", mf.int, "MaxAtk")
 
         mp("ability_1", Ability.find, "Abilities11")
         mp("ability_2", Ability.find, "Abilities21")
         mp("skill", Skill.find, "SkillName")
-        mp("availability", mf.text, "Availability")
 
         def crafting_materials(*args):
             arg_pairs = zip(*[iter(args)] * 2)
