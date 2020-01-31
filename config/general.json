@@ -2,7 +2,7 @@
   "owner_id": 126587545336283136,
   "report_channel": 559212035401842718,
   "logging_channel": 578890034686459914,
-  "enable_automatic_restart": false, 
+  "enable_automatic_restart": false,
   "news_article_blacklist": [
     19999,
     213
