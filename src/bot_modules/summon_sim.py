@@ -241,9 +241,9 @@ async def get_entity_icon(entity):
         icon_image = Image.open(f"../data/{entity.icon_name}.png")
     except FileNotFoundError:
         if isinstance(entity, data.Adventurer):
-            icon_image = Image.open("../assets/frame_adventurer.png")
+            icon_image = Image.open("../upload/frame_adventurer.png")
         elif isinstance(entity, data.Dragon):
-            icon_image = Image.open("../assets/frame_dragon.png")
+            icon_image = Image.open("../upload/frame_dragon.png")
         else:
             raise ValueError(f"Unexpected entity type {type(entity)}")
 
