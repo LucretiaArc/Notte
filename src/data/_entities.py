@@ -58,6 +58,7 @@ class Adventurer(abc.Entity):
         mp("coability", mf.filtered_list_of(CoAbility.find), *(f"ExAbilityData{i + 1}" for i in range(5)))
         mp("skill_1", Skill.find, "Skill1Name")
         mp("skill_2", Skill.find, "Skill2Name")
+        mp("icon_name", lambda i, v, r: f"{i}_0{v}_r0{r}", "Id", "VariationId", "Rarity")
 
         def post_processor(adv: Adventurer):
             try:
@@ -99,6 +100,7 @@ class Adventurer(abc.Entity):
         self.max_str = 0
         self.max_might = 0
         self.max_nodes = 0
+        self.icon_name = ""
 
         self.skill_1: Skill = None
         self.skill_2: Skill = None
@@ -195,6 +197,7 @@ class Dragon(abc.Entity):
         mp("max_hp", mf.int, "MaxHp")
         mp("max_str", mf.int, "MaxAtk")
         mp("favourite_gift", DragonGift.get, "FavoriteType")
+        mp("icon_name", lambda i, v: f"{i}_0{v}", "BaseId", "VariationId")
 
         mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(2)))
         mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(2)))
@@ -235,6 +238,7 @@ class Dragon(abc.Entity):
         self.max_str = 0
         self.max_might = 0
         self.favourite_gift: DragonGift = None
+        self.icon_name = ""
 
         self.skill: Skill = None
         self.ability_1: typing.List[Ability] = []

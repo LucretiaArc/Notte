@@ -3,6 +3,15 @@ import logging
 import data
 import typing
 import random
+import aiohttp
+import json
+import os
+import itertools
+import urllib.parse
+import asyncio
+import io
+import discord
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +26,8 @@ async def on_init(discord_client):
 
     hook.Hook.get("public!tenfold").attach(tenfold_summon)
     hook.Hook.get("public!single").attach(single_summon)
+    hook.Hook.get("download_data_delayed").attach(update_entity_icons)
+    hook.Hook.get("owner!update_sim_icons").attach(update_entity_icons_cmd)
 
 
 async def tenfold_summon(message, args):
@@ -24,8 +35,17 @@ async def tenfold_summon(message, args):
     Simulates a tenfold summon.
     """
     results = current_banner.perform_tenfold(0, 0)[0]
-    output = "\n".join(e.get_title_with_emotes() for e in results)
-    await message.channel.send(output)
+    result_images = [await get_entity_icon(e) for e in results]
+    output_img_size = (515, 707)
+    output_image = Image.new("RGBA", output_img_size)
+    result_positions = generate_result_positions(output_img_size)
+    for img, pos in zip(result_images, result_positions):
+        output_image.paste(img, pos)
+
+    fp = io.BytesIO()
+    output_image.save(fp, format="png")
+    fp.seek(0)
+    await message.channel.send(file=discord.File(fp, filename="tenfold.png"))
 
 
 async def single_summon(message, args):
@@ -33,7 +53,17 @@ async def single_summon(message, args):
     Simulates a single summon.
     """
     result = current_banner.perform_solo(0, 0)[0]
-    await message.channel.send(result.get_title_with_emotes())
+    output_image = await get_entity_icon(result)
+
+    fp = io.BytesIO()
+    output_image.save(fp, format="png")
+    fp.seek(0)
+    await message.channel.send(file=discord.File(fp, filename="single.png"))
+
+
+async def update_entity_icons_cmd(message, args):
+    await update_entity_icons()
+    await message.channel.send("Updated summoning sim icons.")
 
 
 class Banner:
@@ -156,6 +186,93 @@ def increment_pity_progress(pity, pity_progress, increment_amount):
     return pity, pity_progress
 
 
+async def update_entity_icons():
+    required_icons = check_entity_icons()
+    if required_icons:
+        logger.info(f"Downloading icons for {len(required_icons)} entities")
+        async with aiohttp.ClientSession() as session:
+            icon_urls = await get_entity_icon_urls(session, required_icons)
+            for file_name, url in icon_urls.items():
+                await fetch_entity_icon(session, file_name, url)
+                await asyncio.sleep(10)  # don't use too much bandwidth all at once
+
+        logger.info(f"Finished downloading {len(required_icons)} icons")
+
+
+def check_entity_icons():
+    entities = list(data.Adventurer.get_all().values()) + list(data.Dragon.get_all().values())
+    icon_info = (f"{e.icon_name}.png" for e in entities)
+    return [icon for icon in icon_info if not os.path.exists(f"../data/{icon}")]
+
+
+async def get_entity_icon_urls(session: aiohttp.ClientSession, icon_names):
+    base_url = "https://dragalialost.gamepedia.com/api.php?action=query&prop=imageinfo&iiprop=url&format=json&titles="
+    title_chunks = itertools.zip_longest(*([iter(icon_names)] * 50))
+    file_urls = {}
+    for chunk in title_chunks:
+        titles_value = "|".join(f"File:{icon}" for icon in filter(None, chunk))
+        url = base_url + urllib.parse.quote(titles_value.replace("_", " "))
+        async with session.get(url) as response:
+            try:
+                response_json = await response.json(content_type=None)
+            except json.decoder.JSONDecodeError:
+                logger.warning("Could not decode JSON response")
+                return None
+
+        results = response_json["query"]["pages"]
+        for item in results.values():
+            file_name = item["title"].replace(" ", "_")[5:]
+            if "missing" in item:
+                logger.warning(f"URL requested for non-existent file '{file_name}'")
+                continue
+            file_urls[file_name] = item["imageinfo"][0]["url"]
+
+    return file_urls
+
+
+async def fetch_entity_icon(session: aiohttp.ClientSession, file_name, url):
+    async with session.get(url) as response:
+        with open(f"../data/{file_name}", "wb") as file:
+            file.write(await response.read())
+
+
+async def get_entity_icon(entity):
+    try:
+        icon_image = Image.open(f"../data/{entity.icon_name}.png")
+    except FileNotFoundError:
+        if isinstance(entity, data.Adventurer):
+            icon_image = Image.open("../assets/frame_adventurer.png")
+        elif isinstance(entity, data.Dragon):
+            icon_image = Image.open("../assets/frame_dragon.png")
+        else:
+            raise ValueError(f"Unexpected entity type {type(entity)}")
+
+    return icon_image
+
+
+def generate_result_positions(canvas_size):
+    canvas_w, canvas_h = canvas_size
+    row_capacities = [2, 3, 3, 2]
+    item_w = 160
+    item_h = 160
+    item_sep_h = 26
+    item_sep_v = 28
+
+    num_cols = max(row_capacities)
+    num_rows = len(row_capacities)
+    offset_x = (canvas_w - item_w * num_cols - item_sep_h * (num_cols - 1)) // 2 - 1
+    offset_y = (canvas_h - item_h * num_rows - item_sep_v * (num_rows - 1)) // 2 - 1
+
+    positions = []
+    for y, capacity in enumerate(row_capacities):
+        row_offset = (item_w + item_sep_h) * (max(row_capacities) - capacity) // 2
+        for x in range(capacity):
+            positions.append((
+                offset_x + x * (item_w + item_sep_h) + row_offset,
+                offset_y + y * (item_h + item_sep_v)
+            ))
+
+    return positions
+
+
 hook.Hook.get("on_init").attach(on_init)
-
-
