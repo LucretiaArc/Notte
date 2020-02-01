@@ -34,7 +34,7 @@ async def on_init(discord_client):
 
 async def tenfold_summon(message, args):
     """
-    Simulates a tenfold summon.
+    Simulates a tenfold summon on a generic banner with no focus units. Pity rate is untracked (constant 5* rate of 4%).
     """
     results = current_banner.perform_tenfold(0, 0)[0]
     result_images = [await get_entity_icon(e) for e in results]
@@ -52,7 +52,7 @@ async def tenfold_summon(message, args):
 
 async def single_summon(message, args):
     """
-    Simulates a single summon.
+    Simulates a single summon on a generic banner with no focus units. Pity rate is untracked (constant 5* rate of 4%).
     """
     result = current_banner.perform_solo(0, 0)[0]
     output_image = await get_entity_icon(result)
