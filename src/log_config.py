@@ -33,6 +33,13 @@ def configure_console():
     logging.getLogger().addHandler(console_handler)
 
 
+def configure_file(filename):
+    file_handler = logging.FileHandler(filename)
+    file_handler.setLevel(logging.NOTSET)
+    file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(name)s: %(message)s"))
+    logging.getLogger().addHandler(file_handler)
+
+
 def configure_discord(client: discord.Client):
     channel = client.get_channel(config.get_global("general")["logging_channel"])
     if channel is None:
