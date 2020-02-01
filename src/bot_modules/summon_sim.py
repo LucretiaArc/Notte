@@ -24,6 +24,8 @@ async def on_init(discord_client):
     client = discord_client
     current_banner = Banner([])
 
+    os.makedirs("../data", exist_ok=True)
+
     hook.Hook.get("public!tenfold").attach(tenfold_summon)
     hook.Hook.get("public!single").attach(single_summon)
     hook.Hook.get("download_data_delayed").attach(update_entity_icons)
