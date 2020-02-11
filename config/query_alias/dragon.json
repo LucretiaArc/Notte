@@ -4,6 +4,7 @@
   "prom": "prometheus",
   "levi": "leviathan",
   "vody": "vodyanoy",
+  "poli'ahu": "poliʻahu",
   "poli": "poliʻahu",
   "posei": "poseidon",
   "nyathot": "nyarlathotep",
@@ -55,5 +56,9 @@
   "hmariti": "halloween maritimus",
 
   "dyjeanne": "dragonyule jeanne",
-  "djeanne": "dragonyule jeanne"
+  "djeanne": "dragonyule jeanne",
+
+  "rath": "rathalos",
+  "dkrathalos": "dreadking rathalos",
+  "dkrath": "dreadking rathalos"
 }

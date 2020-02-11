@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 import asyncio
 import discord
 import config
@@ -33,8 +34,8 @@ def configure_console():
     logging.getLogger().addHandler(console_handler)
 
 
-def configure_file(filename):
-    file_handler = logging.FileHandler(filename)
+def configure_file(filename: str):
+    file_handler = logging.handlers.RotatingFileHandler(filename, maxBytes=10*1024*1024, backupCount=5)
     file_handler.setLevel(logging.NOTSET)
     file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(name)s: %(message)s"))
     logging.getLogger().addHandler(file_handler)

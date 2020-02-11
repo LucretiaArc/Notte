@@ -16,7 +16,7 @@ async def on_init(discord_client):
     global client
     client = discord_client
 
-    hook.Hook.get("owner!uptime").attach(uptime)
+    hook.Hook.get("public!uptime").attach(uptime)
     if config.get_global("general")["enable_automatic_restart"]:
         util.create_daily_hook("automatic_restart", 12, 0, 0)
         hook.Hook.get("automatic_restart").attach(restart)
