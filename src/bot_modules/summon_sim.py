@@ -11,6 +11,7 @@ import urllib.parse
 import asyncio
 import io
 import discord
+import util
 from PIL import Image
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ async def on_init(discord_client):
     client = discord_client
     current_banner = Banner([])
 
-    os.makedirs("../data", exist_ok=True)
+    os.makedirs(util.path("data"), exist_ok=True)
 
     hook.Hook.get("public!tenfold").attach(tenfold_summon)
     hook.Hook.get("public!single").attach(single_summon)
@@ -204,7 +205,7 @@ async def update_entity_icons():
 def check_entity_icons():
     entities = list(data.Adventurer.get_all().values()) + list(data.Dragon.get_all().values())
     icon_info = (f"{e.icon_name}.png" for e in entities)
-    return [icon for icon in icon_info if not os.path.exists(f"../data/{icon}")]
+    return [icon for icon in icon_info if not os.path.exists(util.path(f"data/{icon}"))]
 
 
 async def get_entity_icon_urls(session: aiohttp.ClientSession, icon_names):
@@ -234,18 +235,18 @@ async def get_entity_icon_urls(session: aiohttp.ClientSession, icon_names):
 
 async def fetch_entity_icon(session: aiohttp.ClientSession, file_name, url):
     async with session.get(url) as response:
-        with open(f"../data/{file_name}", "wb") as file:
+        with open(util.path(f"data/{file_name}"), "wb") as file:
             file.write(await response.read())
 
 
 async def get_entity_icon(entity):
     try:
-        icon_image = Image.open(f"../data/{entity.icon_name}.png")
+        icon_image = Image.open(util.path(f"data/{entity.icon_name}.png"))
     except FileNotFoundError:
         if isinstance(entity, data.Adventurer):
-            icon_image = Image.open("../upload/frame_adventurer.png")
+            icon_image = Image.open(util.path("upload/frame_adventurer.png"))
         elif isinstance(entity, data.Dragon):
-            icon_image = Image.open("../upload/frame_dragon.png")
+            icon_image = Image.open(util.path("upload/frame_dragon.png"))
         else:
             raise ValueError(f"Unexpected entity type {type(entity)}")
 

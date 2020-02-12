@@ -1,6 +1,5 @@
 import discord
 import os
-import sys
 import logging
 import bot_modules
 import util
@@ -9,12 +8,10 @@ import data
 import log_config
 from hook import Hook
 
-os.chdir(sys.path[0])
-
 # set up console logging, defer logging channel setup until client is initialised
 logging.getLogger().setLevel(logging.INFO)
 log_config.configure_console()
-log_config.configure_file("../log.txt")
+log_config.configure_file(util.path("log.txt"))
 logger = logging.getLogger(__name__)
 
 initialised = False

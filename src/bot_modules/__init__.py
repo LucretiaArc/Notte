@@ -27,6 +27,7 @@ def import_modules():
 # on_reset()
 # before_reset()
 # download_data()
+# download_data_delayed()
 # data_downloaded()
 #
 # Command events:

@@ -9,6 +9,8 @@ import mwparserfromhell
 import io
 import discord
 import hook
+import sys
+import pathlib
 
 
 logger = logging.getLogger(__name__)
@@ -149,3 +151,7 @@ async def send_long_message_as_file(channel: discord.abc.Messageable, msg: str, 
         await channel.send(msg)
     else:
         await channel.send(file=discord.File(fp=io.BytesIO(bytes(msg, "UTF-8")), filename=filename))
+
+
+def path(path_fragment):
+    return str(pathlib.Path(sys.path[0]).parent / path_fragment)
