@@ -56,7 +56,7 @@ async def check_news(reschedule):
             wc.news_ids = query_result["new_article_list"]
             wc.news_update_time = math.ceil(time.time())
             logger.info(f"Regenerated article history, time = {wc.news_update_time}, IDs = {wc.news_ids}")
-            config.set_writeable(wc)
+            await config.set_writeable(wc)
             return
 
         # new posts
@@ -97,7 +97,7 @@ async def check_news(reschedule):
     wc.news_ids = new_stored_ids
     wc.news_update_time = new_stored_time
     if wc.news_ids != stored_ids or wc.news_update_time != stored_time:
-        config.set_writeable(wc)
+        await config.set_writeable(wc)
 
     # post articles
     if embeds:

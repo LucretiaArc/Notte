@@ -3,8 +3,6 @@ A Discord bot that provides information about Dragalia Lost, a mobile game devel
 
 ## Prerequisites
 * Python 3.7
-* Amazon S3 bucket in which to store configuration data
-* AWS access key, used to get and put objects in your S3 bucket
 * Discord bot user
 
 ## Installing
@@ -17,23 +15,21 @@ Perform all of the following steps in the environment you will be using to run t
     pip install -r requirements.txt
     ```
     
-2. Store the following values as environment variables in the bot environment:
+2. Create an environment variable `DISCORD_CLIENT_TOKEN` containing your discord bot user's client token
 
-    | Environment Variable | Value Description |
-    | --- | --- |
-    | DISCORD_CLIENT_TOKEN | Your discord bot user's client token |
-    | AWS_ACCESS_KEY_ID | Part of your AWS credentials |
-    | AWS_SECRET_ACCESS_KEY | Part of your AWS credentials |
-    | S3_BUCKET_NAME | Name of your S3 bucket |
-    | WRITEABLE_CONFIG_KEY | Key of the writeable config object in your S3 bucket |
-    | GUILD_CONFIG_KEY | Key of the guild config object in your S3 bucket |
-    
-    [More info about AWS access keys](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys)
-    
-    [More info about S3 Buckets and Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/Introduction.html#CoreConcepts)
-
-3. Run main.py using python 3
+3. Run main.py
     
     ```
     python3 ./src/main.py
     ```
+## Directory Structure
+
+| Directory | Content |
+| --- | --- |
+| /src | Application code |
+| /config | Static bot configuration files. |
+| /assets | Assets used by the bot for functionality. |
+| /data | Contains all data written by the bot to disk, except for log files. Automatically generated at runtime. |
+| /data/config | Dynamic bot configuration files. |
+| /data/icons | Icons automatically downloaded for use in the summoning simulator module. |
+| /extras | Extras which aren't important for functionality (e.g. the bot's avatar). |

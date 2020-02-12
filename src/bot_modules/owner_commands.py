@@ -84,7 +84,7 @@ async def wconfig_set(message, args):
     except ValueError:
         await message.channel.send(f"Invalid config key: {key}")
         return
-    config.set_writeable(wc)
+    await config.set_writeable(wc)
     await message.channel.send(f'Updated config["{key}"] = {json.dumps(value)}')
 
 
@@ -97,7 +97,7 @@ async def wconfig_del(message, args):
         await message.channel.send(f"No such configuration key: {key}")
         return
 
-    config.set_writeable(wc)
+    await config.set_writeable(wc)
     await message.channel.send(f"Successfully deleted key: {key}")
 
 

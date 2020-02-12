@@ -147,6 +147,12 @@ def clean_wikitext(wikitext):
 
 
 async def send_long_message_as_file(channel: discord.abc.Messageable, msg: str, filename="message.txt"):
+    """
+    Sends a potentially-long message as a file if it exceeds the maximum message length.
+    :param channel: channel to send the message in
+    :param msg: message to send
+    :param filename: filename to use
+    """
     if len(msg) <= 2000:
         await channel.send(msg)
     else:
@@ -154,4 +160,10 @@ async def send_long_message_as_file(channel: discord.abc.Messageable, msg: str, 
 
 
 def path(path_fragment):
+    """
+    Gets a full file path from a path fragment. Path fragments are relative to the top level of the project (the
+    directory containing the "src" directory). Path fragments should not contain a leading slash.
+    :param path_fragment: a path fragment
+    :return: full file path
+    """
     return str(pathlib.Path(sys.path[0]).parent / path_fragment)

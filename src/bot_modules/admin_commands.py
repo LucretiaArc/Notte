@@ -27,14 +27,16 @@ async def set_prefix(message, args):
     if len(new_prefix) > 250:
         await message.channel.send("That's too long! Try something shorter.")
         return
-
+    if not new_prefix:
+        await message.channel.send("You need to choose something to set as the prefix!")
+        return
     if new_prefix == client.user.mention:
         new_prefix += " "
 
     guild = message.guild
     new_config = config.get_guild(guild)
     new_config.token = new_prefix
-    config.set_guild(guild, new_config)
+    await config.set_guild(guild, new_config)
 
     logger.info(f'Prefix for guild {guild.id} set to "{new_prefix}"')
     await message.channel.send(f"Prefix has been set to `{new_prefix}`")
@@ -48,12 +50,12 @@ async def set_active_channel(message, args):
     new_config = config.get_guild(message.guild)
     if args.strip().lower() == "none":
         new_config.active_channel = 0
-        config.set_guild(message.guild, new_config)
+        await config.set_guild(message.guild, new_config)
         logger.info(f"Active channel for guild {message.guild.id} disabled")
         await message.channel.send("Active channel has been disabled, I won't post reset messages anymore!")
     else:
         new_config.active_channel = message.channel.id
-        config.set_guild(message.guild, new_config)
+        await config.set_guild(message.guild, new_config)
         logger.info(f"Active channel for guild {message.guild.id} set to {message.channel.id}")
         await message.channel.send("Active channel has been updated, I'll post reset messages in here from now on!")
 
