@@ -37,7 +37,7 @@ async def tenfold_summon(message, args):
     """
     Simulates a tenfold summon on a generic banner with no focus units. Pity rate is untracked (constant 5* rate of 4%).
     """
-    results = current_banner.perform_tenfold(0, 0)[0]
+    results = current_banner.perform_tenfold(0)[0]
     result_images = [await get_entity_icon(e) for e in results]
     output_img_size = (515, 707)
     output_image = Image.new("RGBA", output_img_size)
@@ -55,7 +55,7 @@ async def single_summon(message, args):
     """
     Simulates a single summon on a generic banner with no focus units. Pity rate is untracked (constant 5* rate of 4%).
     """
-    result = current_banner.perform_solo(0, 0)[0]
+    result = current_banner.perform_solo(0)[0]
     output_image = await get_entity_icon(result)
 
     fp = io.BytesIO()
@@ -122,8 +122,8 @@ class Banner:
 
         return rates
 
-    def is_pity_rate_capped(self, pity):
-        return pity >= (3 if self.is_gala else 5)
+    def is_pity_capped(self, pity_progress):
+        return pity_progress >= (60 if self.is_gala else 100)
 
     def _get_result(self, rates):
         weights = []
@@ -137,29 +137,29 @@ class Banner:
         selected_pool = random.choices(pools, weights=weights)[0]
         return random.choice(selected_pool)
 
-    def perform_solo(self, pity, pity_progress):
+    def perform_solo(self, pity_progress):
+        pity = pity_progress // 10 * 0.5
         rates = self.get_pool_rates(pity)
-        adjust_rates(rates, guaranteed_5=self.is_pity_rate_capped(pity))
+        adjust_rates(rates, guaranteed_5=self.is_pity_capped(pity_progress))
         result = self._get_result(rates)
         if result.rarity == 5:
-            pity = 0
             pity_progress = 0
         else:
-            pity, pity_progress = increment_pity_progress(pity, pity_progress, 1)
-        return result, pity, pity_progress
+            pity_progress += 1
+        return result, pity_progress
 
-    def perform_tenfold(self, pity, pity_progress):
+    def perform_tenfold(self, pity_progress):
+        pity = pity_progress // 10 * 0.5
         rates = self.get_pool_rates(pity)
         results = [self._get_result(rates) for i in range(9)]
         received_5 = any(e.rarity == 5 for e in results)
-        adjust_rates(rates, guaranteed_5=self.is_pity_rate_capped(pity), guaranteed_4=True)
+        adjust_rates(rates, guaranteed_5=self.is_pity_capped(pity_progress), guaranteed_4=True)
         results.append(self._get_result(rates))
         if received_5 or results[-1].rarity == 5:
-            pity = 0
             pity_progress = 0
         else:
-            pity, pity_progress = increment_pity_progress(pity, pity_progress, 10)
-        return results, pity, pity_progress
+            pity_progress += 10
+        return results, pity_progress
 
 
 def adjust_rates(rates, guaranteed_5=False, guaranteed_4=False):
@@ -180,13 +180,6 @@ def set_rarity_rate(rarity_rates, new_rate):
             type_pool[e_type] *= rate_scale
 
     return old_rate
-
-
-def increment_pity_progress(pity, pity_progress, increment_amount):
-    pity_progress += increment_amount
-    pity += 0.5 * (pity_progress // 10)
-    pity_progress %= 10
-    return pity, pity_progress
 
 
 async def update_entity_icons():
