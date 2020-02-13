@@ -1,20 +1,20 @@
-import glob
 import importlib
-from os.path import dirname, basename, isfile
-
+import pathlib
 import logging
 logger = logging.getLogger(__name__)
 
 
 def import_modules():
-    modules = glob.glob(dirname(__file__) + "/*.py")
-    module_names = [basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
-    for m in module_names:
-        # noinspection PyBroadException
-        try:
-            importlib.import_module("."+m, package="bot_modules")
-        except Exception:
-            logger.exception(f'Error while importing module "{m}"')
+    this_file_path = pathlib.Path(__file__)
+    for path in this_file_path.parent.iterdir():
+        if path == this_file_path:
+            continue
+        if path.is_dir() and (path / "__init__.py").exists() or path.is_file() and path.suffix == ".py":
+            # noinspection PyBroadException
+            try:
+                importlib.import_module(f".{path.stem}", package="bot_modules")
+            except Exception:
+                logger.exception(f'Error while importing module "{path.stem}"')
 
 
 # Standard events:
