@@ -46,7 +46,7 @@ async def select_showcase(message, args):
                 await message.channel.send(showcase_info, embed=showcase.get_embed())
         else:
             showcase = core.get_summonable_showcase(showcase_name)
-            if showcase:
+            if showcase and showcase != core.get_summonable_showcase("none"):
                 await message.channel.send(embed=showcase.get_embed())
             else:
                 await message.channel.send("I don't know that showcase! Use `showcase list` to see the list of showcases.")
