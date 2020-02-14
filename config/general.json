@@ -6,5 +6,8 @@
   "news_article_blacklist": [
     19999,
     213
+  ],
+  "summonable_showcase_blacklist": [
+    "Gala Dragalia (Oct 2019)"
   ]
 }

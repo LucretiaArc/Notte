@@ -2,50 +2,78 @@ import hook
 import logging
 import io
 import discord
-import util
-import contextlib
-import sqlite3
 from PIL import Image
-from . import core, icons
+from . import core, db, icons
 
 logger = logging.getLogger(__name__)
-
 client = None
-current_banner: core.Banner = None
-pity_file = util.path("data/pity.db")
+default_showcase: core.Showcase = None
 
 
 async def on_init(discord_client):
-    global current_banner, client
+    global client
     client = discord_client
-    current_banner = core.Banner([])
 
-    create_db()
+    db.create_db()
 
     hook.Hook.get("public!tenfold").attach(tenfold_summon)
     hook.Hook.get("public!single").attach(single_summon)
+    hook.Hook.get("public!showcase").attach(select_showcase)
+
+
+async def select_showcase(message, args):
+    """
+    Selects a showcase to summon on. To select a showcase, use `showcase <showcase>`.
+    To get a list of showcases, use `showcase list`.
+    To get information about a showcase, use `showcase info <showcase>`
+    To select a generic showcase without any rate-up units or dragons, use `showcase none`.
+
+    **Note:** Showcases as represented in the summoning simulator aren't historically accurate. This means:
+     - All currently available permanent units are able to be pulled as off-focus units
+     - Wyrmprints aren't summonable in the showcases which featured them
+     - Showcases which appeared prior to the 5★ dragon rate change on July 31st, 2019 will use the new dragon rates
+    """
+    args = args.strip()
+    if args == "list":
+        await message.channel.send(", ".join(sc.name for sc in core.get_summonable_showcase_list()))
+    elif args.startswith("info"):
+        showcase_name = args[5:].strip()
+        if not showcase_name:
+            showcase_info, showcase = db.get_current_showcase_info(message.channel.id, message.author.id)
+            if showcase == core.get_summonable_showcase("none"):
+                await message.channel.send(showcase_info)
+            else:
+                await message.channel.send(showcase_info, embed=showcase.get_embed())
+        else:
+            showcase = core.get_summonable_showcase(showcase_name)
+            if showcase:
+                await message.channel.send(embed=showcase.get_embed())
+            else:
+                await message.channel.send("I don't know that showcase! Use `showcase list` to see the list of showcases.")
+    else:
+        showcase = core.get_summonable_showcase(args)
+        if showcase:
+            await message.channel.send(db.set_showcase(message.channel.id, message.author.id, showcase))
+        else:
+            await message.channel.send("I don't know that showcase! Use `showcase list` to see the list of showcases.")
 
 
 async def tenfold_summon(message, args):
     """
-    Simulates a tenfold summon on a generic banner with no focus units.
+    Simulates a tenfold summon on your current showcase.
+    To choose a showcase to summon on, use the `showcase` command.
     """
-    results, pity_progress = perform_summon(current_banner.perform_tenfold, message.channel.id, message.author.id)
-    await send_result(message.channel, results, get_pity_explanation_text(current_banner, pity_progress))
+    results, results_text = db.perform_summon(message.channel.id, message.author.id, is_tenfold=True)
+    await send_result(message.channel, results, results_text)
 
 
 async def single_summon(message, args):
     """
-    Simulates a single summon on a generic banner with no focus units.
+    Simulates a single summon on your current showcase.
+    To choose a showcase to summon on, use the `showcase` command.
     """
-    result, pity_progress = perform_summon(current_banner.perform_solo, message.channel.id, message.author.id)
-    await send_result(message.channel, [result], get_pity_explanation_text(current_banner, pity_progress))
-
-
-def get_pity_explanation_text(banner: core.Banner, pity_progress):
-    new_pity = banner.get_five_star_rate(pity_progress)
-    summons_left = ((-pity_progress - 1) % 10) + 1
-    return f"The 5* rate is now {new_pity}%. {summons_left} summons until the 5* rate increases."
+    result, result_text = db.perform_summon(message.channel.id, message.author.id, is_tenfold=False)
+    await send_result(message.channel, [result], result_text)
 
 
 async def send_result(channel, results, message_content):
@@ -68,35 +96,6 @@ async def send_result(channel, results, message_content):
         output_image.save(fp, format="png")
         fp.seek(0)
         await channel.send(message_content, file=discord.File(fp, filename=output_filename))
-
-
-def create_db():
-    with contextlib.closing(sqlite3.connect(pity_file)) as connection:
-        with connection:
-            with contextlib.closing(connection.cursor()) as cursor:
-                cursor.execute("CREATE TABLE IF NOT EXISTS pity (channel, user, rate, PRIMARY KEY (channel, user))")
-
-
-def perform_summon(summon_func, channel_id: int, user_id: int):
-    if channel_id and user_id:
-        with contextlib.closing(sqlite3.connect(pity_file)) as connection:
-            with connection:
-                with contextlib.closing(connection.cursor()) as cursor:
-                    cursor.execute(
-                        "SELECT rate FROM pity WHERE channel = ? AND user = ?",
-                        (channel_id, user_id)
-                    )
-                    result = cursor.fetchone()
-                    pity_progress = 0 if result is None else result[0]
-                    summon_results, new_pity_progress = summon_func(pity_progress)
-                    cursor.execute(
-                        "INSERT OR REPLACE INTO pity VALUES (?, ?, ?)",
-                        (channel_id, user_id, new_pity_progress)
-                    )
-
-                    return summon_results, new_pity_progress
-    else:
-        raise ValueError(f"Invalid channel id '{channel_id}' or user id '{user_id}'")
 
 
 def generate_result_positions(canvas_size):

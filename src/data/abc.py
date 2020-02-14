@@ -13,11 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 class Entity(abc.ABC):
-    __initialised = False
-
     @classmethod
     @abc.abstractmethod
     def init(cls):
+        """
+        Sets up entity property mapping.
+        """
         pass
 
     @abc.abstractmethod
@@ -190,7 +191,9 @@ class EntityRepository:
         offset = 0
         result_items = []
         while True:
-            async with session.get(self.get_query_url(limit, offset)) as response:
+            query_url = self.get_query_url(limit, offset)
+            logger.info(f"Querying url {query_url}")
+            async with session.get(query_url) as response:
                 result_json = await response.json()
                 inner_result_list = result_json["cargoquery"]
                 query_items = [d["title"] for d in inner_result_list]

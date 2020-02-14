@@ -1,10 +1,53 @@
+import discord
+import textwrap
+import util
 import data
-import typing
 import random
+import aiohttp
+import hook
+import config
 
 
-class Banner:
-    def __init__(self, featured: typing.List[typing.Union[data.Adventurer, data.Dragon]]):
+default_showcase: "Showcase" = None
+
+
+class Showcase(data.abc.Entity):
+    """
+    Represents a summon showcase and some of its associated data
+    """
+
+    repository: data.abc.EntityRepository = None
+
+    @classmethod
+    def get_all(cls):
+        return cls.repository.data
+
+    @classmethod
+    def init(cls):
+        def get_entity_list(names, key_mapper):
+            if not mf.text(names):
+                return []
+            entity_name_list = mf.text(names).split(", ")
+            return list(filter(None, map(key_mapper, entity_name_list)))
+
+        mapper = data.abc.EntityMapper(Showcase)
+        cls.repository = data.abc.EntityRepository(mapper, "SummonShowcase")
+
+        mp = mapper.add_property  # mapper property
+        mf = data.abc.EntityMapper  # mapper functions
+
+        mp("name", lambda s: s.replace(" (Summon Showcase)", ""), "Title")
+        mp("page_name", mf.text, "Title")
+        mp("start_date", mf.date, "StartDate")
+        mp("end_date", mf.date, "EndDate")
+        mp("type", mf.text, "Type")
+        mp("focus_adventurers", lambda s: get_entity_list(s, data.Adventurer.find), "Adventurer")
+        mp("focus_dragons", lambda s: get_entity_list(s, data.Dragon.find), "Dragons")
+
+        mapper.post_processor = Showcase.initialise
+
+    def initialise(self):
+        featured = self.focus_adventurers + self.focus_dragons
         self.is_gala = any(e.availability == "Gala" for e in featured)
         self.entity_pools = {r: {f: {t: [] for t in (data.Adventurer, data.Dragon)} for f in ("f", "n")} for r in range(3, 6)}
 
@@ -12,10 +55,67 @@ class Banner:
             if e.rarity:
                 self.entity_pools[e.rarity]["f"][type(e)].append(e)
 
-        normal_pool = (set(data.Adventurer.get_all().values()) | set(data.Dragon.get_all().values())) - set(featured)
+        normal_pool = (set(data.Adventurer.get_all().values()) | set(data.Dragon.get_all().values())) - set(
+            featured)
         for e in normal_pool:
             if e.rarity and (e.availability == "Permanent" or (self.is_gala and e.availability == "Gala")):
                 self.entity_pools[e.rarity]["n"][type(e)].append(e)
+
+        return True
+
+    def __init__(self):
+        self.name = ""
+        self.page_name = ""
+        self.type = ""
+        self.start_date = ""
+        self.end_date = ""
+        self.focus_adventurers = []
+        self.focus_dragons = []
+        self.is_gala = False
+        self.entity_pools = {}
+
+    @classmethod
+    def find(cls, key: str):
+        key = data.abc.EntityMapper.text(key)
+        if key is None:
+            return None
+        return cls.repository.get_from_key(key.lower())
+
+    def __str__(self):
+        return self.name
+
+    def get_key(self):
+        if self.name:
+            return self.name.lower()
+        else:
+            return None
+
+    def get_embed(self) -> discord.Embed:
+        fmt = data.abc.EmbedFormatter()
+
+        title = fmt.format("{e.name} (Summon Showcase)", e=self)
+        focus_adventurers = "\n".join(map(data.Adventurer.get_title_with_emotes, self.focus_adventurers))
+        focus_dragons = "\n".join(map(data.Dragon.get_title_with_emotes, self.focus_dragons))
+        focus_adventurers_section = f"**Focus Adventurers**\n{focus_adventurers}\n" if focus_adventurers else ""
+        focus_dragon_section = f"**Focus Dragons**\n{focus_dragons}\n" if focus_dragons else ""
+
+        description = fmt.format(
+            textwrap.dedent("""
+                {focus_adv!o}{focus_drg!o}
+                **Start date:** {e.start_date!d}
+                **End date:** {e.end_date!d}
+                """),
+            e=self,
+            focus_adv=focus_adventurers_section,
+            focus_drg=focus_dragon_section
+        )
+
+        return discord.Embed(
+            title=title,
+            description=description,
+            url=util.get_link(self.page_name),
+            color=data.get_rarity_colour(5)
+        )
 
     def get_pool_rates(self, pity):
         rates = {r: {f: {t: 0 for t in (data.Adventurer, data.Dragon)} for f in ("f", "n")} for r in range(3, 6)}
@@ -101,6 +201,43 @@ class Banner:
         return results, pity_progress
 
 
+async def update_repository():
+    global default_showcase
+    async with aiohttp.ClientSession() as session:
+        await Showcase.repository.update_data(session)
+
+    default_showcase = Showcase()
+    default_showcase.name = "none"
+    default_showcase.initialise()
+
+
+def can_summon_on_showcase(showcase: Showcase):
+    if showcase.name in config.get_global("general")["summonable_showcase_blacklist"]:
+        return False
+
+    return showcase.type == "Regular" and not showcase.name.startswith("Dragon Special")
+
+
+def get_summonable_showcase(name: str):
+    if name.lower() == "none":
+        return default_showcase
+    else:
+        showcase = Showcase.find(name)
+        if showcase and can_summon_on_showcase(showcase):
+            return showcase
+
+        return None
+
+
+def get_summonable_showcase_list():
+    showcases = sorted(Showcase.get_all().values(), key=lambda sc: sc.start_date, reverse=True)
+    return list(filter(can_summon_on_showcase, showcases))
+
+
+def get_summons_remaining(pity_progress):
+    return ((-pity_progress - 1) % 10) + 1
+
+
 def _adjust_rates(rates, guaranteed_5=False, guaranteed_4=False):
     if guaranteed_5:
         _set_rarity_rate(rates[3], 0)
@@ -119,3 +256,7 @@ def _set_rarity_rate(rarity_rates, new_rate):
             type_pool[e_type] *= rate_scale
 
     return old_rate
+
+
+Showcase.init()
+hook.Hook.get("data_downloaded").attach(update_repository)
