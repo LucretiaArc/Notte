@@ -36,7 +36,7 @@ async def select_showcase(message, args):
     args = args.strip()
     if args == "list":
         await message.channel.send(", ".join(sc.name for sc in core.get_summonable_showcase_list()))
-    elif args.startswith("info"):
+    elif args.split(" ")[0].lower() == "info":
         showcase_name = args[5:].strip()
         if not showcase_name:
             showcase_info, showcase = db.get_current_showcase_info(message.channel.id, message.author.id)
