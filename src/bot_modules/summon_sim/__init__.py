@@ -6,14 +6,9 @@ from PIL import Image
 from . import core, db, icons
 
 logger = logging.getLogger(__name__)
-client = None
-default_showcase: core.Showcase = None
 
 
 async def on_init(discord_client):
-    global client
-    client = discord_client
-
     db.create_db()
 
     hook.Hook.get("public!tenfold").attach(tenfold_summon)
@@ -82,7 +77,7 @@ async def send_result(channel, results, message_content):
 
     if len(results) == 10:
         output_filename = "tenfold.png"
-        result_images = [await icons.get_entity_icon(e) for e in results]
+        result_images = [icons.get_entity_icon(e) for e in results]
         output_img_size = (515, 707)
         output_image = Image.new("RGBA", output_img_size)
         result_positions = generate_result_positions(output_img_size)
@@ -90,10 +85,15 @@ async def send_result(channel, results, message_content):
             output_image.paste(img, pos)
     else:
         output_filename = "single.png"
-        output_image = await icons.get_entity_icon(results[0])
+        output_image = icons.get_entity_icon(results[0])
 
     with io.BytesIO() as fp:
-        output_image.save(fp, format="png")
+        # profiling results for this function (except sending the message)
+        # level     time (s)    size (kb)
+        # 6         0.117       255
+        # 1         0.050       323
+        # 0         0.036       1423
+        output_image.save(fp, format="png", compress_level=1)
         fp.seek(0)
         await channel.send(message_content, file=discord.File(fp, filename=output_filename))
 

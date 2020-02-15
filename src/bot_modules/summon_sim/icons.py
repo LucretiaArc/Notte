@@ -4,6 +4,7 @@ import logging
 import util
 import data
 import aiohttp
+import aiofiles
 import asyncio
 import urllib.parse
 import json
@@ -71,11 +72,11 @@ async def _get_entity_icon_urls(session: aiohttp.ClientSession, icon_names):
 
 async def _fetch_entity_icon(session: aiohttp.ClientSession, file_name, url):
     async with session.get(url) as response:
-        with open(util.path(f"data/icons/{file_name}"), "wb") as file:
+        async with aiofiles.open(util.path(f"data/icons/{file_name}"), "wb") as file:
             file.write(await response.read())
 
 
-async def get_entity_icon(entity):
+def get_entity_icon(entity):
     try:
         icon_image = Image.open(util.path(f"data/icons/{entity.icon_name}.png"))
     except FileNotFoundError:
