@@ -98,7 +98,7 @@ def get_entity_icon(entity: typing.Union[data.Adventurer, data.Dragon]):
 @contextlib.contextmanager
 def _get_image_fp(image):
     with io.BytesIO() as fp:
-        # profiling results for encoding this png
+        # profiling results for encoding tenfold png
         # level     time (s)    size (kb)
         # 6         0.098       255
         # 1         0.031       323

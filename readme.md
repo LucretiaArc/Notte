@@ -29,6 +29,7 @@ Perform all of the following steps in the environment you will be using to run t
 | /src | Application code |
 | /config | Static bot configuration files. |
 | /assets | Assets used by the bot for functionality. |
+| /scripts | Utility scripts which run independently of the bot. |
 | /data | Contains all data written by the bot to disk, except for log files. Automatically generated at runtime. |
 | /data/config | Dynamic bot configuration files. |
 | /data/icons | Icons automatically downloaded for use in the summoning simulator module. |
