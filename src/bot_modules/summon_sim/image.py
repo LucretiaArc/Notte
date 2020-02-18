@@ -3,12 +3,15 @@ import hook
 import logging
 import util
 import data
+import typing
 import aiohttp
 import aiofiles
 import asyncio
 import urllib.parse
 import json
 import itertools
+import contextlib
+import io
 from PIL import Image
 
 logger = logging.getLogger(__name__)
@@ -76,18 +79,73 @@ async def _fetch_entity_icon(session: aiohttp.ClientSession, file_name, url):
             file.write(await response.read())
 
 
-def get_entity_icon(entity):
+def get_entity_icon(entity: typing.Union[data.Adventurer, data.Dragon]):
     try:
-        icon_image = Image.open(util.path(f"data/icons/{entity.icon_name}.png"))
+        return Image.open(util.path(f"data/icons/{entity.icon_name}.png"))
     except FileNotFoundError:
         if isinstance(entity, data.Adventurer):
-            icon_image = Image.open(util.path("assets/frame_adventurer.png"))
+            return Image.open(util.path("assets/frame_adventurer.png"))
         elif isinstance(entity, data.Dragon):
-            icon_image = Image.open(util.path("assets/frame_dragon.png"))
+            return Image.open(util.path("assets/frame_dragon.png"))
         else:
             raise ValueError(f"Unexpected entity type {type(entity)}")
 
-    return icon_image
+
+@contextlib.contextmanager
+def get_single_image_fp(entity: typing.Union[data.Adventurer, data.Dragon]):
+    try:
+        with open(util.path(f"data/icons/{entity.icon_name}.png"), "rb") as fp:
+            yield fp
+    except FileNotFoundError:
+        if isinstance(entity, data.Adventurer):
+            with open(util.path("assets/frame_adventurer.png"), "rb") as fp:
+                yield fp
+        elif isinstance(entity, data.Dragon):
+            with open(util.path("assets/frame_dragon.png"), "rb") as fp:
+                yield fp
+        else:
+            raise ValueError(f"Unexpected entity type {type(entity)}")
+
+
+@contextlib.contextmanager
+def get_tenfold_image_fp(results: list):
+    result_images = [get_entity_icon(e) for e in results]
+    output_image_size, result_positions = generate_result_image_constraints((2, 3, 3, 2))
+    output_image = Image.new("RGBA", output_image_size)
+    for img, pos in zip(result_images, result_positions):
+        output_image.paste(img, pos)
+
+    with io.BytesIO() as fp:
+        # profiling results for encoding this png
+        # level     time (s)    size (kb)
+        # 6         0.098       255
+        # 1         0.031       323
+        # 0         0.014       1423
+        output_image.save(fp, format="png", compress_level=1)
+        fp.seek(0)
+        yield fp
+
+
+def generate_result_image_constraints(row_capacities):
+    margin = (-17, -17)
+    offset = (-10, -10)
+    item_size = (160, 160)
+    item_sep = (26, 28)
+    max_cols = max(row_capacities)
+    num_rows = len(row_capacities)
+    canvas_w = item_size[0] * max_cols + item_sep[0] * (max_cols - 1) + margin[0]
+    canvas_h = item_size[1] * num_rows + item_sep[1] * (num_rows - 1) + margin[1]
+
+    positions = []
+    for y, capacity in enumerate(row_capacities):
+        row_offset = (item_size[0] + item_sep[0]) * (max(row_capacities) - capacity) // 2
+        for x in range(capacity):
+            positions.append((
+                offset[0] + x * (item_size[0] + item_sep[0]) + row_offset,
+                offset[1] + y * (item_size[1] + item_sep[1])
+            ))
+
+    return (canvas_w, canvas_h), positions
 
 
 hook.Hook.get("on_init").attach(on_init)

@@ -58,15 +58,17 @@ def set_showcase(channel_id: int, user_id: int, showcase: core.Showcase):
     return f"Now summoning on {showcase_name}. Your 5★ rate has been reset."
 
 
-def _get_rate_explanation_string(rate: float, remaining: int, after_summon: bool):
+def _get_rate_explanation_string(showcase: core.Showcase, pity_progress: int, after_summon: bool):
+    rate = showcase.get_five_star_rate(pity_progress)
     if after_summon:
         current_rate_text = f"The 5★ rate is now {rate}%. "
     else:
         current_rate_text = f"Your 5★ rate is {rate}%. "
 
-    if rate == 9:
+    if showcase.is_pity_capped(pity_progress):
         return current_rate_text + f"Your next summon is guaranteed to contain a 5★. "
     else:
+        remaining = core.get_summons_remaining(pity_progress)
         return current_rate_text + f"{remaining} more summon{'s' if remaining > 1 else ''} until the 5★ rate increases. "
 
 
@@ -75,9 +77,7 @@ def get_current_showcase_info(channel_id: int, user_id: int):
     with get_cursor(pity_file) as cursor:
         showcase, pity_progress = _get_showcase_info(cursor, channel_id, user_id)
     showcase_name = showcase.name if showcase.name != "none" else "a generic showcase"
-    five_star_rate = showcase.get_five_star_rate(pity_progress)
-    summons_left = core.get_summons_remaining(pity_progress)
-    rate_explanation = _get_rate_explanation_string(five_star_rate, summons_left, False)
+    rate_explanation = _get_rate_explanation_string(showcase, pity_progress, False)
     return f"Currently summoning on {showcase_name}. " + rate_explanation, showcase
 
 
@@ -89,6 +89,4 @@ def perform_summon(channel_id: int, user_id: int, is_tenfold: bool):
         summon_results, new_pity_progress = summon_func(pity_progress)
         _set_showcase_info(cursor, channel_id, user_id, showcase, new_pity_progress)
 
-    new_rate = showcase.get_five_star_rate(new_pity_progress)
-    summons_left = core.get_summons_remaining(new_pity_progress)
-    return summon_results, _get_rate_explanation_string(new_rate, summons_left, True)
+    return summon_results, _get_rate_explanation_string(showcase, new_pity_progress, True)
