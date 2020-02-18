@@ -15,6 +15,10 @@ import io
 from PIL import Image
 
 logger = logging.getLogger(__name__)
+glow_image = {
+    data.Adventurer: Image.open(util.path("assets/glow_adventurer.png")),
+    data.Dragon: Image.open(util.path("assets/glow_dragon.png")),
+}
 
 
 async def on_init(discord_client):
@@ -92,43 +96,49 @@ def get_entity_icon(entity: typing.Union[data.Adventurer, data.Dragon]):
 
 
 @contextlib.contextmanager
-def get_single_image_fp(entity: typing.Union[data.Adventurer, data.Dragon]):
-    try:
-        with open(util.path(f"data/icons/{entity.icon_name}.png"), "rb") as fp:
-            yield fp
-    except FileNotFoundError:
-        if isinstance(entity, data.Adventurer):
-            with open(util.path("assets/frame_adventurer.png"), "rb") as fp:
-                yield fp
-        elif isinstance(entity, data.Dragon):
-            with open(util.path("assets/frame_dragon.png"), "rb") as fp:
-                yield fp
-        else:
-            raise ValueError(f"Unexpected entity type {type(entity)}")
-
-
-@contextlib.contextmanager
-def get_tenfold_image_fp(results: list):
-    result_images = [get_entity_icon(e) for e in results]
-    output_image_size, result_positions = generate_result_image_constraints((2, 3, 3, 2))
-    output_image = Image.new("RGBA", output_image_size)
-    for img, pos in zip(result_images, result_positions):
-        output_image.paste(img, pos)
-
+def _get_image_fp(image):
     with io.BytesIO() as fp:
         # profiling results for encoding this png
         # level     time (s)    size (kb)
         # 6         0.098       255
         # 1         0.031       323
         # 0         0.014       1423
-        output_image.save(fp, format="png", compress_level=1)
+        image.save(fp, format="png", compress_level=1)
         fp.seek(0)
         yield fp
 
 
+@contextlib.contextmanager
+def get_single_image_fp(entity: typing.Union[data.Adventurer, data.Dragon]):
+    if entity.rarity == 5:
+        output_image = Image.new("RGBA", (160, 160))
+        output_image.paste(glow_image[type(entity)])
+        output_image.alpha_composite(get_entity_icon(entity))
+    else:
+        output_image = get_entity_icon(entity)
+
+    with _get_image_fp(output_image) as fp:
+        yield fp
+
+
+@contextlib.contextmanager
+def get_tenfold_image_fp(results: list):
+    output_image_size, result_positions = generate_result_image_constraints((2, 3, 3, 2))
+    output_image = Image.new("RGBA", output_image_size)
+    for entity, pos in zip(results, result_positions):
+        if entity.rarity == 5:
+            output_image.paste(glow_image[type(entity)], pos)
+            output_image.alpha_composite(get_entity_icon(entity), pos)
+        else:
+            output_image.paste(get_entity_icon(entity), pos)
+
+    with _get_image_fp(output_image) as fp:
+        yield fp
+
+
 def generate_result_image_constraints(row_capacities):
-    margin = (-17, -17)
-    offset = (-10, -10)
+    margin = (0, 0)
+    offset = (0, 0)
     item_size = (160, 160)
     item_sep = (26, 28)
     max_cols = max(row_capacities)
