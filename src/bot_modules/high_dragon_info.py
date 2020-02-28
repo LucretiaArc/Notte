@@ -7,13 +7,11 @@ import typing
 import math
 import util
 
-client = None
 hdt_encounter_queries = {}
 
 
 async def on_init(discord_client):
-    global client, hdt_encounter_queries
-    client = discord_client
+    global hdt_encounter_queries
     hdt_encounter_queries = generate_queries()
 
     hook.Hook.get("public!xmus").attach(xmus)

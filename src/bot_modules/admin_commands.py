@@ -2,10 +2,11 @@ import config
 import util
 import logging
 import hook
+import discord
 
 logger = logging.getLogger(__name__)
 
-client = None
+client: discord.Client = None
 
 
 async def on_init(discord_client):

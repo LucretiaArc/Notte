@@ -5,7 +5,7 @@ import util
 import data
 import hook
 
-client = None
+client: discord.Client = None
 
 
 async def on_init(discord_client):

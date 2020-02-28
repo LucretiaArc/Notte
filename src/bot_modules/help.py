@@ -8,7 +8,7 @@ import hook
 
 logger = logging.getLogger(__name__)
 
-client = None
+client: discord.Client = None
 
 
 async def on_init(discord_client):

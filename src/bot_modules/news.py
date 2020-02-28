@@ -13,7 +13,7 @@ import hook
 
 logger = logging.getLogger(__name__)
 
-client = None
+client: discord.Client = None
 news_icon = "https://cdn.discordapp.com/attachments/560454966154756107/599274542732410890/news.png"
 
 

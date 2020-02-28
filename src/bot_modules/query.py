@@ -15,7 +15,6 @@ import natsort
 
 logger = logging.getLogger(__name__)
 
-client = None
 resolver: "QueryResolver" = None
 query_config = None
 
@@ -75,8 +74,7 @@ class QueryResolver:
 
 
 async def on_init(discord_client):
-    global client, resolver, query_config
-    client = discord_client
+    global resolver, query_config
     resolver = QueryResolver()
     query_config = config.get_global("custom_query")
 

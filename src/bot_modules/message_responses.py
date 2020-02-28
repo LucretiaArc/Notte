@@ -1,13 +1,8 @@
 import util
 import hook
 
-client = None
-
 
 async def on_init(discord_client):
-    global client
-    client = discord_client
-
     hook.Hook.get("on_message").attach(handle_message)
 
 

@@ -3,13 +3,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-client = None
-
 
 async def on_init(discord_client):
-    global client
-    client = discord_client
-
     hook.Hook.get("public!void").attach(void_schedule)
     hook.Hook.get("public!mg").attach(mercurial_gauntlet)
     hook.Hook.get("public!issues").attach(ongoing_issues)

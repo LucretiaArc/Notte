@@ -7,14 +7,10 @@ import datetime
 
 logger = logging.getLogger(__name__)
 
-client = None
 gift_string = None
 
 
 async def on_init(discord_client):
-    global client
-    client = discord_client
-
     hook.Hook.get("on_reset").attach(update_gift_string)
     hook.Hook.get("public!gift").attach(gift_message)
 

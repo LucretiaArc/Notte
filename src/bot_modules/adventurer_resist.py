@@ -8,14 +8,10 @@ import hook
 
 logger = logging.getLogger(__name__)
 
-client = None
 resist_data = None
 
 
 async def on_init(discord_client):
-    global client
-    client = discord_client
-
     hook.Hook.get("data_downloaded").attach(update_data_store)
     hook.Hook.get("public!resist").attach(resist_search)
 

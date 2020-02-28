@@ -4,7 +4,7 @@ import random
 import config
 import hook
 
-client = None
+client: discord.Client = None
 statuses = []
 
 
