@@ -154,7 +154,7 @@ def generate_ascii_table(content: typing.List[list]):
         raise ValueError("Table must have at least one row")
 
     width = len(content[0])
-    max_widths = [max((len(str(l[x])) for l in content)) for x in range(width)]  # max width for each column
+    max_widths = [max((len(str(row[x])) for row in content)) for x in range(width)]  # max width for each column
 
     # generate table rows
     for y in range(height+1):

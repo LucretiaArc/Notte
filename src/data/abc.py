@@ -98,6 +98,7 @@ class EntityMapper:
                     invalid_key = self.inst_map_arg_keys[attr_name][args.index(None)]
                     raise KeyError(f"Invalid data key: {invalid_key}")
 
+                # noinspection PyBroadException
                 try:
                     value = map_func(*args)
                 except Exception:

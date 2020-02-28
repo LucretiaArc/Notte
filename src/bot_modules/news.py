@@ -264,6 +264,8 @@ async def exec_in_order(coroutines):
         await c
 
 
+# doesn't implement error(), which was removed from HTMLParser in Python 3.5
+# noinspection PyAbstractClass
 class TagStripper(html.parser.HTMLParser):
     def __init__(self):
         super().__init__()

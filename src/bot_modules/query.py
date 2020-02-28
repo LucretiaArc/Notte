@@ -5,7 +5,6 @@ import data
 import hook
 import logging
 import jellyfish
-import jellyfish._jellyfish as py_jellyfish
 import pybktree
 import config
 import util
@@ -23,16 +22,9 @@ query_config = None
 
 class QueryResolver:
     def __init__(self):
-        self.query_tree = pybktree.BKTree(QueryResolver.calculate_edit_distance)
+        self.query_tree = pybktree.BKTree(jellyfish.damerau_levenshtein_distance)
         self.query_map = {}
         self.max_query_len = 0
-
-    @staticmethod
-    def calculate_edit_distance(a, b):
-        try:
-            return jellyfish.damerau_levenshtein_distance(a, b)
-        except ValueError:
-            return py_jellyfish.damerau_levenshtein_distance(a, b)
 
     @staticmethod
     def get_match_threshold(input_string: str):
@@ -88,6 +80,7 @@ async def on_init(discord_client):
     resolver = QueryResolver()
     query_config = config.get_global("custom_query")
 
+    logger.info(f"Using {jellyfish.library} version of Jellyfish")
     initialise_keywords(resolver)
 
     hook.Hook.get("on_message").attach(scan_for_query)
