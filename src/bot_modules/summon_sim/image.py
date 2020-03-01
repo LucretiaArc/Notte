@@ -12,7 +12,7 @@ import json
 import itertools
 import contextlib
 import io
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 logger = logging.getLogger(__name__)
 glow_image = {
@@ -41,7 +41,7 @@ async def update_entity_icons():
             icon_urls = await _get_entity_icon_urls(session, required_icons)
             for file_name, url in icon_urls.items():
                 await _fetch_entity_icon(session, file_name, url)
-                await asyncio.sleep(10)  # don't use too much bandwidth all at once
+                await asyncio.sleep(2)  # don't use too much bandwidth all at once
 
         logger.info(f"Finished downloading {len(required_icons)} icons")
 
@@ -80,13 +80,18 @@ async def _get_entity_icon_urls(session: aiohttp.ClientSession, icon_names):
 async def _fetch_entity_icon(session: aiohttp.ClientSession, file_name, url):
     async with session.get(url) as response:
         async with aiofiles.open(util.path(f"data/icons/{file_name}"), "wb") as file:
-            file.write(await response.read())
+            await file.write(await response.read())
 
 
 def get_entity_icon(entity: typing.Union[data.Adventurer, data.Dragon]):
+    icon_path = util.path(f"data/icons/{entity.icon_name}.png")
     try:
-        return Image.open(util.path(f"data/icons/{entity.icon_name}.png"))
-    except FileNotFoundError:
+        return Image.open(icon_path)
+    except (FileNotFoundError, UnidentifiedImageError) as e:
+        if type(e) == UnidentifiedImageError:
+            os.remove(icon_path)
+            logger.warning(f"Bad image file {entity.icon_name}.png removed for reacquisition")
+
         if isinstance(entity, data.Adventurer):
             return Image.open(util.path("assets/frame_adventurer.png"))
         elif isinstance(entity, data.Dragon):
