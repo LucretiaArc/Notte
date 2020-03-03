@@ -132,7 +132,7 @@ def resolve_query(query: str, include_special_responses=False):
         match_content = resolver.resolve(search_term)
         if match_content:
             embed = match_content[0].copy()
-            if match_content[2] < 0.7:
+            if match_content[2] < 1:
                 embed.set_footer(text=f'Displaying result for "{match_content[1]}"')
 
     return embed or f"I'm not sure what \"{query}\" is."
@@ -237,6 +237,9 @@ def initialise_keywords(query_resolver: QueryResolver):
                     descriptions.append(f"a{w.tier} {element_name} {w.weapon_type.name}")
                     if w.tier == 1:
                         descriptions.append(f"{w.rarity}* {element_name} {w.weapon_type.name}")
+            elif w.name.startswith("Chimeratech") and w.tier:
+                for element_name in w.element.get_names():
+                    descriptions.append(f"ct{w.tier} {element_name} {w.weapon_type.name}")
 
         for desc in descriptions:
             add_query(desc, w.get_embed())
