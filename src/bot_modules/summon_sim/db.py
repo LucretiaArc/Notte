@@ -22,20 +22,26 @@ def _check_session(channel_id: int, user_id: int):
 
 def _get_showcase_info(cursor: sqlite3.Cursor, channel_id: int, user_id: int):
     cursor.execute(
-        "SELECT showcase, rate FROM pity WHERE channel = ? AND user = ?",
+        "SELECT showcase, rate, total_summons FROM pity WHERE channel = ? AND user = ?",
         (channel_id, user_id)
     )
     result = cursor.fetchone()
     if result is None:
-        return core.get_summonable_showcase("none"), 0
+        return core.get_summonable_showcase("none"), 0, 0
     else:
-        return core.get_summonable_showcase(result[0]), result[1]
+        return core.get_summonable_showcase(result[0]), result[1], result[2]
 
 
-def _set_showcase_info(cursor: sqlite3.Cursor, channel_id: int, user_id: int, showcase: core.Showcase, pity_progress: int):
+def _set_showcase_info(
+        cursor: sqlite3.Cursor,
+        channel_id: int,
+        user_id: int,
+        showcase: core.Showcase,
+        pity_progress: int,
+        total_summons: int):
     cursor.execute(
-        "INSERT OR REPLACE INTO pity VALUES (?, ?, ?, ?)",
-        (channel_id, user_id, pity_progress, showcase.name)
+        "INSERT OR REPLACE INTO pity VALUES (?, ?, ?, ?, ?)",
+        (channel_id, user_id, pity_progress, showcase.name, total_summons)
     )
 
 
@@ -47,46 +53,54 @@ def create_db():
             "user INTEGER,"
             "rate INTEGER,"
             "showcase TEXT,"
+            "total_summons INTEGER,"
             "PRIMARY KEY (channel, user))")
 
 
 def set_showcase(channel_id: int, user_id: int, showcase: core.Showcase):
     _check_session(channel_id, user_id)
     with get_cursor(pity_file) as cursor:
-        _set_showcase_info(cursor, channel_id, user_id, showcase, 0)
+        _set_showcase_info(cursor, channel_id, user_id, showcase, 0, 0)
     showcase_name = showcase.name if showcase.name != "none" else "a generic showcase"
-    return f"Now summoning on {showcase_name}. Your 5★ rate has been reset."
+    return f"Now summoning on {showcase_name}. Your 5★ rate and wyrmite counter have been reset."
 
 
-def _get_rate_explanation_string(showcase: core.Showcase, pity_progress: int, after_summon: bool):
+def _get_showcase_explanation_string(
+        showcase: core.Showcase,
+        pity_progress: int,
+        total_summons: int,
+        is_after_summon: bool):
     rate = showcase.get_five_star_rate(pity_progress)
-    if after_summon:
-        current_rate_text = f"The 5★ rate is now {rate}%. "
+    if is_after_summon:
+        output_text = f"The 5★ rate is now {rate}%. "
     else:
-        current_rate_text = f"Your 5★ rate is {rate}%. "
+        output_text = f"Your 5★ rate is {rate}%. "
 
     if showcase.is_pity_capped(pity_progress):
-        return current_rate_text + f"Your next summon is guaranteed to contain a 5★. "
+        output_text += f"Your next summon is guaranteed to contain a 5★. "
     else:
         remaining = core.get_summons_remaining(pity_progress)
-        return current_rate_text + f"{remaining} more summon{'s' if remaining > 1 else ''} until the 5★ rate increases. "
+        output_text += f"{remaining} more summon{'s' if remaining > 1 else ''} until the 5★ rate increases. "
+
+    return output_text + f"{total_summons * 120:,} wyrmite spent so far."
 
 
 def get_current_showcase_info(channel_id: int, user_id: int):
     _check_session(channel_id, user_id)
     with get_cursor(pity_file) as cursor:
-        showcase, pity_progress = _get_showcase_info(cursor, channel_id, user_id)
+        showcase, pity_progress, total_summons = _get_showcase_info(cursor, channel_id, user_id)
     showcase_name = showcase.name if showcase.name != "none" else "a generic showcase"
-    rate_explanation = _get_rate_explanation_string(showcase, pity_progress, False)
+    rate_explanation = _get_showcase_explanation_string(showcase, pity_progress, total_summons, False)
     return f"Currently summoning on {showcase_name}. " + rate_explanation, showcase
 
 
 def perform_summon(channel_id: int, user_id: int, is_tenfold: bool):
     _check_session(channel_id, user_id)
     with get_cursor(pity_file) as cursor:
-        showcase, pity_progress = _get_showcase_info(cursor, channel_id, user_id)
+        showcase, pity_progress, total_summons = _get_showcase_info(cursor, channel_id, user_id)
         summon_func = showcase.perform_tenfold if is_tenfold else showcase.perform_solo
         summon_results, new_pity_progress = summon_func(pity_progress)
-        _set_showcase_info(cursor, channel_id, user_id, showcase, new_pity_progress)
+        new_total_summons = total_summons + (10 if is_tenfold else 1)
+        _set_showcase_info(cursor, channel_id, user_id, showcase, new_pity_progress, new_total_summons)
 
-    return summon_results, _get_rate_explanation_string(showcase, new_pity_progress, True)
+    return summon_results, _get_showcase_explanation_string(showcase, new_pity_progress, new_total_summons, True)
