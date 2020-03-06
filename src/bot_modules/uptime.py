@@ -1,10 +1,7 @@
 import time
 import itertools
-import util
-import sys
 import hook
 import logging
-import config
 
 logger = logging.getLogger(__name__)
 
@@ -12,10 +9,7 @@ start_time = time.time()
 
 
 async def on_init(discord_client):
-    hook.Hook.get("public!uptime").attach(uptime)
-    if config.get_global("general")["enable_automatic_restart"]:
-        util.create_daily_hook("automatic_restart", 12, 0, 0)
-        hook.Hook.get("automatic_restart").attach(restart)
+    hook.Hook.get("owner!uptime").attach(uptime)
 
 
 def get_uptime_string(seconds):
@@ -31,15 +25,6 @@ def get_uptime_string(seconds):
 async def uptime(message, args):
     dt = round(time.time() - start_time)
     await message.channel.send(str(get_uptime_string(dt)))
-
-
-def restart():
-    dt = time.time() - start_time
-    if dt > 3600:
-        logger.info("Performing automatic restart")
-        sys.exit(0)
-    else:
-        logger.info("Skipping automatic restart")
 
 
 hook.Hook.get("on_init").attach(on_init)

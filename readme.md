@@ -2,7 +2,7 @@
 A Discord bot that provides information about Dragalia Lost, a mobile game developed by Cygames and published by Nintendo.
 
 ## Prerequisites
-* Python 3.7
+* Python 3.6
 * Discord bot user
 
 ## Installing

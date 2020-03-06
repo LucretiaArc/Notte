@@ -1,6 +1,7 @@
 import inspect
 import logging
 import asyncio
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -130,3 +131,39 @@ class Hook:
                     logger.exception(f"Exception in hook {self.__name} from async method:")
                 else:
                     raise e
+
+
+def create_daily_hook(name, hour, minute=0, second=0):
+    """
+    Schedules a new hook to be called at the same time every day. Time is given in UTC timezone.
+    :param name: name of the hook to be scheduled
+    :param hour: hour at which to call the hook
+    :param minute: minute at which to call the hook
+    :param second: second at which to call the hook
+    """
+
+    scheduled_hook = Hook.get(name)
+
+    def scheduled_call():
+        logger.info("Running scheduled hook " + name)
+        asyncio.ensure_future(scheduled_hook())
+        schedule_at_time(scheduled_call, hour, minute, second)
+
+    schedule_at_time(scheduled_call, hour, minute, second)
+
+
+def schedule_at_time(method, hour, minute=0, second=0, microsecond=0):
+    """
+    Schedules the provided synchronous method for the next occurrence of the given UTC wall clock time. e.g. if hour=14,
+    minute=30, second=24, the method will be scheduled to run the next time it is 14:30:24 UTC. If the next occurrence
+    is to be within 100ms, the method will be scheduled for the next day.
+    :param method: the method to schedule
+    :param hour: hour at which to call the method
+    :param minute: minute at which to call the method
+    :param second: second at which to call the method
+    :param microsecond: microsecond at which to call the method
+    """
+    utc_now = datetime.datetime.utcnow()
+    utc_next = utc_now.replace(hour=hour, minute=minute, second=second, microsecond=microsecond)
+    time_delta = ((utc_next - utc_now).total_seconds() - 0.1) % 86400 + 0.1  # add 100ms safety
+    asyncio.get_event_loop().call_later(time_delta, method)

@@ -7,7 +7,6 @@ import logging
 import jellyfish
 import pybktree
 import config
-import util
 import typing
 import collections
 import textwrap
@@ -104,6 +103,23 @@ async def scan_for_query(message):
                     await message.channel.send(response)
                 elif isinstance(response, discord.Embed):
                     await message.channel.send(embed=response)
+
+
+async def resolve_keywords(message, args):
+    max_dist = QueryResolver.get_match_threshold(args)
+    await message.channel.send(
+        readable_list([f'"{key}" ({int(100 * (1 - dist / max_dist))}%)' for dist, key in resolver.match(args)])
+        or "No results found."
+    )
+
+
+def rebuild_resolver():
+    global resolver
+    logger.info("Rebuilding query resolver...")
+    new_resolver = QueryResolver()
+    initialise_keywords(new_resolver)
+    resolver = new_resolver
+    logger.info("Query resolver rebuilt.")
 
 
 def resolve_query(query: str, include_special_responses=False):
@@ -297,21 +313,20 @@ def initialise_keywords(query_resolver: QueryResolver):
     logger.info(f"Determined maximum query length {query_resolver.max_query_len}")
 
 
-def rebuild_resolver():
-    global resolver
-    logger.info("Rebuilding query resolver...")
-    new_resolver = QueryResolver()
-    initialise_keywords(new_resolver)
-    resolver = new_resolver
-    logger.info("Query resolver rebuilt.")
+def readable_list(items, last_separator="and") -> str:
+    """
+    Formats a list of strings to fit in an english sentence. For example:
+    ["a"] -> "a"
+    ["a", "b'] -> "a and b"
+    ["a", "b", "c", "d"] -> "a, b, c, and d"
+    :param items: list of items to turn into an english list.
+    :param last_separator: separator word to use before the last item. This is "and" in the above examples.
+    :return: string representing the list of items
+    """
+    if len(items) < 3:
+        return f" {last_separator} ".join(items)
 
-
-async def resolve_keywords(message, args):
-    max_dist = QueryResolver.get_match_threshold(args)
-    await message.channel.send(
-        util.readable_list([f'"{key}" ({int(100 * (1 - dist / max_dist))}%)' for dist, key in resolver.match(args)])
-        or "No results found."
-    )
+    return ", ".join(items[:-1]) + f", {last_separator} {items[-1]}"
 
 
 hook.Hook.get("on_init").attach(on_init)

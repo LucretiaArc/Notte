@@ -27,7 +27,7 @@ async def gift_message(message, args):
 async def update_gift_string():
     global gift_string
 
-    reset_day = util.get_reset_day()
+    reset_day = get_reset_day()
 
     if reset_day >= 5:
         gift_target = "your favourite dragon! " + util.get_emote("notte_smile")
@@ -59,6 +59,16 @@ async def update_gift_string():
             gift_target += util.get_emote(d.element) + " " + d.full_name
 
     gift_string = "It's " + calendar.day_name[reset_day] + ", so give your best gift to " + gift_target
+
+
+def get_reset_day():
+    """
+    Returns the weekday of the most recent reset.
+    :return: The weekday of the most recent reset, from 0 to 6. 0 is Monday, 6 is Sunday.
+    """
+    utc_now = datetime.datetime.utcnow()
+    utc_today_reset = utc_now.replace(hour=6, minute=0, second=0, microsecond=0)
+    return (utc_now.weekday() - (1 if utc_now < utc_today_reset else 0)) % 7
 
 
 hook.Hook.get("on_init").attach(on_init)

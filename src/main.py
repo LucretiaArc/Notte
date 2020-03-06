@@ -6,6 +6,7 @@ import util
 import config
 import data
 import log_config
+import hook
 from hook import Hook
 
 # set up console logging, defer logging channel setup until client is initialised
@@ -72,10 +73,10 @@ async def on_guild_join(guild: discord.Guild):
     await Hook.get("on_guild_join")(guild)
 
 
-util.create_daily_hook("on_reset", 6, 0, 1)
-util.create_daily_hook("before_reset", 5, 59, 54)
-util.create_daily_hook("download_data", 5, 59, 0)
-util.create_daily_hook("download_data_delayed", 12, 0, 0)
+hook.create_daily_hook("on_reset", 6, 0, 1)
+hook.create_daily_hook("before_reset", 5, 59, 54)
+hook.create_daily_hook("download_data", 5, 59, 0)
+hook.create_daily_hook("download_data_delayed", 12, 0, 0)
 
 
 client.run(os.environ["DISCORD_CLIENT_TOKEN"])
