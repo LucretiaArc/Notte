@@ -51,7 +51,7 @@ class WriteableConfig(Config):
 
 static_config_cache = {}
 guild_config_cache: typing.Dict[str, GuildConfig] = {}
-writeable_config_cache: WriteableConfig = None
+writeable_config_cache: typing.Optional[WriteableConfig] = None
 
 
 def get_global(path: str) -> dict:

@@ -6,8 +6,8 @@ import re
 import util
 import textwrap
 import datetime
-import typing
 import logging
+from typing import List, Optional
 from data import abc
 from ._static import Element, WeaponType, DragonGift, get_rarity_colour
 
@@ -92,22 +92,22 @@ class Adventurer(abc.Entity):
         self.description = ""
         self.obtained = ""
         self.availability = ""
-        self.release_date: datetime.datetime = None
-        self.weapon_type: WeaponType = None
+        self.release_date: Optional[datetime.datetime] = None
+        self.weapon_type: Optional[WeaponType] = None
         self.rarity = 0
-        self.element: Element = None
+        self.element: Optional[Element] = None
         self.max_hp = 0
         self.max_str = 0
         self.max_might = 0
         self.max_nodes = 0
         self.icon_name = ""
 
-        self.skill_1: Skill = None
-        self.skill_2: Skill = None
-        self.ability_1: typing.List[Ability] = []
-        self.ability_2: typing.List[Ability] = []
-        self.ability_3: typing.List[Ability] = []
-        self.coability: typing.List[CoAbility] = []
+        self.skill_1: Optional[Skill] = None
+        self.skill_2: Optional[Skill] = None
+        self.ability_1: List[Ability] = []
+        self.ability_2: List[Ability] = []
+        self.ability_3: List[Ability] = []
+        self.coability: List[CoAbility] = []
 
     def __str__(self):
         return self.full_name
@@ -231,18 +231,18 @@ class Dragon(abc.Entity):
         self.description = ""
         self.obtained = ""
         self.availability = ""
-        self.release_date: datetime.datetime = None
+        self.release_date: Optional[datetime.datetime] = None
         self.rarity = 0
-        self.element: Element = None
+        self.element: Optional[Element] = None
         self.max_hp = 0
         self.max_str = 0
         self.max_might = 0
-        self.favourite_gift: DragonGift = None
+        self.favourite_gift: Optional[DragonGift] = None
         self.icon_name = ""
 
-        self.skill: Skill = None
-        self.ability_1: typing.List[Ability] = []
-        self.ability_2: typing.List[Ability] = []
+        self.skill: Optional[Skill] = None
+        self.ability_1: List[Ability] = []
+        self.ability_2: List[Ability] = []
 
     def __str__(self):
         return self.full_name
@@ -352,14 +352,14 @@ class Wyrmprint(abc.Entity):
         self.rarity = 0
         self.obtained = []
         self.availability = ""
-        self.release_date: datetime.datetime = None
+        self.release_date: Optional[datetime.datetime] = None
         self.max_hp = 0
         self.max_str = 0
         self.max_might = 0
 
-        self.ability_1: typing.List[Ability] = []
-        self.ability_2: typing.List[Ability] = []
-        self.ability_3: typing.List[Ability] = []
+        self.ability_1: List[Ability] = []
+        self.ability_2: List[Ability] = []
+        self.ability_3: List[Ability] = []
 
     def __str__(self):
         return self.name
@@ -510,8 +510,8 @@ class Weapon(abc.Entity):
     def __init__(self):
         self.name = ""
         self.rarity = 0
-        self.element: Element = None
-        self.weapon_type: WeaponType = None
+        self.element: Optional[Element] = None
+        self.weapon_type: Optional[WeaponType] = None
         self.obtained = ""
         self.availability = ""
 
@@ -519,14 +519,14 @@ class Weapon(abc.Entity):
         self.max_str = 0
         self.max_might = 0
 
-        self.skill: Skill = None
-        self.ability_1: Ability = None
-        self.ability_2: Ability = None
+        self.skill: Optional[Skill] = None
+        self.ability_1: Optional[Ability] = None
+        self.ability_2: Optional[Ability] = None
 
         self.crafting_materials = {}
-        self.crafted_from: Weapon = None
-        self.crafted_to: typing.List[Weapon] = []
-        self.tier: int = None
+        self.crafted_from: Optional[Weapon] = None
+        self.crafted_to: List[Weapon] = []
+        self.tier: int = Optional[None]
 
     def __str__(self):
         return self.name
@@ -688,8 +688,8 @@ class Skill(abc.Entity):
 
     def __init__(self):
         self.name = ""
-        self.levels: typing.List[Skill.SkillLevel] = []
-        self.owner: typing.List[abc.Entity] = []  # updated in postprocess
+        self.levels: List[Skill.SkillLevel] = []
+        self.owner: List[abc.Entity] = []  # updated in postprocess
 
     def __str__(self):
         return self.name
