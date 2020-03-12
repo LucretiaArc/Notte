@@ -12,6 +12,7 @@ async def on_init(discord_client):
     hook.Hook.get("public!tenfold").attach(tenfold_summon)
     hook.Hook.get("public!single").attach(single_summon)
     hook.Hook.get("public!showcase").attach(select_showcase)
+    hook.Hook.get("public!rates").attach(rates)
 
 
 async def select_showcase(message, args):
@@ -29,27 +30,35 @@ async def select_showcase(message, args):
     """
     args = args.strip()
     if args == "list":
-        await message.channel.send(", ".join(sc.name for sc in core.get_summonable_showcase_list()))
+        showcase_list = sorted(core.SimShowcase.showcases.values(), key=lambda sc: sc.showcase.start_date, reverse=True)
+        await message.channel.send(", ".join(sc.showcase.name for sc in showcase_list))
     elif args.split(" ")[0].lower() == "info" or not args:
         showcase_name = args[5:].strip()
         if not showcase_name:
-            showcase_info, showcase = db.get_current_showcase_info(message.channel.id, message.author.id)
-            if showcase == core.get_summonable_showcase("none"):
+            showcase_info, sim_showcase = db.get_current_showcase_info(message.channel.id, message.author.id)
+            if sim_showcase == core.SimShowcase.default_showcase:
                 await message.channel.send(showcase_info)
             else:
-                await message.channel.send(showcase_info, embed=showcase.get_embed())
+                await message.channel.send(showcase_info, embed=sim_showcase.showcase.get_embed())
         else:
-            showcase = core.get_summonable_showcase(showcase_name)
-            if showcase and showcase != core.get_summonable_showcase("none"):
-                await message.channel.send(embed=showcase.get_embed())
+            sim_showcase = core.SimShowcase.get(showcase_name)
+            if sim_showcase and sim_showcase != core.SimShowcase.default_showcase:
+                await message.channel.send(embed=sim_showcase.showcase.get_embed())
             else:
                 await message.channel.send("I don't know that showcase! Use `showcase list` to see the list of showcases.")
     else:
-        showcase = core.get_summonable_showcase(args)
-        if showcase:
-            await message.channel.send(db.set_showcase(message.channel.id, message.author.id, showcase))
+        sim_showcase = core.SimShowcase.get(args)
+        if sim_showcase:
+            await message.channel.send(db.set_showcase(message.channel.id, message.author.id, sim_showcase))
         else:
             await message.channel.send("I don't know that showcase! Use `showcase list` to see the list of showcases.")
+
+
+async def rates(message, args):
+    """
+    Shows a rate breakdown for your current banner.
+    """
+    await message.channel.send(db.get_rate_breakdown(message.channel.id, message.author.id))
 
 
 async def tenfold_summon(message, args):

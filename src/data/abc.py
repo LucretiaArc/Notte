@@ -139,6 +139,10 @@ class EntityMapper:
         return util.safe_int(s, None)
 
     @staticmethod
+    def int0(s: str):
+        return util.safe_int(s, 0)
+
+    @staticmethod
     def date(s: str):
         if not s:
             return None

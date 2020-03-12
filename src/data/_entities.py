@@ -34,10 +34,10 @@ class Adventurer(abc.Entity):
         mf = abc.EntityMapper  # mapper functions
 
         def max_stat(max_limit_break, max_50, max_70, mc_50_bonus, *plus_hp):
-            if int(max_limit_break) >= 5:
-                return int(max_70) + int(mc_50_bonus) + sum(map(int, plus_hp))
+            if mf.int0(max_limit_break) >= 5:
+                return mf.int0(max_70) + mf.int0(mc_50_bonus) + sum(map(mf.int0, plus_hp))
             else:
-                return int(max_50) + int(mc_50_bonus) + sum(map(int, plus_hp[:5]))
+                return mf.int0(max_50) + mf.int0(mc_50_bonus) + sum(map(mf.int0, plus_hp[:5]))
 
         mp("full_name", mf.text, "FullName")
         mp("name", mf.text, "Name")
@@ -51,7 +51,7 @@ class Adventurer(abc.Entity):
         mp("rarity", mf.int, "Rarity")
         mp("max_hp", max_stat, "MaxLimitBreakCount", "MaxHp", "AddMaxHp1", "McFullBonusHp5", "PlusHp0", "PlusHp1", "PlusHp2", "PlusHp3", "PlusHp4", "PlusHp5")
         mp("max_str", max_stat, "MaxLimitBreakCount", "MaxAtk", "AddMaxAtk1", "McFullBonusAtk5", "PlusAtk0", "PlusAtk1", "PlusAtk2", "PlusAtk3", "PlusAtk4", "PlusAtk5")
-        mp("max_nodes", lambda n: 70 if int(n) >= 5 else 50, "MaxLimitBreakCount")
+        mp("max_nodes", lambda n: 70 if mf.int0(n) >= 5 else 50, "MaxLimitBreakCount")
         mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(4)))
         mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(4)))
         mp("ability_3", mf.filtered_list_of(Ability.find), *(f"Abilities3{i + 1}" for i in range(4)))
@@ -526,7 +526,7 @@ class Weapon(abc.Entity):
         self.crafting_materials = {}
         self.crafted_from: Optional[Weapon] = None
         self.crafted_to: List[Weapon] = []
-        self.tier: int = Optional[None]
+        self.tier: Optional[int] = None
 
     def __str__(self):
         return self.name
@@ -673,7 +673,7 @@ class Skill(abc.Entity):
             return Skill.SkillLevel(mf.text(desc), mf.int(sp))
 
         def skill_levels(*args):
-            max_level = int(args[0])
+            max_level = mf.int0(args[0])
             arg_pairs = itertools.zip_longest(*([iter(args[1:])] * 2))
             mapped_levels = itertools.starmap(map_level, arg_pairs)
             valid_levels = list(itertools.takewhile(lambda sl: sl.description, mapped_levels))
@@ -879,6 +879,92 @@ class CoAbility(abc.Entity):
         )
 
 
+class Showcase(abc.Entity):
+    """
+    Represents a summon showcase and some of its associated data
+    """
+
+    repository: abc.EntityRepository = None
+
+    @classmethod
+    def get_all(cls):
+        return cls.repository.data
+
+    @classmethod
+    def init(cls):
+        def get_entity_list(names, key_mapper):
+            if not mf.text(names):
+                return []
+            entity_name_list = mf.text(names).split(", ")
+            return list(filter(None, map(key_mapper, entity_name_list)))
+
+        mapper = abc.EntityMapper(Showcase)
+        cls.repository = abc.EntityRepository(mapper, "SummonShowcase")
+
+        mp = mapper.add_property  # mapper property
+        mf = abc.EntityMapper  # mapper functions
+
+        mp("name", lambda s: s.replace(" (Summon Showcase)", ""), "Title")
+        mp("page_name", mf.text, "Title")
+        mp("start_date", mf.date, "StartDate")
+        mp("end_date", mf.date, "EndDate")
+        mp("type", mf.text, "Type")
+        mp("focus_adventurers", lambda s: get_entity_list(s, Adventurer.find), "Adventurer")
+        mp("focus_dragons", lambda s: get_entity_list(s, Dragon.find), "Dragons")
+
+    def __init__(self):
+        self.name = ""
+        self.page_name = ""
+        self.type = ""
+        self.start_date = ""
+        self.end_date = ""
+        self.focus_adventurers = []
+        self.focus_dragons = []
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def find(cls, key: str):
+        key = abc.EntityMapper.text(key)
+        if key is None:
+            return None
+        return cls.repository.get_from_key(key.lower())
+
+    def get_key(self):
+        if self.name:
+            return self.name.lower()
+        else:
+            return None
+
+    def get_embed(self) -> discord.Embed:
+        fmt = abc.EmbedFormatter()
+
+        title = fmt.format("{e.name} (Summon Showcase)", e=self)
+        focus_adventurers = "\n".join(map(Adventurer.get_title_with_emotes, self.focus_adventurers))
+        focus_dragons = "\n".join(map(Dragon.get_title_with_emotes, self.focus_dragons))
+        focus_adventurers_section = f"**Focus Adventurers**\n{focus_adventurers}\n" if focus_adventurers else ""
+        focus_dragon_section = f"**Focus Dragons**\n{focus_dragons}\n" if focus_dragons else ""
+
+        description = fmt.format(
+            textwrap.dedent("""
+                {focus_adv!o}{focus_drg!o}
+                **Start date:** {e.start_date!d}
+                **End date:** {e.end_date!d}
+                """),
+            e=self,
+            focus_adv=focus_adventurers_section,
+            focus_drg=focus_dragon_section
+        )
+
+        return discord.Embed(
+            title=title,
+            description=description,
+            url=util.get_link(self.page_name),
+            color=get_rarity_colour(5)
+        )
+
+
 Adventurer.init()
 Dragon.init()
 Wyrmprint.init()
@@ -886,3 +972,4 @@ Weapon.init()
 Skill.init()
 Ability.init()
 CoAbility.init()
+Showcase.init()
