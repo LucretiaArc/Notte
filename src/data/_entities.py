@@ -56,6 +56,7 @@ class Adventurer(abc.Entity):
         mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(4)))
         mp("ability_3", mf.filtered_list_of(Ability.find), *(f"Abilities3{i + 1}" for i in range(4)))
         mp("coability", mf.filtered_list_of(CoAbility.find), *(f"ExAbilityData{i + 1}" for i in range(5)))
+        mp("chain_coability", mf.filtered_list_of(ChainCoAbility.find), *(f"ExAbility2Data{i + 1}" for i in range(5)))
         mp("skill_1", Skill.find, "Skill1Name")
         mp("skill_2", Skill.find, "Skill2Name")
         mp("icon_name", lambda i, v, r: f"{i}_0{v}_r0{r}", "Id", "VariationId", "Rarity")
@@ -108,6 +109,7 @@ class Adventurer(abc.Entity):
         self.ability_2: List[Ability] = []
         self.ability_3: List[Ability] = []
         self.coability: List[CoAbility] = []
+        self.chain_coability: List[ChainCoAbility] = []
 
     def __str__(self):
         return self.full_name
@@ -129,9 +131,14 @@ class Adventurer(abc.Entity):
         fmt = abc.EmbedFormatter()
 
         try:
-            coability_str = self.coability[-1].name or "???"
+            coability_str = self.coability[-1].name or "?"
         except IndexError:
-            coability_str = "???"
+            coability_str = "?"
+
+        try:
+            chain_coability_str = self.chain_coability[-1].name or "?"
+        except IndexError:
+            chain_coability_str = "?"
 
         title = fmt.format("{e.rarity!r}{e.element!e}{e.weapon_type!e} {e.name}: {e.title}", e=self)
         description = fmt.format(
@@ -148,12 +155,14 @@ class Adventurer(abc.Entity):
                 {e.ability_3[-1].name}
                 
                 **Co-ability:** {coability}
+                **Chain Co-ability:** {chain_coability}
                 
                 *Obtained from: {e.obtained}*
                 *Release Date: {e.release_date!d}* 
                 """),
             e=self,
-            coability=coability_str
+            coability=coability_str,
+            chain_coability=chain_coability_str
         )
 
         return discord.Embed(
@@ -879,6 +888,62 @@ class CoAbility(abc.Entity):
         )
 
 
+class ChainCoAbility(abc.Entity):
+    """
+    Represents a chain co-ability and some of its associated data
+    """
+    repository: abc.EntityRepository = None
+
+    @classmethod
+    def get_all(cls):
+        return cls.repository.data
+
+    @classmethod
+    def init(cls):
+        mapper = abc.EntityMapper(ChainCoAbility)
+        cls.repository = abc.EntityRepository(mapper, "ChainCoAbilities")
+
+        mp = mapper.add_property  # mapper property
+        mf = abc.EntityMapper  # mapper functions
+
+        mp("id_str", mf.text, "Id")
+        mp("name", mf.text, "Name")
+        mp("generic_name", mf.text, "GenericName")
+        mp("description", mf.text, "Details")
+
+    def __init__(self):
+        self.id_str = ""
+        self.name = ""
+        self.generic_name = ""
+        self.description = ""
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def find(cls, key: str):
+        key = abc.EntityMapper.text(key)
+        if key is None:
+            return None
+        return cls.repository.get_from_key(key)
+
+    def get_key(self):
+        return self.id_str
+
+    def get_embed(self) -> discord.Embed:
+        fmt = abc.EmbedFormatter()
+
+        title = fmt.format("{e.name} (Chain Co-Ability)", e=self)
+        description = self.description or "?"
+
+        return discord.Embed(
+            title=title,
+            description=description,
+            url=util.get_link(self.generic_name),
+            color=0x006080
+        )
+
+
 class Showcase(abc.Entity):
     """
     Represents a summon showcase and some of its associated data
@@ -972,4 +1037,5 @@ Weapon.init()
 Skill.init()
 Ability.init()
 CoAbility.init()
+ChainCoAbility.init()
 Showcase.init()

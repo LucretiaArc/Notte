@@ -211,6 +211,12 @@ def initialise_keywords(query_resolver: QueryResolver):
         if a.coability:
             add_query(f"{name} coability", a.coability[-1].get_embed())
             add_query(f"{name} coab", a.coability[-1].get_embed())
+        if a.chain_coability:
+            e = a.chain_coability[-1].get_embed()
+            add_query(f"{name} chain coability", e)
+            add_query(f"{name} chain coab", e)
+            add_query(f"{name} chain", e)
+            add_query(f"{name} cc", e)
 
     for name, d in dragons.items():
         add_query(name, d.get_embed())
