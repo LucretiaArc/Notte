@@ -2,6 +2,8 @@ import datetime
 import config
 import hook
 import discord
+import data
+import util
 
 client: discord.Client = None
 
@@ -44,6 +46,8 @@ def get_reset_message(date: datetime.datetime):
 
     if date.tzinfo:
         date = date.astimezone(datetime.timezone.utc)
+    else:
+        date = date.replace(tzinfo=datetime.timezone.utc)
 
     message_lines = [
         "It's time for the daily reset!",
@@ -56,6 +60,15 @@ def get_reset_message(date: datetime.datetime):
         message_lines.append("The Void Battle and Astral Raid treasure trades have been reset!")
     elif date.day == 15:
         message_lines.append("The Mercurial Gauntlet Victor's Trove has been reset!")
+
+    # showcase ends
+    def get_days_until_datetime(utc_datetime):
+        return round((utc_datetime - date).total_seconds() / 86400)
+
+    showcase_list = list(filter(lambda s: get_days_until_datetime(s.end_date) == 1, data.Showcase.get_all().values()))
+    if showcase_list:
+        showcase_list_str = util.readable_list(list(map(lambda s: s.name or "Unnamed", showcase_list)))
+        message_lines.append(f"Today is the last day of the {showcase_list_str} summon showcase{'s' if len(showcase_list) > 1 else ''}!")
 
     return "\n".join(message_lines).strip()
 

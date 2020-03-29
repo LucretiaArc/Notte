@@ -11,6 +11,7 @@ import typing
 import collections
 import textwrap
 import natsort
+import util
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +109,7 @@ async def scan_for_query(message):
 async def resolve_keywords(message, args):
     max_dist = QueryResolver.get_match_threshold(args)
     await message.channel.send(
-        readable_list([f'"{key}" ({int(100 * (1 - dist / max_dist))}%)' for dist, key in resolver.match(args)])
+        util.readable_list([f'"{key}" ({int(100 * (1 - dist / max_dist))}%)' for dist, key in resolver.match(args)])
         or "No results found."
     )
 
@@ -317,22 +318,6 @@ def initialise_keywords(query_resolver: QueryResolver):
 
     logger.info(f"{len(query_resolver.query_map) - original_capacity} queries generated and added to resolver.")
     logger.info(f"Determined maximum query length {query_resolver.max_query_len}")
-
-
-def readable_list(items, last_separator="and") -> str:
-    """
-    Formats a list of strings to fit in an english sentence. For example:
-    ["a"] -> "a"
-    ["a", "b'] -> "a and b"
-    ["a", "b", "c", "d"] -> "a, b, c, and d"
-    :param items: list of items to turn into an english list.
-    :param last_separator: separator word to use before the last item. This is "and" in the above examples.
-    :return: string representing the list of items
-    """
-    if len(items) < 3:
-        return f" {last_separator} ".join(items)
-
-    return ", ".join(items[:-1]) + f", {last_separator} {items[-1]}"
 
 
 hook.Hook.get("on_init").attach(on_init)

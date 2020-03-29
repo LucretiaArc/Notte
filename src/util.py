@@ -35,6 +35,22 @@ def safe_int(value, default):
         return default
 
 
+def readable_list(items, last_separator="and") -> str:
+    """
+    Formats a list of strings to fit in an english sentence. For example:
+    ["a"] -> "a"
+    ["a", "b'] -> "a and b"
+    ["a", "b", "c", "d"] -> "a, b, c, and d"
+    :param items: list of items to turn into an english list.
+    :param last_separator: separator word to use before the last item. This is "and" in the above examples.
+    :return: string representing the list of items
+    """
+    if len(items) < 3:
+        return f" {last_separator} ".join(items)
+
+    return ", ".join(items[:-1]) + f", {last_separator} {items[-1]}"
+
+
 def check_command_permissions(message, level) -> bool:
     """
     Determines whether a command of the given level can be used, given the context of a sent message.

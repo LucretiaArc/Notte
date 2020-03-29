@@ -981,10 +981,10 @@ class Showcase(abc.Entity):
         self.name = ""
         self.page_name = ""
         self.type = ""
-        self.start_date = ""
-        self.end_date = ""
-        self.focus_adventurers = []
-        self.focus_dragons = []
+        self.start_date: Optional[datetime.datetime] = None
+        self.end_date: Optional[datetime.datetime] = None
+        self.focus_adventurers: List[Adventurer] = []
+        self.focus_dragons: List[Dragon] = []
 
     def __str__(self):
         return self.name
