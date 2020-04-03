@@ -38,7 +38,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message: discord.Message):
-    if message.author.bot:
+    if message.author.bot or message.author.id in config.get_global("user_blacklist"):
         return
 
     if (isinstance(message.channel, discord.DMChannel) or isinstance(message.channel, discord.GroupChannel)
