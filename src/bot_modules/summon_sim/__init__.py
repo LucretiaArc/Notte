@@ -20,7 +20,6 @@ async def select_showcase(message, args):
     Selects a showcase to summon on. To select a showcase, use `showcase <showcase>`.
     To get information about your currently selected showcase, use `showcase`.
     To get a list of showcases, use `showcase list`.
-    To get information about a showcase, use `showcase info <showcase>`.
     To select a generic showcase without any rate-up units or dragons, use `showcase none`.
 
     **Note:** Showcases as represented in the summoning simulator aren't historically accurate. This means:
@@ -32,22 +31,14 @@ async def select_showcase(message, args):
     if args == "list":
         showcase_list = sorted(core.SimShowcase.showcases.values(), key=lambda sc: sc.showcase.start_date, reverse=True)
         await message.channel.send(", ".join(sc.showcase.name for sc in showcase_list))
-    elif args.split(" ")[0].lower() == "info" or not args:
-        showcase_name = args[5:].strip()
-        if not showcase_name:
-            showcase_info, sim_showcase = db.get_current_showcase_info(message.channel.id, message.author.id)
-            if sim_showcase == core.SimShowcase.default_showcase:
-                await message.channel.send(showcase_info)
-            else:
-                await message.channel.send(showcase_info, embed=sim_showcase.showcase.get_embed())
+    elif not args:
+        showcase_info, sim_showcase = db.get_current_showcase_info(message.channel.id, message.author.id)
+        if sim_showcase == core.SimShowcase.default_showcase:
+            await message.channel.send(showcase_info)
         else:
-            sim_showcase = core.SimShowcase.get(showcase_name)
-            if sim_showcase and sim_showcase != core.SimShowcase.default_showcase:
-                await message.channel.send(embed=sim_showcase.showcase.get_embed())
-            else:
-                await message.channel.send("I don't know that showcase! Use `showcase list` to see the list of showcases.")
+            await message.channel.send(showcase_info, embed=sim_showcase.showcase.get_embed())
     else:
-        sim_showcase = core.SimShowcase.get(args)
+        sim_showcase = core.SimShowcase.match(args)
         if sim_showcase:
             await message.channel.send(db.set_showcase(message.channel.id, message.author.id, sim_showcase))
         else:

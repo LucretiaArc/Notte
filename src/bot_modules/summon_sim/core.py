@@ -3,6 +3,7 @@ import random
 import hook
 import config
 import typing
+import fuzzy_match
 
 
 # pools are represented in a nested dict of pool[rarity: int][is_featured: bool][entity_type: type]
@@ -16,21 +17,43 @@ EntityPools = typing.Dict[int, RarityPools]
 
 
 class SimShowcase:
+    showcase_matcher: fuzzy_match.Matcher = None
     showcases = {}
     default_showcase = None
 
     @classmethod
     def update_data(cls):
-        showcase = data.Showcase()
-        showcase.name = "none"
-        cls.default_showcase = SimShowcase(showcase)
+        default_showcase = data.Showcase()
+        default_showcase.name = "none"
+        cls.default_showcase = SimShowcase(default_showcase)
+
         new_cache = {}
+        showcase_blacklist = config.get_global("general")["summonable_showcase_blacklist"]
         for sc_name, sc in data.Showcase.get_all().items():
-            if sc.name in config.get_global("general")["summonable_showcase_blacklist"]:
-                continue
-            elif sc.type == "Regular" and not sc.name.startswith("Dragon Special"):
+            if sc.name not in showcase_blacklist and sc.type == "Regular" and not sc.name.startswith("Dragon Special"):
                 new_cache[sc_name] = SimShowcase(sc)
+
+        aliases = config.get_global(f"query_alias/showcase")
+        for alias, expanded in aliases.items():
+            try:
+                new_cache[alias] = new_cache[expanded]
+            except KeyError:
+                continue
+
+        # add fuzzy matching names
+        name_replacements = {
+            "part one": "part 1",
+            "part two": "part 2",
+        }
+        matcher = fuzzy_match.Matcher(lambda s: 1 + 0.5 * len(s))
+        for sc_name, sim_sc in new_cache.items():
+            matcher.add(sc_name, sim_sc)
+            for old, new in name_replacements.items():
+                if old in sc_name:
+                    matcher.add(sc_name.replace(old, new), sim_sc)
+
         cls.showcases = new_cache
+        cls.showcase_matcher = matcher
 
     @classmethod
     def get(cls, name: str):
@@ -39,7 +62,16 @@ class SimShowcase:
         else:
             return cls.showcases.get(name.lower())
 
+    @classmethod
+    def match(cls, name: str):
+        if name.lower() == "none":
+            return cls.default_showcase
+        else:
+            result = cls.showcase_matcher.match(name)
+            return result[0] if result else None
+
     def __init__(self, showcase: data.Showcase):
+        # noinspection PyTypeChecker
         featured_pool = showcase.focus_adventurers + showcase.focus_dragons
         self.showcase = showcase
         self.is_gala = any(e.availability == "Gala" for e in featured_pool)
