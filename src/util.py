@@ -95,4 +95,4 @@ def path(path_fragment):
     :param path_fragment: a path fragment
     :return: full file path
     """
-    return str(pathlib.Path(sys.path[0]).parent / path_fragment)
+    return str(pathlib.Path(__file__).parent.parent / path_fragment)

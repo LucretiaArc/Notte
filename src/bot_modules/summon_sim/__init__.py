@@ -9,6 +9,8 @@ logger = logging.getLogger(__name__)
 async def on_init(discord_client):
     db.create_db()
 
+    hook.Hook.get("download_data_delayed").attach(image.update_entity_icons)
+    hook.Hook.get("owner!update_sim_icons").attach(update_entity_icons_cmd)
     hook.Hook.get("public!tenfold").attach(tenfold_summon)
     hook.Hook.get("public!single").attach(single_summon)
     hook.Hook.get("public!showcase").attach(select_showcase)
@@ -17,13 +19,13 @@ async def on_init(discord_client):
 
 async def select_showcase(message, args):
     """
-    Selects a showcase to summon on. To select a showcase, use `showcase <showcase>`.
+    Selects a showcase to summon on. To select a showcase, use `showcase <showcase name>`.
+    To select a generic showcase without any rate-up units or dragons, use `showcase none`.
     To get information about your currently selected showcase, use `showcase`.
     To get a list of showcases, use `showcase list`.
-    To select a generic showcase without any rate-up units or dragons, use `showcase none`.
 
     **Note:** Showcases as represented in the summoning simulator aren't historically accurate. This means:
-     - All currently available permanent units are able to be pulled as off-focus units
+     - All currently available permanent adventurers and dragons are present in the non-featured pool
      - Wyrmprints aren't summonable in the showcases which featured them
      - Showcases which appeared prior to the 5★ dragon rate change on July 31st, 2019 will use the new dragon rates
     """
@@ -70,6 +72,11 @@ async def single_summon(message, args):
     result, text = db.perform_summon(message.channel.id, message.author.id, is_tenfold=False)
     with image.get_single_image_fp(result) as fp:
         await message.channel.send(text, file=discord.File(fp, filename="single.png"))
+
+
+async def update_entity_icons_cmd(message, args):
+    await image.update_entity_icons()
+    await message.channel.send("Updated summoning sim icons.")
 
 
 hook.Hook.get("on_init").attach(on_init)

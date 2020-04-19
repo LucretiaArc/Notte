@@ -4,6 +4,9 @@ import hook
 import config
 import typing
 import fuzzy_match
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # pools are represented in a nested dict of pool[rarity: int][is_featured: bool][entity_type: type]
@@ -33,10 +36,11 @@ class SimShowcase:
             if sc.name not in showcase_blacklist and sc.type == "Regular" and not sc.name.startswith("Dragon Special"):
                 new_cache[sc_name] = SimShowcase(sc)
 
+        matcher_additions = new_cache.copy()
         aliases = config.get_global(f"query_alias/showcase")
         for alias, expanded in aliases.items():
             try:
-                new_cache[alias] = new_cache[expanded]
+                matcher_additions[alias] = new_cache[expanded]
             except KeyError:
                 continue
 
@@ -46,7 +50,7 @@ class SimShowcase:
             "part two": "part 2",
         }
         matcher = fuzzy_match.Matcher(lambda s: 1 + 0.5 * len(s))
-        for sc_name, sim_sc in new_cache.items():
+        for sc_name, sim_sc in matcher_additions.items():
             matcher.add(sc_name, sim_sc)
             for old, new in name_replacements.items():
                 if old in sc_name:
@@ -72,7 +76,7 @@ class SimShowcase:
 
     def __init__(self, showcase: data.Showcase):
         # noinspection PyTypeChecker
-        featured_pool = showcase.focus_adventurers + showcase.focus_dragons
+        featured_pool = showcase.featured_adventurers + showcase.featured_dragons
         self.showcase = showcase
         self.is_gala = any(e.availability == "Gala" for e in featured_pool)
         self.entity_pools: EntityPools = {

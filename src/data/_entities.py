@@ -974,8 +974,8 @@ class Showcase(abc.Entity):
         mp("start_date", mf.date, "StartDate")
         mp("end_date", mf.date, "EndDate")
         mp("type", mf.text, "Type")
-        mp("focus_adventurers", lambda s: get_entity_list(s, Adventurer.find), "Adventurer")
-        mp("focus_dragons", lambda s: get_entity_list(s, Dragon.find), "Dragons")
+        mp("featured_adventurers", lambda s: get_entity_list(s, Adventurer.find), "Adventurer")
+        mp("featured_dragons", lambda s: get_entity_list(s, Dragon.find), "Dragons")
 
     def __init__(self):
         self.name = ""
@@ -983,8 +983,8 @@ class Showcase(abc.Entity):
         self.type = ""
         self.start_date: Optional[datetime.datetime] = None
         self.end_date: Optional[datetime.datetime] = None
-        self.focus_adventurers: List[Adventurer] = []
-        self.focus_dragons: List[Dragon] = []
+        self.featured_adventurers: List[Adventurer] = []
+        self.featured_dragons: List[Dragon] = []
 
     def __str__(self):
         return self.name
@@ -1006,20 +1006,20 @@ class Showcase(abc.Entity):
         fmt = abc.EmbedFormatter()
 
         title = fmt.format("{e.name} (Summon Showcase)", e=self)
-        focus_adventurers = "\n".join(map(Adventurer.get_title_with_emotes, self.focus_adventurers))
-        focus_dragons = "\n".join(map(Dragon.get_title_with_emotes, self.focus_dragons))
-        focus_adventurers_section = f"**Focus Adventurers**\n{focus_adventurers}\n" if focus_adventurers else ""
-        focus_dragon_section = f"**Focus Dragons**\n{focus_dragons}\n" if focus_dragons else ""
+        featured_adventurers = "\n".join(map(Adventurer.get_title_with_emotes, self.featured_adventurers))
+        featured_dragons = "\n".join(map(Dragon.get_title_with_emotes, self.featured_dragons))
+        featured_adventurers_text = f"**Focus Adventurers**\n{featured_adventurers}\n" if featured_adventurers else ""
+        featured_dragon_text = f"**Focus Dragons**\n{featured_dragons}\n" if featured_dragons else ""
 
         description = fmt.format(
             textwrap.dedent("""
-                {focus_adv!o}{focus_drg!o}
+                {featured_adv!o}{featured_drg!o}
                 **Start date:** {e.start_date!d}
                 **End date:** {e.end_date!d}
                 """),
             e=self,
-            focus_adv=focus_adventurers_section,
-            focus_drg=focus_dragon_section
+            featured_adv=featured_adventurers_text,
+            featured_drg=featured_dragon_text
         )
 
         return discord.Embed(
