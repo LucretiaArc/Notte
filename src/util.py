@@ -3,7 +3,6 @@ import urllib.parse
 import config
 import io
 import discord
-import sys
 import pathlib
 
 

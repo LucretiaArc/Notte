@@ -20,16 +20,16 @@ def _check_session(channel_id: int, user_id: int):
         raise ValueError(f"Invalid channel id '{channel_id}' or user id '{user_id}'")
 
 
-def _get_showcase_info(cursor: sqlite3.Cursor, channel_id: int, user_id: int):
+def _get_showcase_info(cursor: sqlite3.Cursor, channel_id: int, user_id: int) -> (core.SimShowcase, int, int):
     cursor.execute(
         "SELECT showcase, rate, total_summons FROM pity WHERE channel = ? AND user = ?",
         (channel_id, user_id)
     )
     result = cursor.fetchone()
     if result is None:
-        return core.SimShowcase.default_showcase, 0, 0
+        return core.SSCache.default_showcase, 0, 0
     else:
-        return core.SimShowcase.get(result[0]), result[1], result[2]
+        return core.SSCache.get(result[0]), result[1], result[2]
 
 
 def _set_showcase_info(
@@ -70,13 +70,13 @@ def _get_showcase_explanation_string(
         pity_progress: int,
         total_summons: int,
         is_after_summon: bool):
-    rate = sim_showcase.get_five_star_rate(pity_progress)
+    rate = sim_showcase.FIVE_STAR_RATE_TOTAL + sim_showcase.get_pity_percent(pity_progress)
     if is_after_summon:
         output_text = f"The 5★ rate is now {rate}%. "
     else:
         output_text = f"Your 5★ rate is {rate}%. "
 
-    if sim_showcase.is_pity_capped(pity_progress):
+    if pity_progress >= sim_showcase.PITY_PROGRESS_MAX:
         output_text += f"Your next summon is guaranteed to contain a 5★. "
     else:
         remaining = ((-pity_progress - 1) % 10) + 1
@@ -98,7 +98,7 @@ def get_rate_breakdown(channel_id: int, user_id: int):
     _check_session(channel_id, user_id)
     with get_cursor(pity_file) as cursor:
         sim_showcase, pity_progress, total_summons = _get_showcase_info(cursor, channel_id, user_id)
-    return sim_showcase.get_rate_breakdown(pity_progress)
+    return sim_showcase.get_rates(pity_progress).get_breakdown()
 
 
 def perform_summon(channel_id: int, user_id: int, is_tenfold: bool):

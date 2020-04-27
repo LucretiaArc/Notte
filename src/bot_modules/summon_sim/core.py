@@ -1,25 +1,24 @@
 import data
-import random
 import hook
 import config
-import typing
 import fuzzy_match
 import logging
+import random
+import typing
+import abc
+from . import pool
+
 
 logger = logging.getLogger(__name__)
 
 
 # pools are represented in a nested dict of pool[rarity: int][is_featured: bool][entity_type: type]
-FeaturedRates = typing.Dict[type, float]
-RarityRates = typing.Dict[bool, FeaturedRates]
-Rates = typing.Dict[int, RarityRates]
-
 FeaturedPools = typing.Dict[type, typing.List[data.abc.Entity]]
 RarityPools = typing.Dict[bool, FeaturedPools]
 EntityPools = typing.Dict[int, RarityPools]
 
 
-class SimShowcase:
+class SSCache:
     showcase_matcher: fuzzy_match.Matcher = None
     showcases = {}
     default_showcase = None
@@ -28,13 +27,14 @@ class SimShowcase:
     def update_data(cls):
         default_showcase = data.Showcase()
         default_showcase.name = "none"
-        cls.default_showcase = SimShowcase(default_showcase)
+        cls.default_showcase = NormalSS(default_showcase)
 
         new_cache = {}
         showcase_blacklist = config.get_global("general")["summonable_showcase_blacklist"]
         for sc_name, sc in data.Showcase.get_all().items():
-            if sc.name not in showcase_blacklist and sc.type == "Regular" and not sc.name.startswith("Dragon Special"):
-                new_cache[sc_name] = SimShowcase(sc)
+            if sc.name not in showcase_blacklist:
+                if sc.type == "Regular" and not sc.name.startswith("Dragon Special"):
+                    new_cache[sc_name] = ShowcaseFactory.create_showcase(sc)
 
         matcher_additions = new_cache.copy()
         aliases = config.get_global(f"query_alias/showcase")
@@ -74,11 +74,40 @@ class SimShowcase:
             result = cls.showcase_matcher.match(name)
             return result[0] if result else None
 
+
+class ShowcaseFactory:
+    showcase_types = []
+
+    @classmethod
+    def register(cls, registered_class):
+        cls.showcase_types.append(registered_class)
+
+    @classmethod
+    def create_showcase(cls, showcase: data.Showcase):
+        matching_types = list(filter(lambda c: c.is_matching_showcase_type(showcase), cls.showcase_types))
+
+        if len(matching_types) == 0:
+            showcase_type = NormalSS
+        elif len(matching_types) == 1:
+            showcase_type = matching_types[0]
+        else:
+            showcase_type = matching_types[-1]
+
+        return showcase_type(showcase)
+
+
+class SimShowcase(abc.ABC):
+    PITY_PROGRESS_MAX = 100
+    FIVE_STAR_ADV_RATE_TOTAL = 2.0
+    FIVE_STAR_DRG_RATE_TOTAL = 2.0
+    FIVE_STAR_RATE_TOTAL = 4.0
+    FIVE_STAR_ADV_RATE_EACH = 0.5
+    FIVE_STAR_DRG_RATE_EACH = 0.8
+
     def __init__(self, showcase: data.Showcase):
         # noinspection PyTypeChecker
         featured_pool = showcase.featured_adventurers + showcase.featured_dragons
         self.showcase = showcase
-        self.is_gala = any(e.availability == "Gala" for e in featured_pool)
         self.entity_pools: EntityPools = {
             r: {
                 f: {
@@ -93,22 +122,19 @@ class SimShowcase:
 
         normal_pool = (set(data.Adventurer.get_all().values()) | set(data.Dragon.get_all().values())) - set(featured_pool)
         for e in normal_pool:
-            if e.rarity and (e.availability == "Permanent" or (self.is_gala and e.availability == "Gala")):
+            if e.rarity and self.is_entity_in_normal_pool(e):
                 self.entity_pools[e.rarity][False][type(e)].append(e)
 
-    def get_base_five_star_rate(self):
-        return 6 if self.is_gala else 4
-
-    def get_five_star_rate(self, pity_progress):
-        return self.get_base_five_star_rate() + pity_progress // 10 * 0.5
-
-    def is_pity_capped(self, pity_progress):
-        return pity_progress >= (60 if self.is_gala else 100)
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.FIVE_STAR_RATE_TOTAL = cls.FIVE_STAR_ADV_RATE_TOTAL + cls.FIVE_STAR_DRG_RATE_TOTAL
+        ShowcaseFactory.register(cls)
 
     def perform_solo(self, pity_progress):
-        rates = self._get_pool_rates(pity_progress)
-        SimShowcase._adjust_rates(rates, guaranteed_5=self.is_pity_capped(pity_progress))
-        result = self._get_result(rates)
+        rates = self.get_rates(pity_progress)
+        if pity_progress >= self.PITY_PROGRESS_MAX:
+            rates.guarantee_five_star()
+        result = self.get_result(rates)
         if result.rarity == 5:
             pity_progress = 0
         else:
@@ -116,94 +142,21 @@ class SimShowcase:
         return result, pity_progress
 
     def perform_tenfold(self, pity_progress):
-        rates = self._get_pool_rates(pity_progress)
-        results = [self._get_result(rates) for _ in range(9)]
-        received_5 = any(e.rarity == 5 for e in results)
-        SimShowcase._adjust_rates(rates, guaranteed_5=self.is_pity_capped(pity_progress), guaranteed_4=True)
-        results.append(self._get_result(rates))
-        if received_5 or results[-1].rarity == 5:
+        rates = self.get_rates(pity_progress)
+        results = [self.get_result(rates) for _ in range(9)]
+        if pity_progress >= self.PITY_PROGRESS_MAX:
+            rates.guarantee_five_star()
+        else:
+            rates.guarantee_four_star()
+        results.append(self.get_result(rates))
+
+        if any(e.rarity == 5 for e in results):
             pity_progress = 0
         else:
             pity_progress += 10
         return results, pity_progress
 
-    def get_rate_breakdown(self, pity_progress):
-        rates = self._get_pool_rates(pity_progress)
-        output = ""
-        for rarity, rarity_rates in rates.items():
-            r_items = ""
-            r_rate = 0
-            for is_featured, featured_rates in rarity_rates.items():
-                f_items = ""
-                f_rate = 0
-                for e_type, rate in featured_rates.items():
-                    if rate > 0:
-                        f_items += f"    {e_type.__name__}s: {rate:.{2}f}%\n"
-                        f_rate += rate
-                if f_rate > 0:
-                    r_items += f"  {'Featured' if is_featured else 'Normal'}: {f_rate:.{2}f}%\n{f_items}"
-                    r_rate += f_rate
-            if r_rate > 0:
-                output += f"**{rarity}★: {r_rate:.{2}f}%**\n{r_items}\n"
-        return output.strip()
-
-    @staticmethod
-    def _get_sub_pool_rate_breakdown(pool: dict):
-        combined_rate = 0
-        for k, v in pool.items():
-            if isinstance(v, dict):
-                combined_rate += SimShowcase._get_sub_pool_rate_breakdown(v)
-            else:
-                combined_rate += v
-
-    def _get_pool_rates(self, pity_progress):
-        rates: Rates = {
-            r: {
-                f: {
-                    t: 0 for t in (data.Adventurer, data.Dragon)
-                } for f in (True, False)
-            } for r in (5, 4, 3)
-        }
-
-        pity = pity_progress // 10 * 0.5
-
-        # 5* rates
-        base_5_rate = self.get_base_five_star_rate()
-        total_5_rate = base_5_rate + pity
-        rate_multi_5 = total_5_rate / base_5_rate
-        featured_5_adv_count = len(self.entity_pools[5][True][data.Adventurer])
-        featured_5_drg_count = len(self.entity_pools[5][True][data.Dragon])
-        rates[5][True][data.Adventurer] = rate_multi_5 * 0.5 * featured_5_adv_count
-        rates[5][True][data.Dragon] = rate_multi_5 * 0.8 * featured_5_drg_count
-        rates[5][False][data.Adventurer] = total_5_rate / 2 - rates[5][True][data.Adventurer]
-        rates[5][False][data.Dragon] = total_5_rate / 2 - rates[5][True][data.Dragon]
-
-        # 4* rates
-        featured_4_adv_count = len(self.entity_pools[4][True][data.Adventurer])
-        featured_4_drg_count = len(self.entity_pools[4][True][data.Dragon])
-        featured_4_total_count = featured_4_adv_count + featured_4_drg_count
-        if featured_4_total_count:
-            rates[4][True][data.Adventurer] = 7 * featured_4_adv_count / featured_4_total_count
-            rates[4][True][data.Dragon] = 7 * featured_4_drg_count / featured_4_total_count
-            rates[4][False][data.Adventurer] = 5.05
-            rates[4][False][data.Dragon] = 3.95
-        else:
-            rates[4][False][data.Adventurer] = 8.55
-            rates[4][False][data.Dragon] = 7.45
-
-        # 3* rates
-        normal_3_rate_split = 80 - pity
-        offset_3_rate = (4 - self.get_base_five_star_rate()) / 2
-        featured_3_adv_count = len(self.entity_pools[3][True][data.Adventurer])
-        featured_3_drg_count = len(self.entity_pools[3][True][data.Dragon])
-        rates[3][True][data.Adventurer] = 4 * featured_3_adv_count
-        rates[3][True][data.Dragon] = 4 * featured_3_drg_count
-        rates[3][False][data.Adventurer] = 0.6 * normal_3_rate_split - rates[3][False][data.Adventurer] + offset_3_rate
-        rates[3][False][data.Dragon] = 0.4 * normal_3_rate_split - rates[3][False][data.Dragon] + offset_3_rate
-
-        return rates
-
-    def _get_result(self, rates: Rates):
+    def get_result(self, rates: pool.Rates):
         weights = []
         pools = []
         for rarity, rarity_pool in self.entity_pools.items():
@@ -215,25 +168,79 @@ class SimShowcase:
         selected_pool = random.choices(pools, weights=weights)[0]
         return random.choice(selected_pool)
 
-    @staticmethod
-    def _adjust_rates(rates: Rates, guaranteed_5=False, guaranteed_4=False):
-        if guaranteed_5:
-            SimShowcase._set_rarity_rate(rates[3], 0)
-            SimShowcase._set_rarity_rate(rates[4], 0)
-            SimShowcase._set_rarity_rate(rates[5], 100)
-        elif guaranteed_4:
-            old_3_rate = SimShowcase._set_rarity_rate(rates[3], 0)
-            SimShowcase._set_rarity_rate(rates[4], 16 + old_3_rate)
+    def get_rates(self, pity_progress):
+        rates = pool.Rates()
+        rates[5] = self.get_five_star_rates(pity_progress)
+        rates[4] = self.get_four_star_rates(pity_progress)
+        rates[3] = self.get_three_star_rates(pity_progress)
+        return rates
+
+    def get_five_star_rates(self, pity_progress) -> pool.RarityRates:
+        rates = pool.RarityRates()
+
+        rate_multi = (self.FIVE_STAR_RATE_TOTAL + self.get_pity_percent(pity_progress)) / self.FIVE_STAR_RATE_TOTAL
+        featured_adv_count = len(self.entity_pools[5][True][data.Adventurer])
+        featured_drg_count = len(self.entity_pools[5][True][data.Dragon])
+        rates[True][data.Adventurer] = rate_multi * self.FIVE_STAR_ADV_RATE_EACH * featured_adv_count
+        rates[True][data.Dragon] = rate_multi * self.FIVE_STAR_DRG_RATE_EACH * featured_drg_count
+        rates[False][data.Adventurer] = rate_multi * self.FIVE_STAR_ADV_RATE_TOTAL - rates[True][data.Adventurer]
+        rates[False][data.Dragon] = rate_multi * self.FIVE_STAR_DRG_RATE_TOTAL - rates[True][data.Dragon]
+
+        return rates
+
+    def get_four_star_rates(self, pity_progress) -> pool.RarityRates:
+        rates = pool.RarityRates()
+
+        featured_adv_count = len(self.entity_pools[4][True][data.Adventurer])
+        featured_drg_count = len(self.entity_pools[4][True][data.Dragon])
+        featured_count = featured_adv_count + featured_drg_count
+        if featured_count:
+            rates[True][data.Adventurer] = 7 * featured_adv_count / featured_count
+            rates[True][data.Dragon] = 7 * featured_drg_count / featured_count
+            rates[False][data.Adventurer] = 5.05
+            rates[False][data.Dragon] = 3.95
+        else:
+            rates[False][data.Adventurer] = 8.55
+            rates[False][data.Dragon] = 7.45
+
+        return rates
+
+    def get_three_star_rates(self, pity_progress) -> pool.RarityRates:
+        rates = pool.RarityRates()
+
+        total_rate = 80 - self.get_pity_percent(pity_progress)
+        featured_adv_count = len(self.entity_pools[3][True][data.Adventurer])
+        featured_drg_count = len(self.entity_pools[3][True][data.Dragon])
+        rates[True][data.Adventurer] = 4 * featured_adv_count
+        rates[True][data.Dragon] = 4 * featured_drg_count
+        rates[False][data.Adventurer] = 0.6 * total_rate - rates[True][data.Adventurer]
+        rates[False][data.Dragon] = 0.4 * total_rate - rates[True][data.Dragon]
+
+        return rates
 
     @staticmethod
-    def _set_rarity_rate(rarity_rate_pool: RarityRates, new_rate):
-        old_rate = sum(rarity_rate_pool[True].values()) + sum(rarity_rate_pool[False].values())
-        rate_scale = new_rate / old_rate
-        for is_featured, type_pool in rarity_rate_pool.items():
-            for e_type in type_pool:
-                type_pool[e_type] *= rate_scale
+    @abc.abstractmethod
+    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
+        pass
 
-        return old_rate
+    @staticmethod
+    @abc.abstractmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        pass
+
+    @staticmethod
+    def get_pity_percent(pity_progress):
+        return pity_progress // 10 * 0.5
 
 
-hook.Hook.get("data_downloaded").attach(SimShowcase.update_data)
+class NormalSS(SimShowcase):
+    @staticmethod
+    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
+        return e.availability == "Permanent"
+
+    @staticmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        return True
+
+
+hook.Hook.get("data_downloaded").attach(SSCache.update_data)

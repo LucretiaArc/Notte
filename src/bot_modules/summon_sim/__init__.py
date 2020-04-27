@@ -1,7 +1,7 @@
 import hook
 import logging
 import discord
-from . import core, db, image
+from . import core, db, image, pool, showcase_types
 
 logger = logging.getLogger(__name__)
 
@@ -31,16 +31,16 @@ async def select_showcase(message, args):
     """
     args = args.strip()
     if args == "list":
-        showcase_list = sorted(core.SimShowcase.showcases.values(), key=lambda sc: sc.showcase.start_date, reverse=True)
+        showcase_list = sorted(core.SSCache.showcases.values(), key=lambda sc: sc.showcase.start_date, reverse=True)
         await message.channel.send(", ".join(sc.showcase.name for sc in showcase_list))
     elif not args:
         showcase_info, sim_showcase = db.get_current_showcase_info(message.channel.id, message.author.id)
-        if sim_showcase == core.SimShowcase.default_showcase:
+        if sim_showcase == core.SSCache.default_showcase:
             await message.channel.send(showcase_info)
         else:
             await message.channel.send(showcase_info, embed=sim_showcase.showcase.get_embed())
     else:
-        sim_showcase = core.SimShowcase.match(args)
+        sim_showcase = core.SSCache.match(args)
         if sim_showcase:
             await message.channel.send(db.set_showcase(message.channel.id, message.author.id, sim_showcase))
         else:
