@@ -18,7 +18,7 @@ RarityPools = typing.Dict[bool, FeaturedPools]
 EntityPools = typing.Dict[int, RarityPools]
 
 
-class SSCache:
+class SimShowcaseCache:
     showcase_matcher: fuzzy_match.Matcher = None
     showcases = {}
     default_showcase = None
@@ -34,7 +34,7 @@ class SSCache:
         for sc_name, sc in data.Showcase.get_all().items():
             if sc.name not in showcase_blacklist:
                 if sc.type == "Regular" and not sc.name.startswith("Dragon Special"):
-                    new_cache[sc_name] = ShowcaseFactory.create_showcase(sc)
+                    new_cache[sc_name] = SimShowcaseFactory.create_showcase(sc)
 
         matcher_additions = new_cache.copy()
         aliases = config.get_global(f"query_alias/showcase")
@@ -75,7 +75,7 @@ class SSCache:
             return result[0] if result else None
 
 
-class ShowcaseFactory:
+class SimShowcaseFactory:
     showcase_types = []
 
     @classmethod
@@ -128,7 +128,7 @@ class SimShowcase(abc.ABC):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         cls.FIVE_STAR_RATE_TOTAL = cls.FIVE_STAR_ADV_RATE_TOTAL + cls.FIVE_STAR_DRG_RATE_TOTAL
-        ShowcaseFactory.register(cls)
+        SimShowcaseFactory.register(cls)
 
     def perform_solo(self, pity_progress):
         rates = self.get_rates(pity_progress)
@@ -243,4 +243,4 @@ class NormalSS(SimShowcase):
         return True
 
 
-hook.Hook.get("data_downloaded").attach(SSCache.update_data)
+hook.Hook.get("data_downloaded").attach(SimShowcaseCache.update_data)

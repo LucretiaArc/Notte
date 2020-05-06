@@ -10,7 +10,7 @@ def get_gala_three_star_rates(self, pity_progress) -> pool.RarityRates:
     return rates
 
 
-class GalaMultiFeaturedSS(core.SimShowcase):
+class GalaMultiFeatured(core.SimShowcase):
     PITY_PROGRESS_MAX = 60
     FIVE_STAR_ADV_RATE_TOTAL = 3.0
     FIVE_STAR_DRG_RATE_TOTAL = 3.0
@@ -31,7 +31,7 @@ class GalaMultiFeaturedSS(core.SimShowcase):
         return get_gala_three_star_rates(self, pity_progress)
 
 
-class GalaAdventurerSS(core.SimShowcase):
+class GalaAdventurer(core.SimShowcase):
     PITY_PROGRESS_MAX = 60
     FIVE_STAR_ADV_RATE_TOTAL = 3.0
     FIVE_STAR_DRG_RATE_TOTAL = 3.0
@@ -50,7 +50,7 @@ class GalaAdventurerSS(core.SimShowcase):
         return get_gala_three_star_rates(self, pity_progress)
 
 
-class GalaDragonSS(core.SimShowcase):
+class GalaDragon(core.SimShowcase):
     PITY_PROGRESS_MAX = 60
     FIVE_STAR_ADV_RATE_TOTAL = 2.4
     FIVE_STAR_DRG_RATE_TOTAL = 3.6
@@ -67,3 +67,33 @@ class GalaDragonSS(core.SimShowcase):
 
     def get_three_star_rates(self, pity_progress) -> pool.RarityRates:
         return get_gala_three_star_rates(self, pity_progress)
+
+
+# Overrides
+
+class DashOfDisasterPartTwo(core.SimShowcase):
+    @staticmethod
+    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
+        return e.availability == "Permanent"
+
+    @staticmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        return showcase.name == "A Dash of Disaster (Part Two)"
+
+    def get_four_star_rates(self, pity_progress) -> pool.RarityRates:
+        rates = pool.RarityRates()
+        rates[False][data.Adventurer] = 8.0
+        rates[False][data.Dragon] = 8.0
+        return rates
+
+
+class KindredTiesPartTwo(core.SimShowcase):
+    FIVE_STAR_ADV_RATE_EACH = 0.8
+
+    @staticmethod
+    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
+        return e.availability == "Permanent"
+
+    @staticmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        return showcase.name == "Fire Emblem: Kindred Ties (Part Two)"

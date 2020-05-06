@@ -27,9 +27,9 @@ def _get_showcase_info(cursor: sqlite3.Cursor, channel_id: int, user_id: int) ->
     )
     result = cursor.fetchone()
     if result is None:
-        return core.SSCache.default_showcase, 0, 0
+        return core.SimShowcaseCache.default_showcase, 0, 0
     else:
-        return core.SSCache.get(result[0]), result[1], result[2]
+        return core.SimShowcaseCache.get(result[0]), result[1], result[2]
 
 
 def _set_showcase_info(

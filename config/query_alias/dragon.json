@@ -17,6 +17,12 @@
   "corsaint": "corsaint phoenix",
   "garland": "ac-011 garland",
   "ac-011": "ac-011 garland",
+  "gaibhne": "gaibhne & creidhne",
+  "creidhne": "gaibhne & creidhne",
+  "g & c": "gaibhne & creidhne",
+  "g n c": "gaibhne & creidhne",
+  "g&c": "gaibhne & creidhne",
+  "gnc": "gaibhne & creidhne",
 
   "mid": "midgardsormr",
   "midgard": "midgardsormr",
@@ -60,5 +66,8 @@
 
   "rath": "rathalos",
   "dkrathalos": "dreadking rathalos",
-  "dkrath": "dreadking rathalos"
+  "dkrath": "dreadking rathalos",
+
+  "gmars": "gala mars",
+  "mars": "gala mars"
 }
