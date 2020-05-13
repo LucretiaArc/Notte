@@ -68,13 +68,16 @@ def create_adventurer_queries(add_query: typing.Callable):
         if a.ability_3:
             add_query(f"{name} a3", a.ability_3[-1])
         if a.coability:
-            add_query(f"{name} coability", a.coability[-1])
-            add_query(f"{name} coab", a.coability[-1])
+            coab = a.coability[-1]
+            add_query(f"{name} coability", coab)
+            add_query(f"{name} coab", coab)
+            add_query(f"{name} ca", coab)
         if a.chain_coability:
             cc = a.chain_coability[-1]
             add_query(f"{name} chain coability", cc)
             add_query(f"{name} chain coab", cc)
             add_query(f"{name} chain", cc)
+            add_query(f"{name} cca", cc)
             add_query(f"{name} cc", cc)
 
 
