@@ -689,6 +689,7 @@ class Skill(abc.Entity):
             return valid_levels[:max_level]
 
         mp("name", mf.text, "Name")
+        mp("sp_regen", mf.int0, "SpRegen")
         mp("levels", skill_levels, "MaxSkillLevel",
            "Description1", "Sp",
            "Description2", "SPLv2",
@@ -697,6 +698,7 @@ class Skill(abc.Entity):
 
     def __init__(self):
         self.name = ""
+        self.sp_regen = 0
         self.levels: List[Skill.SkillLevel] = []
         self.owner: List[abc.Entity] = []  # updated in postprocess
 
@@ -731,15 +733,19 @@ class Skill(abc.Entity):
                 owners += "\n..."
             owner_str = fmt.format("\n**Used by**\n{owner_list}", owner_list=owners)
 
+        max_skill_level = self.levels[-1] if self.levels else Skill.SkillLevel("", 0)
+
         description = fmt.format(
             textwrap.dedent("""
                 {max_level.description}
 
-                **Cost:** {max_level.sp} SP
+                **Cost:** {sp_str} SP{regen_str!o}
                 {owner_str}
                 """),
             e=self,
-            max_level=self.levels[-1] if self.levels else Skill.SkillLevel("", 0),
+            max_level=max_skill_level,
+            sp_str=f"{max_skill_level.sp:,}",
+            regen_str=f"**SP Regen:** {self.sp_regen:,}/sec ({max_skill_level.sp / self.sp_regen:.1f} sec to fill)" if self.sp_regen else "",
             owner_str=owner_str
         )
 
