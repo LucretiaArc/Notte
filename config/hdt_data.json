@@ -7,17 +7,17 @@
     "fight_info": {
       "standard": {
         "str": 7230,
-        "hp_check_multi": 3.6,
+        "hp_check_multi": 2.3,
         "recommended_def": [0, 7, 9, 15]
       },
       "expert": {
         "str": 9000,
-        "hp_check_multi": 3.7,
+        "hp_check_multi": 2.4,
         "recommended_def": [0, 15, 20, 25, 30, 35]
       },
       "master": {
         "str": 13000,
-        "hp_check_multi": 3.4,
+        "hp_check_multi": 2.2,
         "recommended_def": [0, 15, 20, 25, 30, 35]
       }
     }
@@ -30,17 +30,17 @@
     "fight_info": {
       "standard": {
         "str": 7230,
-        "hp_check_multi": 4.8,
+        "hp_check_multi": 3.1,
         "recommended_def": [0, 7, 9, 15]
       },
       "expert": {
         "str": 9000,
-        "hp_check_multi": 4.75,
+        "hp_check_multi": 3.1,
         "recommended_def": [0, 15, 20, 35]
       },
       "master": {
         "str": 13000,
-        "hp_check_multi": 3.5,
+        "hp_check_multi": 2.3,
         "recommended_def": [0, 15, 20, 35]
       }
     }
@@ -53,17 +53,17 @@
     "fight_info": {
       "standard": {
         "str": 7230,
-        "hp_check_multi": 2.75,
+        "hp_check_multi": 1.78,
         "recommended_def": [0, 7, 9, 15]
       },
       "expert": {
         "str": 9000,
-        "hp_check_multi": 3.2,
+        "hp_check_multi": 2.1,
         "recommended_def": [0, 7, 9, 15]
       },
       "master": {
         "str": 13000,
-        "hp_check_multi": 3.1,
+        "hp_check_multi": 2.0,
         "recommended_def": [0, 7, 9, 15]
       }
     }
@@ -76,17 +76,17 @@
     "fight_info": {
       "standard": {
         "str": 7230,
-        "hp_check_multi": 4.8,
+        "hp_check_multi": 2.86,
         "recommended_def": [0, 7, 9, 15, 22]
       },
       "expert": {
         "str": 9000,
-        "hp_check_multi": 4.2,
+        "hp_check_multi": 2.73,
         "recommended_def": [0, 7, 9, 15, 22]
       },
       "master": {
         "str": 13000,
-        "hp_check_multi": 4.6,
+        "hp_check_multi": 3.0,
         "recommended_def": [0, 7, 9, 15]
       }
     }
@@ -99,17 +99,17 @@
     "fight_info": {
       "standard": {
         "str": 7996,
-        "hp_check_multi": 4.4,
+        "hp_check_multi": 2.86,
         "recommended_def": [0, 15, 23, 30, 38]
       },
       "expert": {
         "str": 8386,
-        "hp_check_multi": 4.4,
+        "hp_check_multi": 2.86,
         "recommended_def": [0, 15, 30, 45]
       },
       "master": {
         "str": 9000,
-        "hp_check_multi": 4.0,
+        "hp_check_multi": 2.6,
         "recommended_def": [0, 15, 30, 45]
       }
     }
