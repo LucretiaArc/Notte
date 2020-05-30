@@ -10,8 +10,13 @@
   "mari": "maribelle",
   "lucre": "lucretia",
   "juli": "julietta",
+  "bzardin": "beautician zardin",
+  "naeleen": "nurse aeleen",
+  "smaribelle": "student maribelle",
+  "smari": "student maribelle",
   "vero": "veronica",
   "xuan": "xuan zang",
+  "xz": "xuan zang",
   "nat": "natalie",
   "jiang": "jiang ziya",
   "euden": "the prince",
@@ -20,6 +25,10 @@
   "mitsu": "mitsuhide",
   "thope": "templar hope",
   "kazuma": "templar hope",
+  "rxz": "radiant xuan zang",
+  "radiant xuan": "radiant xuan zang",
+  "radiant xz": "radiant xuan zang",
+  "rxuan": "radiant xuan zang",
 
   "hedward": "halloween edward",
   "helisanne": "halloween elisanne",
@@ -88,11 +97,6 @@
   "sluca": "summer luca",
   "sverica": "summer verica",
 
-  "bzardin": "beautician zardin",
-  "naeleen": "nurse aeleen",
-  "smaribelle": "student maribelle",
-  "smari": "student maribelle",
-
   "mhberserker": "hunter berserker",
   "mhvanessa": "hunter vanessa",
   "mhsarisse": "hunter sarisse",
@@ -116,5 +120,8 @@
   "gluca": "gala luca",
   "galuca": "gala luca",
   "galex": "gala alex",
-  "galalex": "gala alex"
+  "galalex": "gala alex",
+  "gleif": "gala leif",
+  "galeif": "gala leif",
+  "leif": "gala leif"
 }

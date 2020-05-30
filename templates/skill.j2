@@ -1,0 +1,21 @@
+{{e.name}} (Lv. {{e.levels|length}} Skill)
+{% set max_level = e.levels|last -%}
+{{max_level.description}}
+
+**Cost:** {{max_level.sp|group_digits}} SP{% if e.share_cost %} ({{max_level.share_sp|group_digits}} SP when shared){% endif -%}
+{%- if e.sp_regen %}
+**SP Regen:** {{e.sp_regen|group_digits}}/sec{%- if max_level %} ({{(max_level.sp / e.sp_regen)|round(1)}} sec to fill){%- endif -%}
+{%- endif -%}
+{%- if e.share_cost %}
+**Share Cost:** {{e.share_cost|group_digits}}{{"skill_share"|emote}}
+{%- endif -%}
+{%- if e.owner %}
+{% if e.owner|length == 1 -%}
+**Used by:** {{e.owner.0}}
+{%- else %}
+**Used by**
+{%- for owner_name in e.owner|truncate_list(5,"...") %}
+{{owner_name}}
+{%- endfor -%}
+{%- endif -%}
+{%- endif %}

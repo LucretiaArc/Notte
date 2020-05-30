@@ -10,6 +10,7 @@ import logging
 import html
 import mwparserfromhell
 import re
+import jinja2
 import _string
 
 logger = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ class Entity(abc.ABC):
         """
         Finds the entity for a given key.
         :param key: key of the entity to find (as returned by get_key)
-        :return: entity for the given key, or None  if it was not found.
+        :return: entity for the given key, or None if it was not found.
         """
         return None
 
@@ -78,12 +79,12 @@ class EntityMapper:
     def add_property(self, attr_name, cast_function: typing.Callable, *args: str):
         """
         Adds a property to be mapped. If attr_name is None, then the property will be mapped to an added attribute,
-        entity.POST_PROCESS, which can be deleted later.
+        entity._POST_PROCESS, which can be deleted later.
         :param attr_name: name of attribute to map to, or None if the property is a post-process attribute
         :param cast_function: function to use to transform the data before assigning it to the attribute
         :param args: names of the data fields whose values should be passed to the cast function. Often, this is just
         the name of the data field to be mapped. Not applied to post-process attributes, which are added directly to the
-        POST_PROCESS attribute dictionary.
+        _POST_PROCESS attribute dictionary.
         """
         self.inst_map_funcs[attr_name] = cast_function
         self.inst_map_arg_keys[attr_name] = args
@@ -113,7 +114,7 @@ class EntityMapper:
                 post_process = {}
                 for pp_attr_name in self.inst_map_arg_keys[None]:
                     post_process[pp_attr_name] = entity_data.get(pp_attr_name)
-                setattr(inst, "POST_PROCESS", post_process)
+                setattr(inst, "_POST_PROCESS", post_process)
 
         if not inst.get_key():
             return None
@@ -137,6 +138,10 @@ class EntityMapper:
     @staticmethod
     def int(s: str):
         return util.safe_int(s, None)
+
+    @staticmethod
+    def bool(s: str):
+        return bool(EntityMapper.int0(s))
 
     @staticmethod
     def int0(s: str):
@@ -229,6 +234,29 @@ class EntityRepository:
         return self.data.get(key)
 
 
+class EmbedContentGenerator:
+    env = jinja2.Environment(
+        autoescape=False,
+        loader=jinja2.FileSystemLoader(util.path("templates")),
+        lstrip_blocks=True,
+        undefined=jinja2.ChainableUndefined,
+        finalize=lambda v: v if v else "?",
+        auto_reload=False
+    )
+
+    env.filters["group_digits"] = lambda value: f"{value:,}" if value else ""
+    env.filters["truncate_list"] = lambda ls, count, end: (ls[:count] + [end]) if ls else []
+    env.filters["format_date"] = lambda value: value.date().isoformat() if value else ""
+    env.filters["emote"] = lambda value: util.get_emote(value)
+
+    @classmethod
+    def get_embed_content(cls, entity: Entity, **kwargs):
+        template_name = f"{type(entity).__name__.lower()}.j2"
+        template = cls.env.get_template(template_name)
+        rendered = template.render(e=entity, **kwargs)
+        return tuple(rendered.split("\n", maxsplit=1))
+
+
 class EmbedFormatter(string.Formatter):
     """
     Custom string.Formatter which handles navigation exceptions, supports negative list indices, and supports
@@ -258,9 +286,10 @@ class EmbedFormatter(string.Formatter):
                 if is_attr:
                     obj = getattr(obj, i)
                 else:
-                    v = i
                     if isinstance(i, str):
-                        v = util.safe_int(i, None) or v
+                        v = util.safe_int(i, i)
+                    else:
+                        v = i
 
                     obj = obj[v]
         except (AttributeError, TypeError, IndexError):

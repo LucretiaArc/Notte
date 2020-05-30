@@ -1,6 +1,7 @@
 import util
 import enum
 import aenum
+import calendar
 
 
 class Element(aenum.MultiValueEnum):
@@ -80,6 +81,9 @@ class DragonGift(aenum.MultiValueEnum):
     def get(s: str):
         gift_id = util.safe_int(s, None)
         return None if gift_id not in range(1, 8) else DragonGift(gift_id)
+
+    def get_day(self):
+        return calendar.day_name[self.value - 1]
 
     def __str__(self):
         return self.name.replace("_", " ").title()

@@ -6,9 +6,6 @@ import typing
 import aiohttp
 import aiofiles
 import asyncio
-import urllib.parse
-import json
-import itertools
 import contextlib
 import io
 from PIL import Image, UnidentifiedImageError
@@ -22,9 +19,8 @@ async def update_entity_icons():
     if required_icons:
         logger.info(f"Downloading icons for {len(required_icons)} entities")
         async with aiohttp.ClientSession() as session:
-            icon_urls = await _get_entity_icon_urls(session, required_icons)
-            for file_name, url in icon_urls.items():
-                await _fetch_entity_icon(session, file_name, url)
+            for file_name in required_icons:
+                await _fetch_entity_icon(session, file_name)
                 await asyncio.sleep(2)  # don't use too much bandwidth all at once
 
         logger.info(f"Finished downloading {len(required_icons)} icons")
@@ -36,33 +32,8 @@ def _get_missing_entity_icons():
     return [icon for icon in icon_info if not os.path.exists(util.path(f"data/icons/{icon}"))]
 
 
-async def _get_entity_icon_urls(session: aiohttp.ClientSession, icon_names):
-    base_url = "https://dragalialost.gamepedia.com/api.php?action=query&prop=imageinfo&iiprop=url&format=json&titles="
-    title_chunks = itertools.zip_longest(*([iter(icon_names)] * 50))
-    file_urls = {}
-    for chunk in title_chunks:
-        titles_value = "|".join(f"File:{icon}" for icon in filter(None, chunk))
-        url = base_url + urllib.parse.quote(titles_value.replace("_", " "))
-        async with session.get(url) as response:
-            try:
-                response_json = await response.json(content_type=None)
-            except json.decoder.JSONDecodeError:
-                logger.warning("Could not decode JSON response")
-                return None
-
-        results = response_json["query"]["pages"]
-        for item in results.values():
-            file_name = item["title"].replace(" ", "_")[5:]
-            if "missing" in item:
-                logger.warning(f"URL requested for non-existent file '{file_name}'")
-                continue
-            file_urls[file_name] = item["imageinfo"][0]["url"]
-
-    return file_urls
-
-
-async def _fetch_entity_icon(session: aiohttp.ClientSession, file_name, url):
-    async with session.get(url) as response:
+async def _fetch_entity_icon(session: aiohttp.ClientSession, file_name):
+    async with session.get(util.get_wiki_cdn_url(file_name)) as response:
         async with aiofiles.open(util.path(f"data/icons/{file_name}"), "wb") as file:
             await file.write(await response.read())
 

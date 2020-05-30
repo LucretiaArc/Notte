@@ -7,3 +7,4 @@ jellyfish==0.7.2
 pybktree==1.1
 natsort==6.2.0
 pillow==7.0.0
+jinja2==2.11.2

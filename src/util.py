@@ -4,6 +4,7 @@ import config
 import io
 import discord
 import pathlib
+import hashlib
 
 
 logger = logging.getLogger(__name__)
@@ -95,3 +96,8 @@ def path(path_fragment):
     :return: full file path
     """
     return str(pathlib.Path(__file__).parent.parent / path_fragment)
+
+
+def get_wiki_cdn_url(asset_name):
+    md5_chars = hashlib.md5(asset_name.encode("utf-8")).hexdigest()[:2]
+    return f"https://gamepedia.cursecdn.com/dragalialost_gamepedia_en/{md5_chars[0]}/{md5_chars}/{asset_name}"

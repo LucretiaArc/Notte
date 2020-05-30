@@ -1,4 +1,3 @@
-import calendar
 import collections
 import itertools
 import discord
@@ -60,6 +59,9 @@ class Adventurer(abc.Entity):
         mp("skill_1", Skill.find, "Skill1Name")
         mp("skill_2", Skill.find, "Skill2Name")
         mp("icon_name", lambda i, v, r: f"{i}_0{v}_r0{r}", "Id", "VariationId", "Rarity")
+        mp("is_playable", mf.bool, "IsPlayable")
+
+        mp(None, mf.none, "EditSkillId", "EditSkillCost")
 
         def post_processor(adv: Adventurer):
             try:
@@ -78,9 +80,14 @@ class Adventurer(abc.Entity):
             except (IndexError, TypeError, AttributeError):
                 adv.max_might = None
 
+            pp = adv._POST_PROCESS
+            delattr(adv, "_POST_PROCESS")
+            shared_skill_id = pp["EditSkillId"]
             for sk in [adv.skill_1, adv.skill_2]:
                 if sk:
                     sk.owner.append(adv)
+                    if sk.id == shared_skill_id:
+                        sk.share_cost = mf.int0(pp["EditSkillCost"])
 
             return True
 
@@ -102,6 +109,7 @@ class Adventurer(abc.Entity):
         self.max_might = 0
         self.max_nodes = 0
         self.icon_name = ""
+        self.is_playable = True
 
         self.skill_1: Optional[Skill] = None
         self.skill_2: Optional[Skill] = None
@@ -110,6 +118,8 @@ class Adventurer(abc.Entity):
         self.ability_3: List[Ability] = []
         self.coability: List[CoAbility] = []
         self.chain_coability: List[ChainCoAbility] = []
+
+        self._POST_PROCESS = None
 
     def __str__(self):
         return self.full_name
@@ -122,54 +132,20 @@ class Adventurer(abc.Entity):
         return cls.repository.get_from_key(key.lower())
 
     def get_key(self):
-        if self.full_name:
+        if self.full_name and self.is_playable:
             return self.full_name.lower()
         else:
             return None
 
     def get_embed(self) -> discord.Embed:
-        fmt = abc.EmbedFormatter()
-
-        try:
-            coability_str = self.coability[-1].name or "?"
-        except IndexError:
-            coability_str = "?"
-
-        try:
-            chain_coability_str = self.chain_coability[-1].name or "?"
-        except IndexError:
-            chain_coability_str = "?"
-
-        title = fmt.format("{e.rarity!r}{e.element!e}{e.weapon_type!e} {e.name}: {e.title}", e=self)
-        description = fmt.format(
-            textwrap.dedent("""
-                {e.max_hp} HP / {e.max_str} Str / {e.max_might} Might
-                
-                **Skills**
-                {e.skill_1.name}
-                {e.skill_2.name}
-                
-                **Abilities**
-                {e.ability_1[-1].name}
-                {e.ability_2[-1].name}
-                {e.ability_3[-1].name}
-                
-                **Co-ability:** {coability}
-                **Chain Co-ability:** {chain_coability}
-                
-                *Obtained from: {e.obtained}*
-                *Release Date: {e.release_date!d}* 
-                """),
-            e=self,
-            coability=coability_str,
-            chain_coability=chain_coability_str
-        )
-
+        title, description = abc.EmbedContentGenerator.get_embed_content(self)
         return discord.Embed(
             title=title,
             description=description,
             url=util.get_link(self.full_name),
             colour=discord.Embed.Empty if not self.element else self.element.get_colour()
+        ).set_thumbnail(
+            url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
 
     def get_title_with_emotes(self):
@@ -207,6 +183,7 @@ class Dragon(abc.Entity):
         mp("max_str", mf.int, "MaxAtk")
         mp("favourite_gift", DragonGift.get, "FavoriteType")
         mp("icon_name", lambda i, v: f"{i}_0{v}", "BaseId", "VariationId")
+        mp("is_playable", mf.bool, "IsPlayable")
 
         mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(2)))
         mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(2)))
@@ -248,6 +225,7 @@ class Dragon(abc.Entity):
         self.max_might = 0
         self.favourite_gift: Optional[DragonGift] = None
         self.icon_name = ""
+        self.is_playable = True
 
         self.skill: Optional[Skill] = None
         self.ability_1: List[Ability] = []
@@ -264,45 +242,21 @@ class Dragon(abc.Entity):
         return cls.repository.get_from_key(key.lower())
 
     def get_key(self):
-        if self.full_name:
+        if self.full_name and self.is_playable:
             return self.full_name.lower()
         else:
             return None
 
     def get_embed(self) -> discord.Embed:
-        fmt = abc.EmbedFormatter()
-
-        title = fmt.format(
-            "{e.rarity!r}{e.element!e} {e.name}{title}",
-            e=self,
-            title=(": " + self.title) if self.title else " "
-        )
-
-        description = fmt.format(
-            textwrap.dedent("""
-                {e.max_hp} HP / {e.max_str} Str / {e.max_might} Might 
-
-                **Skill:** {e.skill.name} 
-
-                **Abilities** 
-                {e.ability_1[-1].name}{e.ability_2[-1].name!o} 
-                
-                *Favourite gift: {gift}* 
-                *Obtained from: {e.obtained}* 
-                *Release Date: {e.release_date!d}* 
-                """),
-            e=self,
-            gift="" if not self.favourite_gift else "{0} ({1})".format(
-                str(self.favourite_gift),
-                calendar.day_name[self.favourite_gift.value - 1]
-            )
-        )
+        title, description = abc.EmbedContentGenerator.get_embed_content(self)
 
         return discord.Embed(
             title=title,
             description=description,
             url=util.get_link(self.full_name),
             colour=discord.Embed.Empty if not self.element else self.element.get_colour()
+        ).set_thumbnail(
+            url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
 
     def get_title_with_emotes(self):
@@ -335,6 +289,7 @@ class Wyrmprint(abc.Entity):
         mp("obtained", lambda s: re.split("[,\n]+", mf.text(s)) if mf.text(s) else None, "Obtain")
         mp("availability", mf.text, "Availability")
         mp("release_date", mf.date, "ReleaseDate")
+        mp("icon_name", lambda i: f"{i}_02", "BaseId")
 
         mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(3)))
         mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(3)))
@@ -365,6 +320,7 @@ class Wyrmprint(abc.Entity):
         self.max_hp = 0
         self.max_str = 0
         self.max_might = 0
+        self.icon_name = ""
 
         self.ability_1: List[Ability] = []
         self.ability_2: List[Ability] = []
@@ -412,6 +368,8 @@ class Wyrmprint(abc.Entity):
             description=description,
             url=util.get_link(self.name),
             colour=get_rarity_colour(self.rarity)
+        ).set_thumbnail(
+            url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
 
 
@@ -483,16 +441,17 @@ class Weapon(abc.Entity):
             craft_groups = collections.defaultdict(lambda: collections.defaultdict(list))
             craft_index = {}
 
+            w: Weapon
             for w in weapons.values():
                 # add to craft groups map for second pass
-                pp = w.POST_PROCESS
+                pp = w._POST_PROCESS
+                delattr(w, "_POST_PROCESS")
                 group_id = mf.text(pp["CraftGroupId"])
                 if group_id:
                     node_id = mf.text(pp["CraftNodeId"])
                     parent_node_id = mf.text(pp["ParentCraftNodeId"])
                     craft_groups[group_id][parent_node_id].append(node_id)
                     craft_index[group_id, node_id] = w
-                delattr(w, "POST_PROCESS")
 
             # no need to use passed in weapons
             for group_id, group in craft_groups.items():
@@ -536,6 +495,8 @@ class Weapon(abc.Entity):
         self.crafted_from: Optional[Weapon] = None
         self.crafted_to: List[Weapon] = []
         self.tier: Optional[int] = None
+
+        self._POST_PROCESS = None
 
     def __str__(self):
         return self.name
@@ -609,16 +570,10 @@ class Weapon(abc.Entity):
         )
 
     def get_title_string(self):
-        w_tier = 0
-        w_node = self
-        while w_node is not None:
-            w_node = w_node.crafted_from
-            w_tier += 1
-
         return abc.EmbedFormatter().format(
             "{e.rarity!r}{tier!e} {e.name} {e.element!e}{e.weapon_type!e}",
             e=self,
-            tier=("wtier" + str(w_tier)) if self.obtained == "Crafting" else ""
+            tier=f"wtier{self.tier}" if self.obtained == "Crafting" else ""
         )
 
     def get_crafting_cost(self):
@@ -659,9 +614,10 @@ class Skill(abc.Entity):
     repository: abc.EntityRepository = None
 
     class SkillLevel:
-        def __init__(self, desc: str, sp: int):
+        def __init__(self, desc: str, sp: int, share_sp: int):
             self.description = desc
             self.sp = sp
+            self.share_sp = share_sp
 
         def __repr__(self):
             return str(vars(self))
@@ -678,29 +634,32 @@ class Skill(abc.Entity):
         mp = mapper.add_property  # mapper property
         mf = abc.EntityMapper  # mapper functions
 
-        def map_level(desc, sp):
-            return Skill.SkillLevel(mf.text(desc), mf.int(sp))
+        def map_level(desc, sp, share_sp):
+            return Skill.SkillLevel(mf.text(desc), mf.int(sp), mf.int(share_sp))
 
         def skill_levels(*args):
             max_level = mf.int0(args[0])
-            arg_pairs = itertools.zip_longest(*([iter(args[1:])] * 2))
-            mapped_levels = itertools.starmap(map_level, arg_pairs)
+            arg_groups = itertools.zip_longest(*([iter(args[1:])] * 3))
+            mapped_levels = itertools.starmap(map_level, arg_groups)
             valid_levels = list(itertools.takewhile(lambda sl: sl.description, mapped_levels))
             return valid_levels[:max_level]
 
+        mp("id", mf.none, "SkillId")
         mp("name", mf.text, "Name")
         mp("sp_regen", mf.int0, "SpRegen")
         mp("levels", skill_levels, "MaxSkillLevel",
-           "Description1", "Sp",
-           "Description2", "SPLv2",
-           "Description3", "Sp",
-           "Description4", "Sp")
+           "Description1", "Sp",    "SpEdit",
+           "Description2", "SPLv2", "SpLv2Edit",
+           "Description3", "SPLv3", "SpLv3Edit",
+           "Description4", "SPLv4", "SpLv4Edit")
 
     def __init__(self):
+        self.id = ""
         self.name = ""
         self.sp_regen = 0
         self.levels: List[Skill.SkillLevel] = []
-        self.owner: List[abc.Entity] = []  # updated in postprocess
+        self.owner: List[abc.Entity] = []  # updated in postprocess of Adventurer, Dragon, Weapon
+        self.share_cost = 0  # assigned in postprocess of Adventurer
 
     def __str__(self):
         return self.name
@@ -719,36 +678,7 @@ class Skill(abc.Entity):
             return None
 
     def get_embed(self) -> discord.Embed:
-        fmt = abc.EmbedFormatter()
-
-        title = fmt.format("{e.name} (Lv. {e.levels!l} Skill)", e=self)
-
-        if len(self.owner) == 0:
-            owner_str = ""
-        elif len(self.owner) == 1:
-            owner_str = fmt.format("**Used by:** {owner}", owner=self.owner[0])
-        else:
-            owners = "\n".join(str(e) for e in self.owner[:5])
-            if len(self.owner) > 5:
-                owners += "\n..."
-            owner_str = fmt.format("\n**Used by**\n{owner_list}", owner_list=owners)
-
-        max_skill_level = self.levels[-1] if self.levels else Skill.SkillLevel("", 0)
-
-        description = fmt.format(
-            textwrap.dedent("""
-                {max_level.description}
-
-                **Cost:** {sp_str} SP{regen_str!o}
-                {owner_str}
-                """),
-            e=self,
-            max_level=max_skill_level,
-            sp_str=f"{max_skill_level.sp:,}",
-            regen_str=f"**SP Regen:** {self.sp_regen:,}/sec ({max_skill_level.sp / self.sp_regen:.1f} sec to fill)" if self.sp_regen else "",
-            owner_str=owner_str
-        )
-
+        title, description = abc.EmbedContentGenerator.get_embed_content(self)
         return discord.Embed(
             title=title,
             description=description,
