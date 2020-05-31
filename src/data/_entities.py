@@ -108,8 +108,6 @@ class Adventurer(abc.Entity):
         self.max_might = 0
         self.max_nodes = 0
         self.icon_name = ""
-        self.is_playable = True
-
         self.skill_1: Optional[Skill] = None
         self.skill_2: Optional[Skill] = None
         self.ability_1: List[Ability] = []
@@ -118,6 +116,7 @@ class Adventurer(abc.Entity):
         self.coability: List[CoAbility] = []
         self.chain_coability: List[ChainCoAbility] = []
 
+        self.is_playable = True
         self._POST_PROCESS = None
 
     def __str__(self):
@@ -221,11 +220,11 @@ class Dragon(abc.Entity):
         self.max_might = 0
         self.favourite_gift: Optional[DragonGift] = None
         self.icon_name = ""
-        self.is_playable = True
-
         self.skill: Optional[Skill] = None
         self.ability_1: List[Ability] = []
         self.ability_2: List[Ability] = []
+
+        self.is_playable = True
 
     def __str__(self):
         return self.full_name
@@ -313,7 +312,6 @@ class Wyrmprint(abc.Entity):
         self.max_str = 0
         self.max_might = 0
         self.icon_name = ""
-
         self.ability_1: List[Ability] = []
         self.ability_2: List[Ability] = []
         self.ability_3: List[Ability] = []
@@ -372,6 +370,7 @@ class Weapon(abc.Entity):
         mp("availability", mf.text, "Availability")
         mp("max_hp", mf.int, "MaxHp")
         mp("max_str", mf.int, "MaxAtk")
+        mp("icon_name", lambda b_id, f_id: f"{b_id}_01_{f_id}", "BaseId", "FormId")
 
         mp("ability_1", Ability.find, "Abilities11")
         mp("ability_2", Ability.find, "Abilities21")
@@ -455,15 +454,13 @@ class Weapon(abc.Entity):
         self.weapon_type: Optional[WeaponType] = None
         self.obtained = ""
         self.availability = ""
-
         self.max_hp = 0
         self.max_str = 0
         self.max_might = 0
-
+        self.icon_name = ""
         self.skill: Optional[Skill] = None
         self.ability_1: Optional[Ability] = None
         self.ability_2: Optional[Ability] = None
-
         self.crafting_materials = {}
         self.crafted_from: Optional[Weapon] = None
         self.crafted_to: List[Weapon] = []
@@ -502,6 +499,8 @@ class Weapon(abc.Entity):
             description=description,
             url=util.get_link(self.name),
             colour=colour
+        ).set_thumbnail(
+            url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
 
 
