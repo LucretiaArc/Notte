@@ -2,7 +2,7 @@
 {{skill.name}} [{{(skill.levels|last).sp|group_digits}} SP]{% if skill and skill.share_cost %} ({{(skill.levels|last).share_sp|group_digits}} SP when shared){% endif %}
 {%- endmacro -%}
 
-{{("rarity" ~ e.rarity or "")|emote}}{{e.element|emote}}{{e.weapon_type|emote}} {{e.name}}: {{e.title}}
+{{e.rarity|rarity_emote}}{{e.element|element_emote}}{{e.weapon_type|weapon_emote}} {{e.name}}: {{e.title}}
 {{e.max_hp}} HP / {{e.max_str}} Str / {{e.max_might}} Might
 
 **Skills**
@@ -17,5 +17,5 @@
 **Co-ability:** {{(e.coability|last).name}}
 **Chain Co-ability:** {{(e.chain_coability|last).name}}
 
-*Obtained from: {{e.obtained}}*
+*Obtained From: {{e.obtained}}*
 *Release Date: {{e.release_date|format_date}}*

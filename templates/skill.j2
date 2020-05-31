@@ -4,10 +4,10 @@
 
 **Cost:** {{max_level.sp|group_digits}} SP{% if e.share_cost %} ({{max_level.share_sp|group_digits}} SP when shared){% endif -%}
 {%- if e.sp_regen %}
-**SP Regen:** {{e.sp_regen|group_digits}}/sec{%- if max_level %} ({{(max_level.sp / e.sp_regen)|round(1)}} sec to fill){%- endif -%}
+**SP regen:** {{e.sp_regen|group_digits}}/sec{%- if max_level %} ({{(max_level.sp / e.sp_regen)|round(1)}} sec to fill){%- endif -%}
 {%- endif -%}
 {%- if e.share_cost %}
-**Share Cost:** {{e.share_cost|group_digits}}{{"skill_share"|emote}}
+**Share cost:** {{e.share_cost|group_digits}}{{"skill_share"|emote}}
 {%- endif -%}
 {%- if e.owner %}
 {% if e.owner|length == 1 -%}

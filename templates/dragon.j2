@@ -1,4 +1,4 @@
-{{("rarity" ~ e.rarity or "")|emote}}{{e.element|emote}} {{e.name}}{% if e.title %}: {{e.title}}{% endif %}
+{{e.rarity|rarity_emote}}{{e.element|element_emote}} {{e.name}}{% if e.title %}: {{e.title}}{% endif %}
 {{e.max_hp}} HP / {{e.max_str}} Str / {{e.max_might}} Might
 
 **Skill:** {{e.skill.name}}
@@ -11,4 +11,4 @@
 
 *Favourite gift: {{e.favourite_gift}} ({{e.favourite_gift.get_day() if e.favourite_gift is not none else "?"}})*
 *Obtained from: {{e.obtained}}*
-*Release Date: {{e.release_date|format_date}}*
+*Release date: {{e.release_date|format_date}}*

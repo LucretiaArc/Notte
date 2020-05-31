@@ -1,0 +1,20 @@
+{{e.rarity|rarity_emote}} {{e.name}}
+{{e.max_hp}} HP / {{e.max_str}} Str / {{e.max_might}} Might
+
+**Abilities**
+{{(e.ability_1|last).name}}
+{%- if e.ability_2 %}
+{{(e.ability_2|last).name}}
+{%- endif -%}
+{%- if e.ability_3 %}
+{{(e.ability_3|last).name}}
+{%- endif %}
+
+**Obtained from**
+{%- for source in e.obtain %}
+{{source}}
+{%- else %}
+?
+{%- endfor %}
+
+*Release date: {{e.release_date|format_date}}*

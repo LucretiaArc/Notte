@@ -8,6 +8,7 @@
   "dark": "<:element_dark:558907933434314753>",
   "none": "<:element_none:558907933648224256>",
 
+  "rarity0": "<:rarity_none:716269519991210025>",
   "rarity1": "<:rarity_1:660388223293325352>",
   "rarity2": "<:rarity_2:660388222949523468>",
   "rarity3": "<:rarity_3:660388223402377245>",
@@ -15,6 +16,7 @@
   "rarity5": "<:rarity_5:660388223356370944>",
   "rarity6": "<:rarity_6:660388223289262080>",
 
+  "wtier0": "<:wt_none:716558246827130910>",
   "wtier1": "<:wt_1:565525064574042132>",
   "wtier2": "<:wt_2:565525064498544640>",
   "wtier3": "<:wt_3:565525064489893888>",
@@ -27,8 +29,9 @@
   "stun": "<:affliction_stun:558978734007517195>",
   "curse": "<:affliction_curse:558978733957185566>",
   "bog": "<:affliction_bog:558978733462126594>",
+  "sleep": "<:affliction_sleep:716260452664868864>",
+  "frostbite": "<:affliction_frostbite:716260452765794361>",
 
-  "sleep": "<:affliction_sleep:558978734137278464>",
   "sword": "<:weapon_sword:562156792969166888>",
   "blade": "<:weapon_blade:562156792520376321>",
   "dagger": "<:weapon_dagger:562156792738611200>",
@@ -37,6 +40,7 @@
   "bow": "<:weapon_bow:562156792751325184>",
   "wand": "<:weapon_wand:562156792872697892>",
   "staff": "<:weapon_staff:562156792600330250>",
+  "weapon_none": "<:weapon_none:716269520301457468>",
 
   "skill_share": "<:skill_share:715503213356253234>",
 

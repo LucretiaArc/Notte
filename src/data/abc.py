@@ -133,7 +133,11 @@ class EntityMapper:
 
     @staticmethod
     def text(s: str):
-        return _clean_wikitext(s) or None
+        html_breaks_replaced = re.sub(r" *<br */?> *", "\n", html.unescape(s))
+        tags_removed = re.sub(r"<[^<]+?>", "", html_breaks_replaced)
+        wikicode_removed = mwparserfromhell.parse(tags_removed).strip_code()
+        spaces_reduced = re.sub(r" {2,}", " ", wikicode_removed)
+        return spaces_reduced.strip() or None
 
     @staticmethod
     def int(s: str):
@@ -152,7 +156,7 @@ class EntityMapper:
         if not s:
             return None
 
-        dt = datetime.datetime.strptime(s + " +0000", "%Y-%m-%d %H:%M:%S %z")
+        dt = datetime.datetime.strptime(f"{s} +0000", "%Y-%m-%d %H:%M:%S %z")
         return dt if 1970 < dt.year < 2100 else None
 
     @staticmethod
@@ -212,7 +216,6 @@ class EntityRepository:
                 query_items = [d["title"] for d in inner_result_list]
                 result_items += query_items
                 offset += limit
-
                 if len(query_items) < limit or len(inner_result_list) == 0:
                     return result_items
 
@@ -244,96 +247,26 @@ class EmbedContentGenerator:
         auto_reload=False
     )
 
+    @staticmethod
+    def _truncate_list(ls, count, end):
+        if not ls:
+            return []
+
+        if len(ls) <= count:
+            return ls
+
+        return ls[:count-1] + [end]
+
     env.filters["group_digits"] = lambda value: f"{value:,}" if value else ""
-    env.filters["truncate_list"] = lambda ls, count, end: (ls[:count] + [end]) if ls else []
+    env.filters["truncate_list"] = lambda ls, count, end: EmbedContentGenerator._truncate_list(ls, count, end)
     env.filters["format_date"] = lambda value: value.date().isoformat() if value else ""
     env.filters["emote"] = lambda value: util.get_emote(value)
+    env.filters["rarity_emote"] = lambda value: util.get_emote(f"rarity{value or 0}")
+    env.filters["weapon_emote"] = lambda value: util.get_emote(value or "weapon_none")
+    env.filters["element_emote"] = lambda value: util.get_emote(value or "none")
+    env.filters["tier_emote"] = lambda value: util.get_emote(f"wtier{value or 0}")
 
     @classmethod
-    def get_embed_content(cls, entity: Entity, **kwargs):
-        template_name = f"{type(entity).__name__.lower()}.j2"
-        template = cls.env.get_template(template_name)
-        rendered = template.render(e=entity, **kwargs)
+    def get_embed_content(cls, template_name: str, **kwargs):
+        rendered = cls.env.get_template(f"{template_name}.j2").render(**kwargs)
         return tuple(rendered.split("\n", maxsplit=1))
-
-
-class EmbedFormatter(string.Formatter):
-    """
-    Custom string.Formatter which handles navigation exceptions, supports negative list indices, and supports
-    a different set of conversions. The originally provided r, s, and a conversions are not available.
-    """
-
-    def __init__(self, default="?"):
-        self.conversions = {}
-        self.default = default
-
-    def add_conversion(self, conversion, function):
-        if conversion not in self.conversions:
-            self.conversions[conversion] = function
-        else:
-            raise ValueError(f'Conversion already exists for key "{conversion}"')
-
-    def get_field(self, field_name, args, kwargs):
-        # This is a modified version of the existing implementation of get_field, as defined in string.Formatter.
-        # It supports negative list indices, and ignores navigation exceptions in favour of returning None.
-        # Only the former requires modification of this method.
-        first, rest = _string.formatter_field_name_split(field_name)
-
-        obj = self.get_value(first, args, kwargs)
-
-        try:
-            for is_attr, i in rest:
-                if is_attr:
-                    obj = getattr(obj, i)
-                else:
-                    if isinstance(i, str):
-                        v = util.safe_int(i, i)
-                    else:
-                        v = i
-
-                    obj = obj[v]
-        except (AttributeError, TypeError, IndexError):
-            return None, field_name
-
-        return obj, first
-
-    def format_field(self, value, spec):
-        if value is None:
-            return self.default
-
-        return super().format_field(value, spec)
-
-    def convert_field(self, value, conversion):
-        if conversion is None:  # no conversion
-            return value if value else self.default
-        elif conversion == "r":  # rarity emote
-            return util.get_emote(f"rarity{value}")
-        elif conversion == "e":  # generic emote
-            return util.get_emote(value)
-        elif conversion == "d":  # date string from datetime
-            return value.date().isoformat() if value else self.default
-        elif conversion == "o":  # optional value, with newline if present
-            return f"\n{value}" if value else ""
-        elif conversion == "l":  # length of value
-            return len(value) if value else self.default
-        else:
-            raise ValueError(f"Unknown conversion specifier {conversion}")
-
-
-def _clean_wikitext(wikitext):
-    """
-    Applies several transformations to wikitext, so that it's suitable for display in a message. This function does NOT
-    sanitise the input, so the output of this method isn't safe for use in a HTML document. This method, in no
-    particular order:
-     - Strips spaces from the ends
-     - Strips wikicode
-     - Decodes HTML entities then strips HTML tags
-     - Reduces consecutive spaces
-    :param wikitext: wikitext to strip
-    :return: string representing the stripped wikitext
-    """
-    html_breaks_replaced = re.sub(r" *<br */?> *", "\n", html.unescape(wikitext))
-    html_removed = re.sub(r"<[^<]+?>", "", html_breaks_replaced)
-    wikicode_removed = mwparserfromhell.parse(html_removed).strip_code()
-    spaces_reduced = re.sub(r" {2,}", " ", wikicode_removed)
-    return spaces_reduced.strip()

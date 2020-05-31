@@ -1,0 +1,35 @@
+{% macro title_string(w) -%}
+{{w.rarity|rarity_emote}}{% if w.obtained == "Crafting" %}{{w.tier|tier_emote}}{% endif %} {{w.name}} {{w.element|element_emote}}{{w.weapon_type|weapon_emote}}
+{%- endmacro -%}
+
+{{title_string(e)}}
+{{e.max_hp}} HP / {{e.max_str}} Str / {{e.max_might}} Might
+
+{% if e.skill -%}
+**Skill:** {{e.skill.name}}
+
+{% endif -%}
+{%- if e.ability_1 or e.ability_2 -%}
+**Abilities**
+{{e.ability_1.name}}
+{%- if e.ability_2 %}
+{{e.ability_2.name}}
+{%- endif %}
+
+{% endif -%}
+{%- if e.obtained == "Crafting" -%}
+{%- if e.crafted_from -%}
+{{"blank"|emote * 2}} **Crafted from**
+{{title_string(e.crafted_from)}}
+
+{% endif -%}
+{%- if e.crafted_to -%}
+{{"blank"|emote * 2}} **Used to craft**
+{%- for child in e.crafted_to %}
+{{title_string(child)}}
+{%- endfor %}
+
+{% endif -%}
+{%- else -%}
+*Obtained from: {{e.obtained}}*
+{%- endif %}

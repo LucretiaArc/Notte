@@ -3,7 +3,6 @@ import itertools
 import discord
 import re
 import util
-import textwrap
 import datetime
 import logging
 from typing import List, Optional
@@ -138,7 +137,7 @@ class Adventurer(abc.Entity):
             return None
 
     def get_embed(self) -> discord.Embed:
-        title, description = abc.EmbedContentGenerator.get_embed_content(self)
+        title, description = abc.EmbedContentGenerator.get_embed_content("adventurer", e=self)
         return discord.Embed(
             title=title,
             description=description,
@@ -147,9 +146,6 @@ class Adventurer(abc.Entity):
         ).set_thumbnail(
             url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
-
-    def get_title_with_emotes(self):
-        return abc.EmbedFormatter().format("{e.rarity!r}{e.element!e}{e.weapon_type!e} {e.full_name}", e=self)
 
 
 class Dragon(abc.Entity):
@@ -248,8 +244,7 @@ class Dragon(abc.Entity):
             return None
 
     def get_embed(self) -> discord.Embed:
-        title, description = abc.EmbedContentGenerator.get_embed_content(self)
-
+        title, description = abc.EmbedContentGenerator.get_embed_content("dragon", e=self)
         return discord.Embed(
             title=title,
             description=description,
@@ -258,9 +253,6 @@ class Dragon(abc.Entity):
         ).set_thumbnail(
             url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
-
-    def get_title_with_emotes(self):
-        return abc.EmbedFormatter().format("{e.rarity!r}{e.element!e} {e.full_name}", e=self)
 
 
 class Wyrmprint(abc.Entity):
@@ -343,26 +335,7 @@ class Wyrmprint(abc.Entity):
             return None
 
     def get_embed(self) -> discord.Embed:
-        fmt = abc.EmbedFormatter()
-
-        title = fmt.format("{e.rarity!r} {e.name}", e=self)
-
-        description = fmt.format(
-            textwrap.dedent("""
-                {e.max_hp} HP / {e.max_str} Str / {e.max_might} Might 
-
-                **Abilities** 
-                {e.ability_1[-1].name}{e.ability_2[-1].name!o} {e.ability_3[-1].name!o} 
-                
-                **Obtained from**
-                {obtain} 
-                  
-                *Release Date: {e.release_date!d}* 
-                """),
-            e=self,
-            obtain="\n".join(self.obtained) if self.obtained else ""
-        )
-
+        title, description = abc.EmbedContentGenerator.get_embed_content("wyrmprint", e=self)
         return discord.Embed(
             title=title,
             description=description,
@@ -515,45 +488,7 @@ class Weapon(abc.Entity):
             return None
 
     def get_embed(self) -> discord.Embed:
-        fmt = abc.EmbedFormatter()
-
-        sections = []
-
-        # skill
-        if self.skill:
-            sections.append(fmt.format("**Skill:** {e.skill.name} ", e=self))
-
-        # abilities
-        if self.ability_1 or self.ability_2:
-            sections.append(fmt.format("**Abilities**\n{e.ability_1.name}{e.ability_2.name!o} ", e=self))
-
-        # obtained from
-        if self.obtained == "Crafting":
-            if self.crafted_from:
-                sections.append(fmt.format(
-                    "{0!e}{0!e} **Crafted from**\n{1} ",
-                    "blank",
-                    self.crafted_from.get_title_string()
-                ))
-
-            if self.crafted_to:
-                sections.append(fmt.format(
-                    "{0!e}{0!e} **Used to craft**\n{1} ",
-                    "blank",
-                    "\n".join(child.get_title_string() for child in self.crafted_to)
-                ))
-        else:
-            sections.append(fmt.format("*Obtained from: {e.obtained}* ", e=self))
-
-        description = fmt.format(
-            textwrap.dedent("""
-                {e.max_hp} HP / {e.max_str} Str / {e.max_might} Might 
-
-                {sections}
-                """),
-            e=self,
-            sections="\n\n".join(sections)
-        )
+        title, description = abc.EmbedContentGenerator.get_embed_content("weapon", e=self)
 
         if self.element is not None:
             colour = self.element.get_colour()
@@ -563,48 +498,11 @@ class Weapon(abc.Entity):
             colour = discord.Embed.Empty
 
         return discord.Embed(
-            title=self.get_title_string(),
+            title=title,
             description=description,
             url=util.get_link(self.name),
             colour=colour
         )
-
-    def get_title_string(self):
-        return abc.EmbedFormatter().format(
-            "{e.rarity!r}{tier!e} {e.name} {e.element!e}{e.weapon_type!e}",
-            e=self,
-            tier=f"wtier{self.tier}" if self.obtained == "Crafting" else ""
-        )
-
-    def get_crafting_cost(self):
-        material_cost = collections.Counter()
-        material_cost.update(self.crafting_materials)
-        if self.crafted_from:
-            prerequisite_materials = self.crafted_from.get_crafting_cost()
-            material_cost.update({k: v * 5 for k, v in prerequisite_materials.items()})
-
-        return dict(material_cost)
-
-    def get_crafting_cost_embed(self):
-        if self.obtained == "Crafting":
-            crafting_cost = self.get_crafting_cost()
-            content = "**Total Crafting Cost**\n" + "\n".join(f"**{k}**: {v:,}" for k, v in crafting_cost.items())
-
-            if self.element is not None:
-                colour = self.element.get_colour()
-            elif self.rarity is not None:
-                colour = get_rarity_colour(self.rarity)
-            else:
-                colour = discord.Embed.Empty
-
-            return discord.Embed(
-                title=self.get_title_string(),
-                description=content,
-                url=util.get_link(self.name),
-                colour=colour
-            )
-
-        return None
 
 
 class Skill(abc.Entity):
@@ -678,7 +576,7 @@ class Skill(abc.Entity):
             return None
 
     def get_embed(self) -> discord.Embed:
-        title, description = abc.EmbedContentGenerator.get_embed_content(self)
+        title, description = abc.EmbedContentGenerator.get_embed_content("skill", e=self)
         return discord.Embed(
             title=title,
             description=description,
@@ -739,17 +637,7 @@ class Ability(abc.Entity):
         return self.id_str
 
     def get_embed(self) -> discord.Embed:
-        fmt = abc.EmbedFormatter()
-
-        title = fmt.format("{e.name} (Ability)", e=self)
-        description = fmt.format(
-            textwrap.dedent("""
-                {e.description}
-
-                **Might:** {e.might}
-                """),
-            e=self
-        )
+        title, description = abc.EmbedContentGenerator.get_embed_content("ability", e=self)
 
         return discord.Embed(
             title=title,
@@ -804,17 +692,7 @@ class CoAbility(abc.Entity):
         return self.id_str
 
     def get_embed(self) -> discord.Embed:
-        fmt = abc.EmbedFormatter()
-
-        title = fmt.format("{e.name} (Co-Ability)", e=self)
-        description = fmt.format(
-            textwrap.dedent("""
-                {e.description}
-
-                **Might:** {e.might}
-                """),
-            e=self
-        )
+        title, description = abc.EmbedContentGenerator.get_embed_content("coability", e=self)
 
         return discord.Embed(
             title=title,
@@ -867,10 +745,7 @@ class ChainCoAbility(abc.Entity):
         return self.id_str
 
     def get_embed(self) -> discord.Embed:
-        fmt = abc.EmbedFormatter()
-
-        title = fmt.format("{e.name} (Chain Co-Ability)", e=self)
-        description = self.description or "?"
+        title, description = abc.EmbedContentGenerator.get_embed_content("chain_coability", e=self)
 
         return discord.Embed(
             title=title,
@@ -939,25 +814,7 @@ class Showcase(abc.Entity):
             return None
 
     def get_embed(self) -> discord.Embed:
-        fmt = abc.EmbedFormatter()
-
-        title = fmt.format("{e.name} (Summon Showcase)", e=self)
-        featured_adventurers = "\n".join(map(Adventurer.get_title_with_emotes, self.featured_adventurers))
-        featured_dragons = "\n".join(map(Dragon.get_title_with_emotes, self.featured_dragons))
-        featured_adventurers_text = f"**Focus Adventurers**\n{featured_adventurers}\n" if featured_adventurers else ""
-        featured_dragon_text = f"**Focus Dragons**\n{featured_dragons}\n" if featured_dragons else ""
-
-        description = fmt.format(
-            textwrap.dedent("""
-                {featured_adv!o}{featured_drg!o}
-                **Start date:** {e.start_date!d}
-                **End date:** {e.end_date!d}
-                """),
-            e=self,
-            featured_adv=featured_adventurers_text,
-            featured_drg=featured_dragon_text
-        )
-
+        title, description = abc.EmbedContentGenerator.get_embed_content("showcase", e=self)
         return discord.Embed(
             title=title,
             description=description,

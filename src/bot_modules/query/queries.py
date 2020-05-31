@@ -2,7 +2,6 @@ import data
 import typing
 import config
 import collections
-import textwrap
 import natsort
 import discord
 import logging
@@ -143,8 +142,6 @@ def create_weapon_queries(add_query: typing.Callable):
                 add_query(f"{desc} a1", w.ability_1)
             if w.ability_2:
                 add_query(f"{desc} a2", w.ability_2)
-            if w.obtained == "Crafting":
-                add_query(f"{desc} cost", EmbedContainer(w.get_crafting_cost_embed()))
 
 
 def create_skill_queries(add_query: typing.Callable):
@@ -177,15 +174,9 @@ def create_ability_queries(add_query: typing.Callable):
                 names = names[:15] + ["..."]
 
             name_list = "\n".join(names)
-            content = textwrap.dedent(f"""
-                    {desc}
-
-                    {name_list}
-                    """)
-
             embed = discord.Embed(
                 title=f"{name} (Disambiguation)",
-                description=content.strip(),
+                description=f"{desc}\n\n{name_list}".strip(),
                 color=0xFF7000
             )
 

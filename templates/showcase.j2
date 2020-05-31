@@ -1,0 +1,17 @@
+{{e.name}} (Summon Showcase)
+{% if e.featured_adventurers -%}
+**Featured Adventurers**
+{%- for a in e.featured_adventurers %}
+{{a.rarity|rarity_emote}}{{a.element|element_emote}}{{a.weapon_type|weapon_emote}} {{a.full_name}}
+{%- endfor %}
+
+{% endif -%}
+{%- if e.featured_dragons -%}
+**Featured Dragons**
+{%- for d in e.featured_dragons %}
+{{d.rarity|rarity_emote}}{{d.element|element_emote}} {{d.full_name}}
+{%- endfor %}
+
+{% endif -%}
+*Start date: {{e.start_date|format_date}}*
+*End date: {{e.end_date|format_date}}*
