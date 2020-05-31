@@ -165,6 +165,7 @@ class Dragon(abc.Entity):
 
         mp = mapper.add_property  # mapper property
         mf = abc.EntityMapper  # mapper functions
+
         mp("full_name", mf.text, "FullName")
         mp("name", mf.text, "Name")
         mp("title", mf.text, "Title")
@@ -179,7 +180,6 @@ class Dragon(abc.Entity):
         mp("favourite_gift", DragonGift.get, "FavoriteType")
         mp("icon_name", lambda i, v: f"{i}_0{v}", "BaseId", "VariationId")
         mp("is_playable", mf.bool, "IsPlayable")
-
         mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(2)))
         mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(2)))
         mp("skill", Skill.find, "SkillName")
@@ -281,7 +281,6 @@ class Wyrmprint(abc.Entity):
         mp("availability", mf.text, "Availability")
         mp("release_date", mf.date, "ReleaseDate")
         mp("icon_name", lambda i: f"{i}_02", "BaseId")
-
         mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(3)))
         mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(3)))
         mp("ability_3", mf.filtered_list_of(Ability.find), *(f"Abilities3{i + 1}" for i in range(3)))
@@ -371,23 +370,9 @@ class Weapon(abc.Entity):
         mp("max_hp", mf.int, "MaxHp")
         mp("max_str", mf.int, "MaxAtk")
         mp("icon_name", lambda b_id, f_id: f"{b_id}_01_{f_id}", "BaseId", "FormId")
-
         mp("ability_1", Ability.find, "Abilities11")
         mp("ability_2", Ability.find, "Abilities21")
         mp("skill", Skill.find, "SkillName")
-
-        def crafting_materials(*args):
-            arg_pairs = zip(*[iter(args)] * 2)
-            return {k: util.safe_int(v, 0) for k, v in arg_pairs if k and k != "0"}
-
-        mp("crafting_materials", crafting_materials,
-           'CONCAT("Rupies")', "AssembleCoin",
-           "CraftMaterial1", "CraftMaterialQuantity1",
-           "CraftMaterial2", "CraftMaterialQuantity2",
-           "CraftMaterial3", "CraftMaterialQuantity3",
-           "CraftMaterial4", "CraftMaterialQuantity4",
-           "CraftMaterial5", "CraftMaterialQuantity5",
-           )
 
         mp(None, mf.none, "CraftGroupId", "CraftNodeId", "ParentCraftNodeId")
 
@@ -531,6 +516,12 @@ class Skill(abc.Entity):
         mp = mapper.add_property  # mapper property
         mf = abc.EntityMapper  # mapper functions
 
+        def icon_name(*args):
+            try:
+                return list(filter(None, args))[-1]
+            except IndexError:
+                return None
+
         def map_level(desc, sp, share_sp):
             return Skill.SkillLevel(mf.text(desc), mf.int(sp), mf.int(share_sp))
 
@@ -544,6 +535,7 @@ class Skill(abc.Entity):
         mp("id", mf.none, "SkillId")
         mp("name", mf.text, "Name")
         mp("sp_regen", mf.int0, "SpRegen")
+        mp("icon_name", icon_name, "SkillLv1IconName", "SkillLv2IconName", "SkillLv3IconName", "SkillLv4IconName")
         mp("levels", skill_levels, "MaxSkillLevel",
            "Description1", "Sp",    "SpEdit",
            "Description2", "SPLv2", "SpLv2Edit",
@@ -557,6 +549,7 @@ class Skill(abc.Entity):
         self.levels: List[Skill.SkillLevel] = []
         self.owner: List[abc.Entity] = []  # updated in postprocess of Adventurer, Dragon, Weapon
         self.share_cost = 0  # assigned in postprocess of Adventurer
+        self.icon_name = ""
 
     def __str__(self):
         return self.name
@@ -581,6 +574,8 @@ class Skill(abc.Entity):
             description=description,
             url=util.get_link(self.name),
             color=get_rarity_colour(len(self.levels) + 2)
+        ).set_thumbnail(
+            url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
 
 
@@ -614,6 +609,7 @@ class Ability(abc.Entity):
         mp("generic_name", generic_name, "GenericName")
         mp("description", mf.text, "Details")
         mp("might", mf.int, "PartyPowerWeight")
+        mp("icon_name", mf.none, "AbilityIconName")
 
     def __init__(self):
         self.id_str = ""
@@ -621,6 +617,7 @@ class Ability(abc.Entity):
         self.generic_name = ""
         self.description = ""
         self.might = 0
+        self.icon_name = ""
 
     def __str__(self):
         return self.name
@@ -643,6 +640,8 @@ class Ability(abc.Entity):
             description=description,
             url=util.get_link(self.name),
             color=0xFF7000
+        ).set_thumbnail(
+            url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
 
 
@@ -669,6 +668,7 @@ class CoAbility(abc.Entity):
         mp("generic_name", mf.text, "GenericName")
         mp("description", mf.text, "Details")
         mp("might", mf.int, "PartyPowerWeight")
+        mp("icon_name", mf.none, "AbilityIconName")
 
     def __init__(self):
         self.id_str = ""
@@ -676,6 +676,7 @@ class CoAbility(abc.Entity):
         self.generic_name = ""
         self.description = ""
         self.might = 0
+        self.icon_name = ""
 
     def __str__(self):
         return self.name
@@ -698,6 +699,8 @@ class CoAbility(abc.Entity):
             description=description,
             url=util.get_link(self.generic_name),
             color=0x006080
+        ).set_thumbnail(
+            url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
 
 
@@ -723,12 +726,14 @@ class ChainCoAbility(abc.Entity):
         mp("name", mf.text, "Name")
         mp("generic_name", mf.text, "GenericName")
         mp("description", mf.text, "Details")
+        mp("icon_name", mf.none, "AbilityIconName")
 
     def __init__(self):
         self.id_str = ""
         self.name = ""
         self.generic_name = ""
         self.description = ""
+        self.icon_name = ""
 
     def __str__(self):
         return self.name
@@ -751,6 +756,8 @@ class ChainCoAbility(abc.Entity):
             description=description,
             url=util.get_link(self.generic_name),
             color=0x006080
+        ).set_thumbnail(
+            url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
 
 
