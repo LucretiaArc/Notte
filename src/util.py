@@ -100,4 +100,5 @@ def path(path_fragment):
 
 def get_wiki_cdn_url(asset_name):
     md5_chars = hashlib.md5(asset_name.encode("utf-8")).hexdigest()[:2]
-    return f"https://gamepedia.cursecdn.com/dragalialost_gamepedia_en/{md5_chars[0]}/{md5_chars}/{asset_name}"
+    asset_name_safe = urllib.parse.quote(asset_name.replace(" ", "_"))
+    return f"https://gamepedia.cursecdn.com/dragalialost_gamepedia_en/{md5_chars[0]}/{md5_chars}/{asset_name_safe}"
