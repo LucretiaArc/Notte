@@ -94,3 +94,28 @@ class GalaMay2020(GalaBase):
     @staticmethod
     def is_matching_showcase_type(showcase: data.Showcase):
         return showcase.name == "Gala Dragalia (May 2020)"
+
+
+class LightFocus(core.SimShowcase):
+    FIVE_STAR_ADV_RATE_EACH = 0.0
+    FIVE_STAR_DRG_RATE_EACH = 0.0
+
+    @staticmethod
+    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
+        return e.availability == "Permanent" and e.element == data.Element.LIGHT
+
+    @staticmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        return showcase.name == "Light Focus"
+
+    def get_four_star_rates(self, pity_progress) -> pool.RarityRates:
+        rates = pool.RarityRates()
+        rates[False][data.Adventurer] = 13.0
+        rates[False][data.Dragon] = 3.0
+        return rates
+
+    def get_three_star_rates(self, pity_progress) -> pool.RarityRates:
+        rates = pool.RarityRates()
+        rates[False][data.Adventurer] = 50.0
+        rates[False][data.Dragon] = 30.0
+        return rates
