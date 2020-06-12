@@ -133,7 +133,7 @@ class EntityMapper:
 
     @staticmethod
     def text(s: str):
-        html_breaks_replaced = re.sub(r" *<br */?> *", "\n", html.unescape(s))
+        html_breaks_replaced = re.sub(r" *</? *br */?> *", "\n", html.unescape(s))
         tags_removed = re.sub(r"<[^<]+?>", "", html_breaks_replaced)
         wikicode_removed = mwparserfromhell.parse(tags_removed).strip_code()
         spaces_reduced = re.sub(r" {2,}", " ", wikicode_removed)
