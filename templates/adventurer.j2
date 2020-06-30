@@ -1,9 +1,8 @@
-{% macro skill_line(skill) -%}
-{{skill.name}} [{{(skill.levels|last).sp|group_digits}} SP]{% if skill and skill.share_cost %} ({{(skill.levels|last).share_sp|group_digits}} SP when shared){% endif %}
-{%- endmacro -%}
+{%- from "skill.j2" import skill_line -%}
+{%- from "common.j2" import max_stats -%}
 
 {{e.rarity|rarity_emote}}{{e.element|element_emote}}{{e.weapon_type|weapon_emote}} {{e.name}}: {{e.title}}
-{{e.max_hp}} HP / {{e.max_str}} Str / {{e.max_might}} Might
+{{max_stats(e)}}
 
 **Skills**
 {{skill_line(e.skill_1)}}

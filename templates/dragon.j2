@@ -1,5 +1,7 @@
+{%- from "common.j2" import max_stats -%}
+
 {{e.rarity|rarity_emote}}{{e.element|element_emote}} {{e.name}}{% if e.title %}: {{e.title}}{% endif %}
-{{e.max_hp}} HP / {{e.max_str}} Str / {{e.max_might}} Might
+{{max_stats(e)}}
 
 **Skill:** {{e.skill.name}}
 

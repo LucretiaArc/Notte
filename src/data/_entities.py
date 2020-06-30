@@ -523,7 +523,7 @@ class Skill(abc.Entity):
                 return None
 
         def map_level(desc, sp, share_sp):
-            return Skill.SkillLevel(mf.text(desc), mf.int(sp), mf.int(share_sp))
+            return Skill.SkillLevel(mf.text(desc), mf.int0(sp), mf.int0(share_sp))
 
         def skill_levels(*args):
             max_level = mf.int0(args[0])

@@ -4,14 +4,13 @@ import itertools
 import util
 import abc
 import datetime
-import string
 import discord
 import logging
 import html
 import mwparserfromhell
 import re
+import numbers
 import jinja2
-import _string
 
 logger = logging.getLogger(__name__)
 
@@ -243,9 +242,16 @@ class EmbedContentGenerator:
         loader=jinja2.FileSystemLoader(util.path("templates")),
         lstrip_blocks=True,
         undefined=jinja2.ChainableUndefined,
-        finalize=lambda v: v if v else "?",
+        finalize=lambda v: EmbedContentGenerator._finalise(v),
         auto_reload=False
     )
+
+    @staticmethod
+    def _finalise(v):
+        if isinstance(v, numbers.Number) or v:
+            return v
+        else:
+            return "?"
 
     @staticmethod
     def _truncate_list(ls, count, end):
@@ -257,7 +263,8 @@ class EmbedContentGenerator:
 
         return ls[:count-1] + [end]
 
-    env.filters["group_digits"] = lambda value: f"{value:,}" if value else ""
+    env.filters["nonzero"] = lambda v: v if v else "?"
+    env.filters["group_digits"] = lambda value: f"{value:,}"
     env.filters["truncate_list"] = lambda ls, count, end: EmbedContentGenerator._truncate_list(ls, count, end)
     env.filters["format_date"] = lambda value: value.date().isoformat() if value else ""
     env.filters["emote"] = lambda value: util.get_emote(value)

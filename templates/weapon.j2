@@ -1,12 +1,15 @@
-{% macro title_string(w) -%}
+{%- from "skill.j2" import skill_line -%}
+{%- from "common.j2" import max_stats -%}
+
+{%- macro title_string(w) -%}
 {{w.rarity|rarity_emote}}{% if w.obtained == "Crafting" %}{{w.tier|tier_emote}}{% endif %} {{w.name}} {{w.element|element_emote}}{{w.weapon_type|weapon_emote}}
 {%- endmacro -%}
 
 {{title_string(e)}}
-{{e.max_hp}} HP / {{e.max_str}} Str / {{e.max_might}} Might
+{{max_stats(e)}}
 
 {% if e.skill -%}
-**Skill:** {{e.skill.name}}
+**Skill:** {{skill_line(e.skill)}}
 
 {% endif -%}
 {%- if e.ability_1 or e.ability_2 -%}

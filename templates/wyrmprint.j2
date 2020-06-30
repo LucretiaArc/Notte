@@ -1,5 +1,7 @@
+{%- from "common.j2" import max_stats -%}
+
 {{e.rarity|rarity_emote}} {{e.name}}
-{{e.max_hp}} HP / {{e.max_str}} Str / {{e.max_might}} Might
+{{max_stats(e)}}
 
 **Abilities**
 {{(e.ability_1|last).name}}
@@ -11,10 +13,14 @@
 {%- endif %}
 
 **Obtained from**
+{%- if e.obtained -%}
 {%- for source in e.obtained %}
 {{source}}
 {%- else %}
 ?
-{%- endfor %}
+{%- endfor -%}
+{%- else %}
+?
+{%- endif %}
 
 *Release date: {{e.release_date|format_date}}*
