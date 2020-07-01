@@ -1,3 +1,7 @@
 {%- macro max_stats(e) -%}
 {{e.max_hp|nonzero}} HP / {{e.max_str|nonzero}} Str / {{e.max_might|nonzero}} Might
 {%- endmacro -%}
+
+{%- macro skill_line(skill) -%}
+{{skill.name}} [{{(skill.levels|last).sp|group_digits}} SP]{% if skill and skill.share_cost %} ({{(skill.levels|last).share_sp|group_digits}} SP when shared){% endif %}
+{%- endmacro -%}

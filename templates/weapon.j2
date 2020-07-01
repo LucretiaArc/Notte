@@ -1,5 +1,4 @@
-{%- from "skill.j2" import skill_line -%}
-{%- from "common.j2" import max_stats -%}
+{%- from "common.j2" import max_stats, skill_line -%}
 
 {%- macro title_string(w) -%}
 {{w.rarity|rarity_emote}}{% if w.obtained == "Crafting" %}{{w.tier|tier_emote}}{% endif %} {{w.name}} {{w.element|element_emote}}{{w.weapon_type|weapon_emote}}
