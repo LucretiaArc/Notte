@@ -165,7 +165,7 @@ async def index_adventurer_resists():
             return None
         value_matches = re.findall(r"(\d+)%", ability.description)
         if len(value_matches) == 0:
-            logger.warning(f"Ability {ability.name} ({ability.id_str}) appears to be a resist ability, but has no resist percentage listed")
+            logger.warning(f"Ability {ability.name} ({ability.id}) appears to be a resist ability, but has no resist percentage listed")
             return None
 
         ability_resistances = []

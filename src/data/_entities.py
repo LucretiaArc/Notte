@@ -55,8 +55,8 @@ class Adventurer(abc.Entity):
         mp("ability_3", mf.filtered_list_of(Ability.find), *(f"Abilities3{i + 1}" for i in range(4)))
         mp("coability", mf.filtered_list_of(CoAbility.find), *(f"ExAbilityData{i + 1}" for i in range(5)))
         mp("chain_coability", mf.filtered_list_of(ChainCoAbility.find), *(f"ExAbility2Data{i + 1}" for i in range(5)))
-        mp("skill_1", Skill.find, "Skill1Name")
-        mp("skill_2", Skill.find, "Skill2Name")
+        mp("skill_1", Skill.find, "Skill1ID")
+        mp("skill_2", Skill.find, "Skill2ID")
         mp("icon_name", lambda i, v, r: f"{i}_0{v}_r0{r}", "Id", "VariationId", "Rarity")
         mp("is_playable", mf.bool, "IsPlayable")
 
@@ -182,7 +182,7 @@ class Dragon(abc.Entity):
         mp("is_playable", mf.bool, "IsPlayable")
         mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(2)))
         mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(2)))
-        mp("skill", Skill.find, "SkillName")
+        mp("skill", Skill.find, "SkillID")
 
         def post_processor(dragon: Dragon):
             try:
@@ -372,7 +372,7 @@ class Weapon(abc.Entity):
         mp("icon_name", lambda b_id, f_id: f"{b_id}_01_{f_id}", "BaseId", "FormId")
         mp("ability_1", Ability.find, "Abilities11")
         mp("ability_2", Ability.find, "Abilities21")
-        mp("skill", Skill.find, "SkillName")
+        mp("skill", Skill.find, "Skill")
 
         mp(None, mf.none, "CraftGroupId", "CraftNodeId", "ParentCraftNodeId")
 
@@ -562,10 +562,7 @@ class Skill(abc.Entity):
         return cls.repository.get_from_key(key.lower())
 
     def get_key(self):
-        if self.name:
-            return self.name.lower()
-        else:
-            return None
+        return self.id
 
     def get_embed(self) -> discord.Embed:
         title, description = abc.EmbedContentGenerator.get_embed_content("skill", e=self)
@@ -604,7 +601,7 @@ class Ability(abc.Entity):
         mp = mapper.add_property  # mapper property
         mf = abc.EntityMapper  # mapper functions
 
-        mp("id_str", mf.text, "Id")
+        mp("id", mf.text, "Id")
         mp("name", mf.text, "Name")
         mp("generic_name", generic_name, "GenericName")
         mp("description", mf.text, "Details")
@@ -612,7 +609,7 @@ class Ability(abc.Entity):
         mp("icon_name", mf.none, "AbilityIconName")
 
     def __init__(self):
-        self.id_str = ""
+        self.id = ""
         self.name = ""
         self.generic_name = ""
         self.description = ""
@@ -630,7 +627,7 @@ class Ability(abc.Entity):
         return cls.repository.get_from_key(key)
 
     def get_key(self):
-        return self.id_str
+        return self.id
 
     def get_embed(self) -> discord.Embed:
         title, description = abc.EmbedContentGenerator.get_embed_content("ability", e=self)
@@ -663,7 +660,7 @@ class CoAbility(abc.Entity):
         mp = mapper.add_property  # mapper property
         mf = abc.EntityMapper  # mapper functions
 
-        mp("id_str", mf.text, "Id")
+        mp("id", mf.text, "Id")
         mp("name", mf.text, "Name")
         mp("generic_name", mf.text, "GenericName")
         mp("description", mf.text, "Details")
@@ -671,7 +668,7 @@ class CoAbility(abc.Entity):
         mp("icon_name", mf.none, "AbilityIconName")
 
     def __init__(self):
-        self.id_str = ""
+        self.id = ""
         self.name = ""
         self.generic_name = ""
         self.description = ""
@@ -689,7 +686,7 @@ class CoAbility(abc.Entity):
         return cls.repository.get_from_key(key)
 
     def get_key(self):
-        return self.id_str
+        return self.id
 
     def get_embed(self) -> discord.Embed:
         title, description = abc.EmbedContentGenerator.get_embed_content("coability", e=self)
@@ -722,14 +719,14 @@ class ChainCoAbility(abc.Entity):
         mp = mapper.add_property  # mapper property
         mf = abc.EntityMapper  # mapper functions
 
-        mp("id_str", mf.text, "Id")
+        mp("id", mf.text, "Id")
         mp("name", mf.text, "Name")
         mp("generic_name", mf.text, "GenericName")
         mp("description", mf.text, "Details")
         mp("icon_name", mf.none, "AbilityIconName")
 
     def __init__(self):
-        self.id_str = ""
+        self.id = ""
         self.name = ""
         self.generic_name = ""
         self.description = ""
@@ -746,7 +743,7 @@ class ChainCoAbility(abc.Entity):
         return cls.repository.get_from_key(key)
 
     def get_key(self):
-        return self.id_str
+        return self.id
 
     def get_embed(self) -> discord.Embed:
         title, description = abc.EmbedContentGenerator.get_embed_content("chain_coability", e=self)

@@ -225,7 +225,11 @@ class EntityRepository:
         for e in query_data:
             entity = self.entity_mapper.map(e)
             if entity:
-                data_new[entity.get_key()] = entity
+                entity_key = entity.get_key()
+                if entity_key in data_new:
+                    logger.warning(f"Key {entity_key} duplicated in table {self.table_name}")
+                else:
+                    data_new[entity.get_key()] = entity
 
         if self.post_processor:
             self.post_processor(data_new)
