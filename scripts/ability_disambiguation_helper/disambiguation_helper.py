@@ -4,6 +4,15 @@ import config
 import collections
 import re
 
+
+def description_line(generic_name, description):
+    description = re.sub(r"\.\s+", ". ", description.replace('"', '\\"'))
+    description = re.sub(r" by \d+%", "", description)
+    description = re.sub(r"If the user is attuned to [^:]+: ", "", description)
+    description = description[0].upper() + description[1:]
+    return f'  "{generic_name}": "{description}",'
+
+
 roman_numerals = {
     "I": 1,
     "II": 2,
@@ -39,7 +48,7 @@ for gen_name, ab_list in generic_ability_map.items():
                     if m and int(m.group(2)) > ab_max_value:
                         ab_max = ab
                         ab_max_value = int(m.group(2))
-                print(f'  "{gen_name}": "{ab_max.description}",')
+                print(description_line(gen_name, ab_max.description))
             elif any(roman_ex.match(ab.name) for ab in ab_list):
                 ab_max = None
                 ab_max_value = 0
@@ -48,7 +57,7 @@ for gen_name, ab_list in generic_ability_map.items():
                     if m and roman_numerals.get(m.group(2)) and roman_numerals[m.group(2)] > ab_max_value:
                         ab_max = ab
                         ab_max_value = roman_numerals[m.group(2)]
-                print(f'  "{gen_name}": "{ab_max.description}",')
+                print(description_line(gen_name, ab_max.description))
             else:
                 non_matching.append(gen_name)
 

@@ -4,13 +4,6 @@ import abc
 from . import core, pool
 
 
-def get_gala_three_star_rates(self, pity_progress) -> pool.RarityRates:
-    rates = core.SimShowcase.get_three_star_rates(self, pity_progress)
-    rates[False][data.Adventurer] -= 1
-    rates[False][data.Dragon] -= 1
-    return rates
-
-
 class GalaBase(core.SimShowcase, abc.ABC):
     PITY_PROGRESS_MAX = 60
     FIVE_STAR_ADV_RATE_TOTAL = 3.0
@@ -21,7 +14,17 @@ class GalaBase(core.SimShowcase, abc.ABC):
         return e.availability in ("Permanent", "Gala")
 
     def get_three_star_rates(self, pity_progress) -> pool.RarityRates:
-        return get_gala_three_star_rates(self, pity_progress)
+        rates = core.SimShowcase.get_three_star_rates(self, pity_progress)
+        rates[False][data.Adventurer] -= 1
+        rates[False][data.Dragon] -= 1
+        return rates
+
+
+class GalaGeneric(GalaBase):
+    @staticmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        # noinspection PyTypeChecker
+        return any(e.availability == "Gala" for e in (showcase.featured_adventurers + showcase.featured_dragons))
 
 
 class GalaMultiFeatured(GalaBase):
@@ -35,78 +38,9 @@ class GalaMultiFeatured(GalaBase):
         return len(featured_pool) > 1 and all(e.availability == "Gala" for e in featured_pool)
 
 
-class GalaAdventurer(GalaBase):
-    FIVE_STAR_ADV_RATE_TOTAL = 3.0
-    FIVE_STAR_DRG_RATE_TOTAL = 3.0
-
-    @staticmethod
-    def is_matching_showcase_type(showcase: data.Showcase):
-        return (len(showcase.featured_adventurers) == 1
-                and showcase.featured_adventurers[0].availability == "Gala"
-                and not showcase.featured_dragons)
-
-
-class GalaDragon(GalaBase):
-    FIVE_STAR_ADV_RATE_TOTAL = 2.4
-    FIVE_STAR_DRG_RATE_TOTAL = 3.6
-
-    @staticmethod
-    def is_matching_showcase_type(showcase: data.Showcase):
-        return (len(showcase.featured_dragons) == 1
-                and showcase.featured_dragons[0].availability == "Gala"
-                and not showcase.featured_adventurers)
-
-
-# Overrides
-
-class DashOfDisasterPartTwo(core.SimShowcase):
-    @staticmethod
-    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
-        return e.availability == "Permanent"
-
-    @staticmethod
-    def is_matching_showcase_type(showcase: data.Showcase):
-        return showcase.name == "A Dash of Disaster (Part Two)"
-
-    def get_four_star_rates(self, pity_progress) -> pool.RarityRates:
-        rates = pool.RarityRates()
-        rates[False][data.Adventurer] = 8.0
-        rates[False][data.Dragon] = 8.0
-        return rates
-
-
-class KindredTiesPartTwo(core.SimShowcase):
-    FIVE_STAR_ADV_RATE_EACH = 0.8
-
-    @staticmethod
-    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
-        return e.availability == "Permanent"
-
-    @staticmethod
-    def is_matching_showcase_type(showcase: data.Showcase):
-        return showcase.name == "Fire Emblem: Kindred Ties (Part Two)"
-
-
-class GalaMay2020(GalaBase):
-    FIVE_STAR_ADV_RATE_TOTAL = 3.2
-    FIVE_STAR_DRG_RATE_TOTAL = 2.8
-
-    @staticmethod
-    def is_matching_showcase_type(showcase: data.Showcase):
-        return showcase.name == "Gala Dragalia (May 2020)"
-
-
-class LightFocus(core.SimShowcase):
+class ElementFocus(core.SimShowcase, abc.ABC):
     FIVE_STAR_ADV_RATE_EACH = 0.0
     FIVE_STAR_DRG_RATE_EACH = 0.0
-
-    @staticmethod
-    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
-        return e.availability == "Permanent" and e.element == data.Element.LIGHT
-
-    @staticmethod
-    def is_matching_showcase_type(showcase: data.Showcase):
-        return showcase.name == "Light Focus"
 
     def get_four_star_rates(self, pity_progress) -> pool.RarityRates:
         rates = pool.RarityRates()
@@ -119,3 +53,63 @@ class LightFocus(core.SimShowcase):
         rates[False][data.Adventurer] = 50.0
         rates[False][data.Dragon] = 30.0
         return rates
+
+
+class LightFocus(ElementFocus):
+    @staticmethod
+    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
+        return e.availability == "Permanent" and e.element == data.Element.LIGHT
+
+    @staticmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        return showcase.name.startswith("Light Focus")
+
+
+class WaterFocus(ElementFocus):
+    @staticmethod
+    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
+        return e.availability == "Permanent" and e.element == data.Element.WATER
+
+    @staticmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        return showcase.name.startswith("Water Focus")
+
+
+# Overrides
+
+class DashOfDisasterPartTwo(core.NormalSS):
+    @staticmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        return showcase.name == "A Dash of Disaster (Part Two)"
+
+    def get_four_star_rates(self, pity_progress) -> pool.RarityRates:
+        rates = pool.RarityRates()
+        rates[False][data.Adventurer] = 8.0
+        rates[False][data.Dragon] = 8.0
+        return rates
+
+
+class KindredTiesPartTwo(core.NormalSS):
+    FIVE_STAR_ADV_RATE_EACH = 0.8
+
+    @staticmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        return showcase.name == "Fire Emblem: Kindred Ties (Part Two)"
+
+
+class GalaApr2020(GalaBase):
+    FIVE_STAR_ADV_RATE_TOTAL = 2.4
+    FIVE_STAR_DRG_RATE_TOTAL = 3.6
+
+    @staticmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        return showcase.name == "Gala Dragalia (Apr 2020)"
+
+
+class GalaMay2020(GalaBase):
+    FIVE_STAR_ADV_RATE_TOTAL = 3.2
+    FIVE_STAR_DRG_RATE_TOTAL = 2.8
+
+    @staticmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        return showcase.name == "Gala Dragalia (May 2020)"
