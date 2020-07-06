@@ -50,8 +50,11 @@ class ElementFocus(core.SimShowcase, abc.ABC):
 
     def get_three_star_rates(self, pity_progress) -> pool.RarityRates:
         rates = pool.RarityRates()
-        rates[False][data.Adventurer] = 50.0
-        rates[False][data.Dragon] = 30.0
+
+        total_rate = 80 - self.get_pity_percent(pity_progress)
+        rates[False][data.Adventurer] = 0.625 * total_rate - rates[True][data.Adventurer]
+        rates[False][data.Dragon] = 0.375 * total_rate - rates[True][data.Dragon]
+
         return rates
 
 
