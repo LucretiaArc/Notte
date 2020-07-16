@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 async def update_entity_icons():
+    logger.info(f"Updating entity icons")
     os.makedirs(util.path("data/icons"), exist_ok=True)
     required_icons = _get_missing_entity_icons()
     if required_icons:
