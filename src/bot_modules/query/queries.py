@@ -30,7 +30,7 @@ def create_queries(matcher: Matcher):
 
 
 def get_name_map(entity_type: typing.Type[data.abc.Entity]):
-    name_map = {str(e).lower(): e for e in entity_type.get_all().values()}
+    name_map = {str(e).lower(): e for e in entity_type.get_all()}
     entity_type_name = entity_type.__name__.lower()
     try:
         aliases = config.get_global(f"query_alias/{entity_type_name}")

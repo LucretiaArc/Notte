@@ -34,9 +34,8 @@ async def update_gift_string():
     else:
         gift = data.DragonGift(reset_day + 1)
 
-        all_dragons = data.Dragon.get_all().values()
         dragons = [
-            d for d in all_dragons if
+            d for d in data.Dragon.get_all() if
             d.favourite_gift == gift
             and d.rarity
             and d.release_date

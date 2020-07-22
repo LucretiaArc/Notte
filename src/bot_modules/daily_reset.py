@@ -65,7 +65,7 @@ def get_reset_message(date: datetime.datetime):
     def get_days_until_datetime(utc_datetime):
         return round((utc_datetime - date).total_seconds() / 86400)
 
-    showcase_list = list(filter(lambda s: get_days_until_datetime(s.end_date) == 1, data.Showcase.get_all().values()))
+    showcase_list = list(filter(lambda s: get_days_until_datetime(s.end_date) == 1, data.Showcase.get_all()))
     if showcase_list:
         showcase_list_str = util.readable_list(list(map(lambda s: s.name or "Unnamed", showcase_list)))
         message_lines.append(f"Today is the last day of the {showcase_list_str} summon showcase{'s' if len(showcase_list) > 1 else ''}!")

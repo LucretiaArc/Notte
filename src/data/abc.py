@@ -40,12 +40,12 @@ class Entity(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def get_all(cls) -> dict:
+    def get_all(cls) -> typing.ValuesView:
         """
-        Returns a dict representing the repository for this entity type.
+        Returns a view for all entities of this entity type.
         :return:
         """
-        return {}
+        return {}.values()
 
     @classmethod
     @abc.abstractmethod
@@ -75,24 +75,58 @@ class EntityMapper:
         self.inst_map_arg_keys = {}
         self.post_processor = None
 
-    def add_property(self, attr_name, cast_function: typing.Callable, *args: str):
+    def add_property(self, attr_name: str, cast_function: typing.Callable, *args: str):
         """
-        Adds a property to be mapped. If attr_name is None, then the property will be mapped to an added attribute,
-        entity._POST_PROCESS, which can be deleted later.
-        :param attr_name: name of attribute to map to, or None if the property is a post-process attribute
+        Adds a property to be mapped.
+        :param attr_name: name of attribute to map to
         :param cast_function: function to use to transform the data before assigning it to the attribute
-        :param args: names of the data fields whose values should be passed to the cast function. Often, this is just
-        the name of the data field to be mapped. Not applied to post-process attributes, which are added directly to the
-        _POST_PROCESS attribute dictionary.
+        :param args: names of the data fields whose values should be passed to the cast function.
         """
+        if attr_name.startswith("_"):
+            raise ValueError("Mapped attribute name cannot start with an underscore")
+
+        if not attr_name:
+            raise ValueError("Mapped attribute name must be valid")
+
         self.inst_map_funcs[attr_name] = cast_function
         self.inst_map_arg_keys[attr_name] = args
 
+    def set_post_process_args(self, *args: str):
+        """
+        Defines the data fields to be used for post-processing. Rather than assigning the values of these fields to
+        their own attributes, the values are added to a dictionary (with key-value pairs of the field name and
+        value) stored in the _POST_PROCESS attribute.
+        :param args: names of the data fields to add to the post-process dictionary
+        """
+        self.inst_map_arg_keys["_POST_PROCESS"] = args
+
+    def set_secondary_keys(self, keys_attr: str, ignore_first=True):
+        """
+        Defines additional keys to use as aliases for the mapped entity. Keys are parsed from the specified data field,
+        the value of which should be a comma or newline delimited list.
+        :param keys_attr: name of the data field from which to parse additional keys
+        :param ignore_first: True to ignore the first key in the list, False otherwise
+        """
+        self.inst_map_arg_keys["_SECONDARY_KEYS"] = [keys_attr]
+        self.inst_map_funcs["_SECONDARY_KEYS"] = lambda s: EntityMapper.list(s)[bool(ignore_first):]
+
     def map(self, entity_data: dict):
         inst = self.inst_class()
+        inst_keys = []
+
+        if "_POST_PROCESS" in self.inst_map_arg_keys:
+            setattr(inst, "_POST_PROCESS", {
+                prop_name: entity_data.get(prop_name)
+                for prop_name in self.inst_map_arg_keys["_POST_PROCESS"]
+            })
+
+        if "_SECONDARY_KEYS" in self.inst_map_arg_keys:
+            arg_key = self.inst_map_arg_keys["_SECONDARY_KEYS"][0]
+            map_func = self.inst_map_funcs["_SECONDARY_KEYS"]
+            inst_keys = map_func(entity_data.get(arg_key))
 
         for attr_name, map_func in self.inst_map_funcs.items():
-            if attr_name is not None:
+            if attr_name not in ("_POST_PROCESS", "_SECONDARY_KEYS"):
                 if not hasattr(inst, attr_name):
                     raise AttributeError(f"Invalid entity attribute: {attr_name}")
 
@@ -109,21 +143,16 @@ class EntityMapper:
                     value = None
 
                 setattr(inst, attr_name, value)
-            else:
-                post_process = {}
-                for pp_attr_name in self.inst_map_arg_keys[None]:
-                    post_process[pp_attr_name] = entity_data.get(pp_attr_name)
-                setattr(inst, "_POST_PROCESS", post_process)
 
         if not inst.get_key():
-            return None
+            return None, []
 
         if self.post_processor:
-            # post-process instance, if post processor returns falsey value then instance is invalid so return None
             if not self.post_processor(inst):
-                return None
+                return None, []
 
-        return inst
+        inst_keys = [inst.get_key()] + inst_keys
+        return inst, inst_keys
 
     # mapping helper methods
     @staticmethod
@@ -168,6 +197,14 @@ class EntityMapper:
     @staticmethod
     def filtered_list_of(mapping_function: typing.Callable):
         return lambda *args: list(filter(None, [mapping_function(s) for s in args]))
+
+    @staticmethod
+    def list(s: str):
+        return re.split(r"(?:, *|\n)+", s)
+
+    @staticmethod
+    def first_of(mapping_function: typing.Callable):
+        return lambda arg: mapping_function(arg)[0]
 
 
 class EntityRepository:
@@ -223,13 +260,12 @@ class EntityRepository:
 
         data_new = {}
         for e in query_data:
-            entity = self.entity_mapper.map(e)
-            if entity:
-                entity_key = entity.get_key()
-                if entity_key in data_new:
-                    logger.warning(f"Key {entity_key} duplicated in table {self.table_name}")
+            entity, entity_keys = self.entity_mapper.map(e)
+            for key in entity_keys:
+                if key in data_new:
+                    logger.warning(f"Key {key} duplicated in table {self.table_name}")
                 else:
-                    data_new[entity.get_key()] = entity
+                    data_new[key] = entity
 
         if self.post_processor:
             self.post_processor(data_new)

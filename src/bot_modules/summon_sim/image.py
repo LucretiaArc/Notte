@@ -28,7 +28,7 @@ async def update_entity_icons():
 
 
 def _get_missing_entity_icons():
-    entities = list(data.Adventurer.get_all().values()) + list(data.Dragon.get_all().values())
+    entities = list(data.Adventurer.get_all()) + list(data.Dragon.get_all())
     icon_info = (f"{e.icon_name}.png" for e in entities)
     return [icon for icon in icon_info if not os.path.exists(util.path(f"data/icons/{icon}"))]
 

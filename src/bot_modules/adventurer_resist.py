@@ -104,14 +104,11 @@ async def resist_search(message, args):
         return
 
     result_lines = []
-    adventurers = data.Adventurer.get_all()
     emote = util.get_emote
     for res in resist_list:
         match_list = []
         for el in element_list:
-            match_list.extend(list(filter(None, (
-                adventurers.get(adv_name.lower()) for adv_name in resist_data[res][el]
-            ))))
+            match_list.extend(list(filter(None, map(data.Adventurer.find, resist_data[res][el]))))
 
         if len(match_list) > 0 or res in specified_resists:  # include resists specifically searched for
             result_lines.append(f"{emote(res)} **{res} Resistance**")
@@ -126,12 +123,12 @@ async def resist_search(message, args):
         match_list.sort(key=lambda a: a.full_name)  # by name
         match_list.sort(key=lambda a: a.element.value)  # by element
         match_list.sort(key=lambda a: a.rarity, reverse=True)  # by rarity
-        match_list.sort(key=lambda a: resist_data[res][a.element][a.full_name], reverse=True)  # by percent
+        match_list.sort(key=lambda a: resist_data[res][a.element][a.get_key()], reverse=True)  # by percent
 
         # formatting
         current_resist = 101
         for adv in match_list:
-            adv_res_percent = resist_data[res][adv.element][adv.full_name]
+            adv_res_percent = resist_data[res][adv.element][adv.get_key()]
             if adv_res_percent < specified_threshold:
                 break
 
@@ -177,7 +174,7 @@ async def index_adventurer_resists():
 
         return ability_resistances
 
-    for adv in data.Adventurer.get_all().values():
+    for adv in data.Adventurer.get_all():
         adv_resistances = []
         abilities = [adv.ability_1, adv.ability_2, adv.ability_3]
         for ab in abilities:
@@ -185,7 +182,7 @@ async def index_adventurer_resists():
                 adv_resistances += get_ability_resists(ab[-1]) or [None]
 
         for res in filter(None, adv_resistances):
-            res_data[res[0]][adv.element][adv.full_name] += res[1]
+            res_data[res[0]][adv.element][adv.get_key()] += res[1]
 
     return res_data
 

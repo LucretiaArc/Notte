@@ -31,10 +31,10 @@ class SimShowcaseCache:
 
         new_cache = {}
         showcase_blacklist = config.get_global("general")["summonable_showcase_blacklist"]
-        for sc_name, sc in data.Showcase.get_all().items():
+        for sc in data.Showcase.get_all():
             if sc.name not in showcase_blacklist:
                 if sc.type == "Regular" and not sc.name.startswith("Dragon Special"):
-                    new_cache[sc_name] = SimShowcaseFactory.create_showcase(sc)
+                    new_cache[sc.get_key()] = SimShowcaseFactory.create_showcase(sc)
 
         matcher_additions = new_cache.copy()
         aliases = config.get_global(f"query_alias/showcase")
@@ -120,7 +120,7 @@ class SimShowcase(abc.ABC):
             if e.rarity:
                 self.entity_pools[e.rarity][True][type(e)].append(e)
 
-        normal_pool = (set(data.Adventurer.get_all().values()) | set(data.Dragon.get_all().values())) - set(featured_pool)
+        normal_pool = (set(data.Adventurer.get_all()) | set(data.Dragon.get_all())) - set(featured_pool)
         for e in normal_pool:
             if e.rarity and self.is_entity_in_normal_pool(e):
                 self.entity_pools[e.rarity][False][type(e)].append(e)

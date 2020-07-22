@@ -21,7 +21,7 @@ class Adventurer(abc.Entity):
 
     @classmethod
     def get_all(cls):
-        return cls.repository.data
+        return cls.repository.data.values()
 
     @classmethod
     def init(cls):
@@ -60,7 +60,7 @@ class Adventurer(abc.Entity):
         mp("icon_name", lambda i, v, r: f"{i}_0{v}_r0{r}", "Id", "VariationId", "Rarity")
         mp("is_playable", mf.bool, "IsPlayable")
 
-        mp(None, mf.none, "EditSkillId", "EditSkillCost")
+        mapper.set_post_process_args("EditSkillId", "EditSkillCost")
 
         def post_processor(adv: Adventurer):
             try:
@@ -79,7 +79,7 @@ class Adventurer(abc.Entity):
             except (IndexError, TypeError, AttributeError):
                 adv.max_might = None
 
-            pp = adv._POST_PROCESS
+            pp = getattr(adv, "_POST_PROCESS")
             delattr(adv, "_POST_PROCESS")
             shared_skill_id = pp["EditSkillId"]
             for sk in [adv.skill_1, adv.skill_2]:
@@ -115,9 +115,7 @@ class Adventurer(abc.Entity):
         self.ability_3: List[Ability] = []
         self.coability: List[CoAbility] = []
         self.chain_coability: List[ChainCoAbility] = []
-
         self.is_playable = True
-        self._POST_PROCESS = None
 
     def __str__(self):
         return self.full_name
@@ -156,7 +154,7 @@ class Dragon(abc.Entity):
 
     @classmethod
     def get_all(cls):
-        return cls.repository.data
+        return cls.repository.data.values()
 
     @classmethod
     def init(cls):
@@ -263,7 +261,7 @@ class Wyrmprint(abc.Entity):
 
     @classmethod
     def get_all(cls):
-        return cls.repository.data
+        return cls.repository.data.values()
 
     @classmethod
     def init(cls):
@@ -351,7 +349,7 @@ class Weapon(abc.Entity):
 
     @classmethod
     def get_all(cls):
-        return cls.repository.data
+        return cls.repository.data.values()
 
     @classmethod
     def init(cls):
@@ -374,7 +372,7 @@ class Weapon(abc.Entity):
         mp("ability_2", Ability.find, "Abilities21")
         mp("skill", Skill.find, "Skill")
 
-        mp(None, mf.none, "CraftGroupId", "CraftNodeId", "ParentCraftNodeId")
+        mapper.set_post_process_args("CraftGroupId", "CraftNodeId", "ParentCraftNodeId")
 
         def mapper_post_processor(weapon: Weapon):
             # max might adds 100 for skill if it exists
@@ -401,7 +399,7 @@ class Weapon(abc.Entity):
             w: Weapon
             for w in weapons.values():
                 # add to craft groups map for second pass
-                pp = w._POST_PROCESS
+                pp = getattr(w, "_POST_PROCESS")
                 delattr(w, "_POST_PROCESS")
                 group_id = mf.text(pp["CraftGroupId"])
                 if group_id:
@@ -450,8 +448,6 @@ class Weapon(abc.Entity):
         self.crafted_from: Optional[Weapon] = None
         self.crafted_to: List[Weapon] = []
         self.tier: Optional[int] = None
-
-        self._POST_PROCESS = None
 
     def __str__(self):
         return self.name
@@ -506,7 +502,7 @@ class Skill(abc.Entity):
 
     @classmethod
     def get_all(cls):
-        return cls.repository.data
+        return cls.repository.data.values()
 
     @classmethod
     def init(cls):
@@ -532,7 +528,7 @@ class Skill(abc.Entity):
             valid_levels = list(itertools.takewhile(lambda sl: sl.description, mapped_levels))
             return valid_levels[:max_level]
 
-        mp("id", mf.none, "SkillId")
+        mp("id", mf.first_of(mf.list), "SkillId")
         mp("name", mf.text, "Name")
         mp("sp_regen", mf.int0, "SpRegen")
         mp("icon_name", icon_name, "SkillLv1IconName", "SkillLv2IconName", "SkillLv3IconName", "SkillLv4IconName")
@@ -541,6 +537,8 @@ class Skill(abc.Entity):
            "Description2", "SPLv2", "SpLv2Edit",
            "Description3", "SPLv3", "SpLv3Edit",
            "Description4", "SPLv4", "SpLv4Edit")
+
+        mapper.set_secondary_keys("SkillId", ignore_first=True)
 
     def __init__(self):
         self.id = ""
@@ -584,7 +582,7 @@ class Ability(abc.Entity):
 
     @classmethod
     def get_all(cls):
-        return cls.repository.data
+        return cls.repository.data.values()
 
     @classmethod
     def init(cls):
@@ -650,7 +648,7 @@ class CoAbility(abc.Entity):
 
     @classmethod
     def get_all(cls):
-        return cls.repository.data
+        return cls.repository.data.values()
 
     @classmethod
     def init(cls):
@@ -709,7 +707,7 @@ class ChainCoAbility(abc.Entity):
 
     @classmethod
     def get_all(cls):
-        return cls.repository.data
+        return cls.repository.data.values()
 
     @classmethod
     def init(cls):
@@ -767,7 +765,7 @@ class Showcase(abc.Entity):
 
     @classmethod
     def get_all(cls):
-        return cls.repository.data
+        return cls.repository.data.values()
 
     @classmethod
     def init(cls):

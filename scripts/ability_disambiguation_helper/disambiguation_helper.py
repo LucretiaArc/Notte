@@ -27,7 +27,7 @@ roman_numerals = {
 }
 
 asyncio.get_event_loop().run_until_complete(data.update_repositories())
-abilities = {str(e).lower(): e for e in data.Ability.get_all().values()}
+abilities = {str(e).lower(): e for e in data.Ability.get_all()}
 generic_ability_map = collections.defaultdict(list)
 for name, ab in abilities.items():
     generic_ability_map[ab.generic_name].append(ab)
