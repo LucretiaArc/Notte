@@ -88,6 +88,19 @@ async def send_long_message_as_file(channel: discord.abc.Messageable, msg: str, 
         await channel.send(file=discord.File(fp=io.BytesIO(bytes(msg, "UTF-8")), filename=filename))
 
 
+async def send_long_message_in_sections(channel: discord.abc.Messageable, sections: list, sep="\n"):
+    output_message = ""
+    for section in sections:
+        section = section.strip()
+        if len(output_message + sep + section) > 2000:
+            await channel.send(output_message)
+            output_message = section
+        else:
+            output_message += (sep if output_message else "") + section
+
+    await channel.send(output_message)
+
+
 def path(path_fragment):
     """
     Gets a full file path from a path fragment. Path fragments are relative to the top level of the project (the

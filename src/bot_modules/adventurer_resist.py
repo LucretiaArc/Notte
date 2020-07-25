@@ -141,17 +141,7 @@ async def resist_search(message, args):
     if len(result_lines) == 0:
         await message.channel.send("I didn't find anything! Maybe there's nobody that matches your search?")
 
-    # avoid huge messages by breaking them up at every resist
-    output_message = ""
-    for section in result_lines:
-        section = section.strip()
-        if len(output_message + "\n" + section) > 2000:
-            await message.channel.send(output_message)
-            output_message = section
-        else:
-            output_message += "\n" + section
-
-    await message.channel.send(output_message)
+    await util.send_long_message_in_sections(message.channel, result_lines)
 
 
 async def index_adventurer_resists():

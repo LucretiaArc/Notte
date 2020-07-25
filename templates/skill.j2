@@ -1,7 +1,3 @@
-{%- macro skill_line(skill) -%}
-{{skill.name}} [{{(skill.levels|last).sp|group_digits}} SP]{% if skill and skill.share_cost %} ({{(skill.levels|last).share_sp|group_digits}} SP when shared){% endif %}
-{%- endmacro -%}
-
 {{e.name}} (Lv. {{e.levels|length}} Skill)
 {% set max_level = e.levels|last -%}
 {{max_level.description}}
