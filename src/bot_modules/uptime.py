@@ -9,6 +9,8 @@ start_time = time.time()
 
 
 async def on_init(discord_client):
+    global start_time
+    start_time = time.time()
     hook.Hook.get("owner!uptime").attach(uptime)
 
 
