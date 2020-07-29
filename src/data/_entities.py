@@ -178,8 +178,8 @@ class Dragon(abc.Entity):
         mp("favourite_gift", DragonGift.get, "FavoriteType")
         mp("icon_name", lambda i, v: f"{i}_0{v}", "BaseId", "VariationId")
         mp("is_playable", mf.bool, "IsPlayable")
-        mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(2)))
-        mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(2)))
+        mp("ability_1", mf.filtered_list_of(Ability.find), *(f"Abilities1{i + 1}" for i in range(5)))
+        mp("ability_2", mf.filtered_list_of(Ability.find), *(f"Abilities2{i + 1}" for i in range(5)))
         mp("skill", Skill.find, "SkillID")
 
         def post_processor(dragon: Dragon):
