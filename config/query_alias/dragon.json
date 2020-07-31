@@ -27,6 +27,9 @@
   "tsg": "tie shan gongzhu",
   "tie shan": "tie shan gongzhu",
   "takemi": "takemikazuchi",
+  "ssakuya": "summer konohana sakuya",
+  "skonohana": "summer konohana sakuya",
+  "sks": "summer konohana sakuya",
 
   "mid": "midgardsormr",
   "midgard": "midgardsormr",
@@ -73,5 +76,8 @@
   "dkrath": "dreadking rathalos",
 
   "gmars": "gala mars",
-  "mars": "gala mars"
+  "mars": "gala mars",
+  "gcat": "gala cat sìth",
+  "cat sith": "gala cat sìth",
+  "gala cat sith": "gala cat sìth"
 }
