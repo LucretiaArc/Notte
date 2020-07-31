@@ -144,6 +144,12 @@ class Adventurer(abc.Entity):
             url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
 
+    def get_skills(self):
+        return [self.skill_1, self.skill_2]
+
+    def get_abilities(self):
+        return [self.ability_1, self.ability_2, self.ability_3]
+
 
 class Dragon(abc.Entity):
     """
@@ -251,6 +257,9 @@ class Dragon(abc.Entity):
             url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
 
+    def get_abilities(self):
+        return [self.ability_1, self.ability_2]
+
 
 class Wyrmprint(abc.Entity):
     """
@@ -340,6 +349,9 @@ class Wyrmprint(abc.Entity):
             url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
 
+    def get_abilities(self):
+        return [self.ability_1, self.ability_2, self.ability_3]
+
 
 class Weapon(abc.Entity):
     """
@@ -368,8 +380,8 @@ class Weapon(abc.Entity):
         mp("max_hp", mf.int, "MaxHp")
         mp("max_str", mf.int, "MaxAtk")
         mp("icon_name", lambda b_id, f_id: f"{b_id}_01_{f_id}", "BaseId", "FormId")
-        mp("ability_1", Ability.find, "Abilities11")
-        mp("ability_2", Ability.find, "Abilities21")
+        mp("ability_1", mf.filtered_list_of(Ability.find), "Abilities11")
+        mp("ability_2", mf.filtered_list_of(Ability.find), "Abilities21")
         mp("skill", Skill.find, "Skill")
 
         mapper.set_post_process_args("CraftGroupId", "CraftNodeId", "ParentCraftNodeId")
@@ -380,8 +392,8 @@ class Weapon(abc.Entity):
                 weapon.max_might = sum((
                     weapon.max_hp,
                     weapon.max_str,
-                    (0 if not weapon.ability_1 else weapon.ability_1.might),
-                    (0 if not weapon.ability_2 else weapon.ability_2.might),
+                    (0 if not weapon.ability_1 else weapon.ability_1[-1].might),
+                    (0 if not weapon.ability_2 else weapon.ability_2[-1].might),
                     (0 if not weapon.skill else 100)
                 ))
             except (IndexError, TypeError):
@@ -442,8 +454,8 @@ class Weapon(abc.Entity):
         self.max_might = 0
         self.icon_name = ""
         self.skill: Optional[Skill] = None
-        self.ability_1: Optional[Ability] = None
-        self.ability_2: Optional[Ability] = None
+        self.ability_1: List[Ability] = []
+        self.ability_2: List[Ability] = []
         self.crafting_materials = {}
         self.crafted_from: Optional[Weapon] = None
         self.crafted_to: List[Weapon] = []
@@ -483,6 +495,9 @@ class Weapon(abc.Entity):
         ).set_thumbnail(
             url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
+
+    def get_abilities(self):
+        return [self.ability_1, self.ability_2]
 
 
 class Skill(abc.Entity):

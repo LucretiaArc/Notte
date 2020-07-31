@@ -34,7 +34,7 @@ async def wyrmprint_lookup(message, args):
 
         await util.send_long_message_in_sections(message.channel, sections, sep="\n")
     else:
-        await message.channel.send("I don't know any abilities like that!")
+        await message.channel.send("I don't know any wyrmprints that have an ability like that!")
 
 
 def build_matcher():
@@ -45,7 +45,7 @@ def build_matcher():
     wyrmprint_ability_index = defaultdict(lambda: defaultdict(list))
     wp: data.Wyrmprint
     for wp in data.Wyrmprint.get_all():
-        abilities = list(map(lambda a: a[-1], filter(None, [wp.ability_1, wp.ability_2, wp.ability_3])))
+        abilities = list(map(lambda a: a[-1], filter(None, wp.get_abilities())))
         for i, ab in enumerate(abilities):
             if ab.generic_name and ab.name:
                 other_abilities = list(map(lambda a: a.name, abilities[:i] + abilities[i+1:]))

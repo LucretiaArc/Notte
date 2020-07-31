@@ -166,8 +166,7 @@ async def index_adventurer_resists():
 
     for adv in data.Adventurer.get_all():
         adv_resistances = []
-        abilities = [adv.ability_1, adv.ability_2, adv.ability_3]
-        for ab in abilities:
+        for ab in adv.get_abilities():
             if ab:
                 adv_resistances += get_ability_resists(ab[-1]) or [None]
 

@@ -139,9 +139,9 @@ def create_weapon_queries(add_query: typing.Callable):
                 add_query(f"{desc} skill", w.skill)
                 add_query(f"{desc} s1", w.skill)
             if w.ability_1:
-                add_query(f"{desc} a1", w.ability_1)
+                add_query(f"{desc} a1", w.ability_1[-1])
             if w.ability_2:
-                add_query(f"{desc} a2", w.ability_2)
+                add_query(f"{desc} a2", w.ability_2[-1])
 
 
 def create_skill_queries(add_query: typing.Callable):
@@ -152,35 +152,57 @@ def create_skill_queries(add_query: typing.Callable):
 
 def create_ability_queries(add_query: typing.Callable):
     abilities = get_name_map(data.Ability)
-    generic_ability_map = collections.defaultdict(list)
+    generic_ability_group_map = collections.defaultdict(list)
     for name, ab in abilities.items():
         # this will need to be addressed if different abilities have the same name
         add_query(name, ab, True)
-        generic_ability_map[ab.generic_name].append(ab)
+        generic_ability_group_map[ab.generic_name].append(ab)
+
+    generic_ability_sources_map = collections.defaultdict(dict)
+    entities = [item for sublist in map(lambda c: c.get_all(), (
+        data.Adventurer,
+        data.Dragon,
+        data.Wyrmprint,
+        data.Weapon
+    )) for item in sublist]
+
+    for ent in entities:
+        # assumes that abilities unique to an entity won't be present on that entity in multiple slots
+        ent_ability_groups = ent.get_abilities()
+        for ab_group in ent_ability_groups:
+            for ab in ab_group:
+                generic_ability_sources_map[ab.generic_name][ent.get_key()] = ab
 
     generic_descriptions = config.get_global("ability_disambiguation")
-    for name, ab_list in generic_ability_map.items():
-        if len(ab_list) == 1:
-            add_query(name, ab_list[0], True)
+    for gen_name, source_map in generic_ability_sources_map.items():
+        if len(source_map) == 1:
+            ab_highest = list(source_map.values())[0]
+            add_query(gen_name, ab_highest, True)
+            if gen_name in generic_descriptions:
+                logger.warning(f"Disambiguation specified for unique generic ability {gen_name}")
         else:
-            if name in generic_descriptions:
-                desc = f"*{generic_descriptions[name]}*"
+            ab_list = generic_ability_group_map[gen_name]
+            if len(ab_list) == 1:
+                add_query(gen_name, ab_list[0], True)
             else:
-                desc = ""
-                logger.warning(f"No description for generic ability {name}")
+                if gen_name in generic_descriptions:
+                    desc = f"*{generic_descriptions[gen_name]}*"
+                else:
+                    desc = ""
+                    logger.warning(f"No description for common generic ability {gen_name}")
 
-            names = natsort.natsorted(set(ab.name for ab in ab_list))
-            if len(names) > 15:
-                names = names[:15] + ["..."]
+                names = natsort.natsorted(set(ab.name for ab in ab_list))
+                if len(names) > 15:
+                    names = names[:15] + ["..."]
 
-            name_list = "\n".join(names)
-            embed = discord.Embed(
-                title=f"{name} (Disambiguation)",
-                description=f"{desc}\n\n{name_list}".strip(),
-                color=0xFF7000
-            )
+                name_list = "\n".join(names)
+                embed = discord.Embed(
+                    title=f"{gen_name} (Disambiguation)",
+                    description=f"{desc}\n\n{name_list}".strip(),
+                    color=0xFF7000
+                )
 
-            add_query(name, EmbedContainer(embed))
+                add_query(gen_name, EmbedContainer(embed))
 
 
 def create_showcase_queries(add_query: typing.Callable):

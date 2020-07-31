@@ -13,9 +13,9 @@
 {% endif -%}
 {%- if e.ability_1 or e.ability_2 -%}
 **Abilities**
-{{e.ability_1.name}}
+{{(e.ability_1|last).name}}
 {%- if e.ability_2 %}
-{{e.ability_2.name}}
+{{(e.ability_2|last).name}}
 {%- endif %}
 
 {% endif -%}
