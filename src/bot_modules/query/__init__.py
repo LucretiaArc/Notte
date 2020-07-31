@@ -4,6 +4,7 @@ import urllib.parse
 import hook
 import logging
 import config
+import time
 from . import queries
 from fuzzy_match import Matcher
 
@@ -75,10 +76,11 @@ def resolve_query(query: str, include_special_responses=False):
 def build_matcher():
     global matcher
     logger.info("Generating queries...")
+    start_time = time.perf_counter()
     new_matcher = Matcher()
     queries.create_queries(new_matcher)
     matcher = new_matcher
-    logger.info(f"{len(matcher.match_map)} queries generated")
+    logger.info(f"{len(matcher.match_map)} queries generated in {time.perf_counter() - start_time:.1f} seconds")
     logger.info(f"Determined maximum query length {matcher.max_query_len}")
 
 

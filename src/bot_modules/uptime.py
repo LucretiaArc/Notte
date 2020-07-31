@@ -5,12 +5,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-start_time = time.time()
+start_time = time.perf_counter()
 
 
 async def on_init(discord_client):
     global start_time
-    start_time = time.time()
+    start_time = time.perf_counter()
     hook.Hook.get("owner!uptime").attach(uptime)
 
 
@@ -25,7 +25,7 @@ def get_uptime_string(seconds):
 
 
 async def uptime(message, args):
-    dt = round(time.time() - start_time)
+    dt = round(time.perf_counter() - start_time)
     await message.channel.send(str(get_uptime_string(dt)))
 
 
