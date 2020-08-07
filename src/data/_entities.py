@@ -257,6 +257,17 @@ class Dragon(abc.Entity):
             url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
         )
 
+    def get_abilities_embed(self) -> discord.Embed:
+        title, description = abc.EmbedContentGenerator.get_embed_content("dragon_abilities", e=self)
+        return discord.Embed(
+            title=title,
+            description=description,
+            url=util.get_link(self.full_name),
+            colour=discord.Embed.Empty if not self.element else self.element.get_colour()
+        ).set_thumbnail(
+            url=util.get_wiki_cdn_url(f"{self.icon_name}.png")
+        )
+
     def get_abilities(self):
         return [self.ability_1, self.ability_2]
 

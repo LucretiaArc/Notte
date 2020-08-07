@@ -66,7 +66,12 @@ def resolve_query(query: str, include_special_responses=False):
     else:
         match_content = matcher.match(search_term)
         if match_content:
-            embed = match_content[0].get_embed().copy()
+            match_obj = match_content[0]
+            if isinstance(match_obj, discord.embeds.Embed):
+                embed = match_obj.copy()
+            else:
+                embed = match_obj.get_embed().copy()
+
             if match_content[2] < 1:
                 embed.set_footer(text=f'Displaying result for "{match_content[1]}"')
 

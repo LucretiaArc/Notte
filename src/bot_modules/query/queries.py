@@ -10,14 +10,6 @@ from fuzzy_match import Matcher
 logger = logging.getLogger(__name__)
 
 
-class EmbedContainer:
-    def __init__(self, embed):
-        self.embed = embed
-
-    def get_embed(self):
-        return self.embed
-
-
 def create_queries(matcher: Matcher):
     add_query = matcher.add
     create_adventurer_queries(add_query)
@@ -56,10 +48,19 @@ def create_adventurer_queries(add_query: typing.Callable):
     adventurers = get_name_map(data.Adventurer)
     for name, a in adventurers.items():
         add_query(name, a)
+        has_shared_skill = False
         if a.skill_1:
             add_query(f"{name} s1", a.skill_1)
+            if a.skill_1.share_cost:
+                add_query(f"{name} ss", a.skill_1)
+                has_shared_skill = True
         if a.skill_2:
             add_query(f"{name} s2", a.skill_2)
+            if a.skill_2.share_cost:
+                add_query(f"{name} ss", a.skill_2)
+                has_shared_skill = True
+        if not has_shared_skill:
+            add_query(f"{name} ss", discord.Embed(description=f"{a.full_name} doesn't have a shared skill."))
         if a.ability_1:
             add_query(f"{name} a1", a.ability_1[-1])
         if a.ability_2:
@@ -92,6 +93,10 @@ def create_dragon_queries(add_query: typing.Callable):
             add_query(f"{name} a1", d.ability_1[-1])
         if d.ability_2:
             add_query(f"{name} a2", d.ability_2[-1])
+        if d.ability_1 or d.ability_2:
+            e = d.get_abilities_embed()
+            add_query(f"{name} abilities", e)
+            add_query(f"{name} aura", e)
 
 
 def create_wyrmprint_queries(add_query: typing.Callable):
@@ -191,7 +196,7 @@ def create_ability_queries(add_query: typing.Callable):
                     desc = ""
                     logger.warning(f"No description for common generic ability {gen_name}")
 
-                names = natsort.natsorted(set(ab.name for ab in ab_list))
+                names = natsort.natsorted(set(ab.name for ab in ab_list), reverse=True)
                 if len(names) > 15:
                     names = names[:15] + ["..."]
 
@@ -202,7 +207,7 @@ def create_ability_queries(add_query: typing.Callable):
                     color=0xFF7000
                 )
 
-                add_query(gen_name, EmbedContainer(embed))
+                add_query(gen_name, embed)
 
 
 def create_showcase_queries(add_query: typing.Callable):

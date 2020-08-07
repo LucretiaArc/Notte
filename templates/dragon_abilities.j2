@@ -1,0 +1,7 @@
+{{e.rarity|rarity_emote}}{{e.element|element_emote}} {{e.name}}{% if e.title %}: {{e.title}}{% endif %} (Abilities)
+{%- for ability in e.get_abilities() -%}
+{%- if ability %}
+**{{(ability|last).name}}**
+{{(ability|last).description}}
+{% endif -%}
+{%- endfor %}
