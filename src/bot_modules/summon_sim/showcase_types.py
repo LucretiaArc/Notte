@@ -1,6 +1,7 @@
 import data
 import typing
 import abc
+import re
 from . import core, pool
 
 
@@ -9,8 +10,7 @@ class GalaBase(core.SimShowcase, abc.ABC):
     FIVE_STAR_ADV_RATE_TOTAL = 3.0
     FIVE_STAR_DRG_RATE_TOTAL = 3.0
 
-    @staticmethod
-    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
+    def is_entity_in_normal_pool(self, e: typing.Union[data.Adventurer, data.Dragon]):
         return e.availability in ("Permanent", "Gala")
 
     def get_three_star_rates(self, pity_progress) -> pool.RarityRates:
@@ -38,9 +38,23 @@ class GalaMultiFeatured(GalaBase):
         return len(featured_pool) > 1 and all(e.availability == "Gala" for e in featured_pool)
 
 
-class ElementFocus(core.SimShowcase, abc.ABC):
+class ElementFocus(core.SimShowcase):
     FIVE_STAR_ADV_RATE_EACH = 0.0
     FIVE_STAR_DRG_RATE_EACH = 0.0
+
+    @staticmethod
+    def get_element(showcase_name):
+        m = re.match(r"(\w+) Focus.*", showcase_name)
+        if m:
+            return data.Element(m.group(1))
+        return None
+
+    def is_entity_in_normal_pool(self, e: typing.Union[data.Adventurer, data.Dragon]):
+        return e.availability == "Permanent" and e.element == data.Element(self.showcase.name.split(" ")[0])
+
+    @staticmethod
+    def is_matching_showcase_type(showcase: data.Showcase):
+        return bool(ElementFocus.get_element(showcase.name))
 
     def get_four_star_rates(self, pity_progress) -> pool.RarityRates:
         rates = pool.RarityRates()
@@ -56,26 +70,6 @@ class ElementFocus(core.SimShowcase, abc.ABC):
         rates[False][data.Dragon] = 0.375 * total_rate
 
         return rates
-
-
-class LightFocus(ElementFocus):
-    @staticmethod
-    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
-        return e.availability == "Permanent" and e.element == data.Element.LIGHT
-
-    @staticmethod
-    def is_matching_showcase_type(showcase: data.Showcase):
-        return showcase.name.startswith("Light Focus")
-
-
-class WaterFocus(ElementFocus):
-    @staticmethod
-    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
-        return e.availability == "Permanent" and e.element == data.Element.WATER
-
-    @staticmethod
-    def is_matching_showcase_type(showcase: data.Showcase):
-        return showcase.name.startswith("Water Focus")
 
 
 # Overrides

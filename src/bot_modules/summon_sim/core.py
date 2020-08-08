@@ -220,12 +220,11 @@ class SimShowcase(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
+    def is_matching_showcase_type(showcase: data.Showcase):
         pass
 
-    @staticmethod
     @abc.abstractmethod
-    def is_matching_showcase_type(showcase: data.Showcase):
+    def is_entity_in_normal_pool(self, e: typing.Union[data.Adventurer, data.Dragon]):
         pass
 
     @staticmethod
@@ -234,8 +233,7 @@ class SimShowcase(abc.ABC):
 
 
 class NormalSS(SimShowcase):
-    @staticmethod
-    def is_entity_in_normal_pool(e: typing.Union[data.Adventurer, data.Dragon]):
+    def is_entity_in_normal_pool(self, e: typing.Union[data.Adventurer, data.Dragon]):
         return e.availability == "Permanent"
 
     @staticmethod
