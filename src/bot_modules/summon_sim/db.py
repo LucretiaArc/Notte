@@ -101,13 +101,30 @@ def get_rate_breakdown(channel_id: int, user_id: int):
     return sim_showcase.get_rates(pity_progress).get_breakdown()
 
 
-def perform_summon(channel_id: int, user_id: int, is_tenfold: bool):
+def perform_single_summons(channel_id: int, user_id: int, summon_count=1):
+    if summon_count < 1 or summon_count > 10:
+        raise ValueError(f"Invalid summon count {summon_count}")
+
     _check_session(channel_id, user_id)
     with get_cursor(pity_file) as cursor:
         sim_showcase, pity_progress, total_summons = _get_showcase_info(cursor, channel_id, user_id)
-        summon_func = sim_showcase.perform_tenfold if is_tenfold else sim_showcase.perform_solo
-        summon_results, new_pity_progress = summon_func(pity_progress)
-        new_total_summons = total_summons + (10 if is_tenfold else 1)
+        summon_results = []
+        new_pity_progress = pity_progress
+        for i in range(summon_count):
+            result, new_pity_progress = sim_showcase.perform_solo(new_pity_progress)
+            summon_results.append(result)
+        new_total_summons = total_summons + summon_count
+        _set_showcase_info(cursor, channel_id, user_id, sim_showcase, new_pity_progress, new_total_summons)
+
+    return summon_results, _get_showcase_explanation_string(sim_showcase, new_pity_progress, new_total_summons, True)
+
+
+def perform_tenfold_summon(channel_id: int, user_id: int):
+    _check_session(channel_id, user_id)
+    with get_cursor(pity_file) as cursor:
+        sim_showcase, pity_progress, total_summons = _get_showcase_info(cursor, channel_id, user_id)
+        summon_results, new_pity_progress = sim_showcase.perform_tenfold(pity_progress)
+        new_total_summons = total_summons + 10
         _set_showcase_info(cursor, channel_id, user_id, sim_showcase, new_pity_progress, new_total_summons)
 
     return summon_results, _get_showcase_explanation_string(sim_showcase, new_pity_progress, new_total_summons, True)

@@ -1,6 +1,7 @@
 import hook
 import logging
 import discord
+import util
 from . import core, db, image, pool, showcase_types
 
 logger = logging.getLogger(__name__)
@@ -59,9 +60,9 @@ async def tenfold_summon(message, args):
     Simulates a tenfold summon on your current showcase.
     To choose a showcase to summon on, use the `showcase` command.
     """
-    results, text = db.perform_summon(message.channel.id, message.author.id, is_tenfold=True)
-    with image.get_tenfold_image_fp(results) as fp:
-        await message.channel.send(text, file=discord.File(fp, filename="tenfold.png"))
+    results, text = db.perform_tenfold_summon(message.channel.id, message.author.id)
+    with image.get_image_fp(results) as fp:
+        await message.channel.send(text, file=discord.File(fp, filename="result.png"))
 
 
 async def single_summon(message, args):
@@ -69,9 +70,15 @@ async def single_summon(message, args):
     Simulates a single summon on your current showcase.
     To choose a showcase to summon on, use the `showcase` command.
     """
-    result, text = db.perform_summon(message.channel.id, message.author.id, is_tenfold=False)
-    with image.get_single_image_fp(result) as fp:
-        await message.channel.send(text, file=discord.File(fp, filename="single.png"))
+    total_summons = util.safe_int(args, 1)
+    if total_summons < 1:
+        await message.channel.send("I don't know how to do that many!")
+    elif total_summons > 10:
+        await message.channel.send("You can't do more than ten singles at a time!")
+    else:
+        results, text = db.perform_single_summons(message.channel.id, message.author.id, total_summons)
+        with image.get_image_fp(results) as fp:
+            await message.channel.send(text, file=discord.File(fp, filename="result.png"))
 
 
 async def update_entity_icons_cmd(message, args):

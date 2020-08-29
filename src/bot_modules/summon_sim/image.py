@@ -12,6 +12,8 @@ from PIL import Image, UnidentifiedImageError
 
 logger = logging.getLogger(__name__)
 
+result_image_constraints = []
+
 
 async def update_entity_icons():
     logger.info(f"Updating entity icons")
@@ -70,17 +72,8 @@ def _get_image_fp(image):
 
 
 @contextlib.contextmanager
-def get_single_image_fp(entity: typing.Union[data.Adventurer, data.Dragon]):
-    output_image = Image.new("RGBA", (160, 160))
-    paste_entity_image(output_image, entity, (0, 0))
-
-    with _get_image_fp(output_image) as fp:
-        yield fp
-
-
-@contextlib.contextmanager
-def get_tenfold_image_fp(results: list):
-    output_image_size, result_positions = generate_result_image_constraints((2, 3, 3, 2))
+def get_image_fp(results: list):
+    output_image_size, result_positions = get_result_image_constraints(len(results))
     output_image = Image.new("RGBA", output_image_size)
     for entity, pos in zip(results, result_positions):
         paste_entity_image(output_image, entity, pos)
@@ -100,6 +93,29 @@ def paste_entity_image(output_image, entity, pos):
         output_image.alpha_composite(get_entity_icon(entity), pos)
     else:
         output_image.paste(get_entity_icon(entity), pos)
+
+
+def get_result_image_constraints(image_count):
+    global result_image_constraints
+
+    if not result_image_constraints:
+        row_capacities = [
+            (1,),
+            (2,),
+            (2, 1),
+            (2, 2),
+            (3, 2),
+            (2, 3, 2),  # the middle position in the second row is removed manually
+            (2, 3, 2),
+            (2, 3, 3),
+            (3, 3, 3),
+            (2, 3, 3, 2)
+        ]
+        result_image_constraints = list(map(generate_result_image_constraints, row_capacities))
+        six_result_icon_positions = result_image_constraints[5][1]
+        del six_result_icon_positions[3]
+
+    return result_image_constraints[image_count-1]
 
 
 def generate_result_image_constraints(row_capacities):
