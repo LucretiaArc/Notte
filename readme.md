@@ -1,5 +1,5 @@
 # Notte
-A Discord bot that provides information about Dragalia Lost, a mobile game developed by Cygames and published by Nintendo.
+A Discord bot that provides information about Dragalia Lost, a mobile game developed by Cygames and published by Nintendo. **Will not be updated for the second anniversary update (Version 2.0, released in September 2020).**
 
 ## Prerequisites
 * Python 3.6
